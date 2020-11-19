@@ -30,5 +30,3 @@ add_executable(useHello src/useHello.cpp)
 # You could either use the Static Library ("hello") or Shared Library ("hello_shared")
 # target_link_libraries(useHello hello)
 target_link_libraries(useHello hello_shared)
-
-
