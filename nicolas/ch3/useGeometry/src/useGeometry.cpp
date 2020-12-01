@@ -28,7 +28,7 @@ using namespace Eigen;
 // Affine transform (4×4): Eigen::Affine3d.
 // Perspective transformation (4×4): Eigen::Projective3d.
 
-int main(int argc, char **argv){
+int main(int argc, char** argv){
     /* 1. Rotation Matrix */
     // 3D rotation matrix can be declared directly using Matrix3d (3x3, double) or Matrix3f (3x3, float)
     Matrix3d R = Matrix3d::Identity();  // Rotation Matrix

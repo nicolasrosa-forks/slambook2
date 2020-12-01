@@ -21,7 +21,7 @@ double getElapsedTime_ms(const time_t t_start){
 /* =========================================================== */
 /*  This program demonstrates the use of the basic Eigen type  */
 /* =========================================================== */
-int main(int argc, char **argv){
+int main(int argc, char** argv){
     /* ----- Eigen::Matrix Declaration ----- */
     // All vectors and matrices in Eigen are Eigen::Matrix, which is a template class.
     // Its first three parameters are: data type, row, column.

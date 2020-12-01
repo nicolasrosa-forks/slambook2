@@ -21,6 +21,12 @@ include_directories("/usr/include/eigen3")
 #  coordinateTransform  #
 # ===================== #
 # Adds an executable program
-add_executable(coordinateTransform coordinateTransform.cpp)
+add_executable(coordinateTransform src/coordinateTransform.cpp)
 # target_link_libraries(coordinateTransform utils_shared)
 # target_link_libraries(useGeometry ${CMAKE_SOURCE_DIR}/libUtils_shared.so)
+
+# ================ #
+#  plotTrajectory  #
+# ================ #
+add_executable(plotTrajectory src/plotTrajectory.cpp)
+
