@@ -3,9 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 
 # Declares a cmake project
 project(HelloSLAM)
-
-# Set compilation mode
-set(CMAKE_BUILD_TYPE "Debug")
+# Compilation Settings
+set(CMAKE_BUILD_TYPE "Debug")  # Set compilation mode
 
 # =========== #
 #  helloSLAM  #
@@ -14,11 +13,11 @@ set(CMAKE_BUILD_TYPE "Debug")
 # Syntax: add_executable (<program_name> <source_code_file>)
 add_executable(helloSLAM src/helloSLAM.cpp)
 
-# Adds a Static library containing the functions declared in "libHelloSLAM.cpp"
+# Adds a static library containing the functions declared in "libHelloSLAM.cpp"
 add_library(hello include/libHelloSLAM.cpp) # Will generate the "libhello.a" file
 
-# Adds a Shared library containing the functions declared in "libHelloSLAM.cpp"
-add_library(hello_shared SHARED include/libHelloSLAM.cpp) # Will generate the "libhello_shared.so" file
+# Adds a shared library containing the functions declared in "libHelloSLAM.cpp"
+add_library(hello_shared SHARED include/libHelloSLAM.cpp)  # Will generate the "libhello_shared.so" file
 
 # ========== #
 #  useHello  #

@@ -15,4 +15,4 @@ include_directories("/usr/include/eigen3")
 #  eigenMatrix  #
 # ============= #
 # Adds an executable program
-add_executable(eigenMatrix eigenMatrix.cpp)
+add_executable(eigenMatrix src/eigenMatrix.cpp)

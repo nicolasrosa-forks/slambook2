@@ -8,6 +8,7 @@
         "functional": "cpp",
         "random": "cpp",
         "type_traits": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "geometry": "cpp"
     }
 }

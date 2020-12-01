@@ -8,7 +8,7 @@
             "name": "g++-5 - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch3/useGeometry/useGeometry",
+            "program": "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch3/useGeometry/src/useGeometry",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
