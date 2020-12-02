@@ -1,7 +1,7 @@
 /* System Libraries */
 #include <iostream>
 #include <vector>
-// #include <algorithm>
+#include <algorithm>
 
 /* Eigen3 Libraries */
 #include <eigen3/Eigen/Core>

@@ -6,7 +6,7 @@ using namespace std;
 /* =========== */
 /*  Functions  */
 /* =========== */
-void print(char var[]){
+void print(const char var[]){
     cout << var << endl;
 }
 

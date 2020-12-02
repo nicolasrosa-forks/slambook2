@@ -16,8 +16,6 @@ void printVector(const char text[], TTypeVec vec);
 template <typename TTypeQuat>
 void printQuaternion(const char text[], TTypeQuat quat);
 
-void print_augusto();
-
 #include "libUtils.cpp"
 
 #endif

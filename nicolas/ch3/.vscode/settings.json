@@ -9,6 +9,8 @@
         "random": "cpp",
         "type_traits": "cpp",
         "core": "cpp",
-        "geometry": "cpp"
+        "geometry": "cpp",
+        "fstream": "cpp",
+        "algorithm": "cpp"
     }
 }

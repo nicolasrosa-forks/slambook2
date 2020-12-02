@@ -7,15 +7,21 @@ project(examples)
 # Compilation Settings
 set(CMAKE_BUILD_TYPE "Debug")  # Set compilation mode
 
-# Add Eigen library headers
+# =========== #
+#  Libraries  #
+# =========== #
+# Eigen3
 # Because the Eigen library only has header files, so you don’t need to link the program to the library with the target_link_libraries statement.
 include_directories("/usr/include/eigen3")
 
-# ======= #
-#  Utils  #
-# ======= #
-# Adds a shared library containing the functions declared in "include/libHelloSLAM.cpp"
-# add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libhello_shared.so" file
+# Pangolin 
+find_package(Pangolin REQUIRED)
+include_directories(${Pangolin_INCLUDE_DIRS})
+
+# ----- Custom Libraries ----- #
+# Utils
+# Adds a shared library containing the functions declared in "include/libUtilsSLAM.cpp"
+# add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libutils_shared.so" file
 
 # ===================== #
 #  coordinateTransform  #
@@ -29,4 +35,4 @@ add_executable(coordinateTransform src/coordinateTransform.cpp)
 #  plotTrajectory  #
 # ================ #
 add_executable(plotTrajectory src/plotTrajectory.cpp)
-
+target_link_libraries(plotTrajectory ${Pangolin_LIBRARIES})
