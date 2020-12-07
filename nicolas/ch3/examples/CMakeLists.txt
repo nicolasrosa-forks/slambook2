@@ -5,7 +5,8 @@ cmake_minimum_required(VERSION 2.8)
 project(examples)
 
 # Compilation Settings
-set(CMAKE_BUILD_TYPE "Debug")  # Set compilation mode
+set(CMAKE_CXX_FLAGS "-std=c++11")  # Set C++ Standard
+set(CMAKE_BUILD_TYPE "Debug")      # Set compilation mode
 
 # =========== #
 #  Libraries  #

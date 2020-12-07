@@ -11,6 +11,7 @@
         "core": "cpp",
         "geometry": "cpp",
         "fstream": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "iomanip": "cpp"
     }
 }

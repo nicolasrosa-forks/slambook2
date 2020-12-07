@@ -69,12 +69,13 @@ void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> pos
     pangolin::OpenGlRenderState s_cam(
         pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
         pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
-    );
+    );    // Object representing attached OpenGl Matrices/transforms
 
     pangolin::View &d_cam = pangolin::CreateDisplay()
     .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f /768.0f)
     .SetHandler(new pangolin::Handler3D(s_cam));
 
+    /* Loop */
     while (pangolin::ShouldQuit() == false){
         pangolin::FinishFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
