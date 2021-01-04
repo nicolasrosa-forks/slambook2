@@ -20,12 +20,10 @@ using namespace Eigen;
 
 /* Functions Scope */
 typedef vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> TrajectoryType;
-void DrawTrajectory(TrajectoryType);
+void DrawTrajectory(const TrajectoryType &poses);
 
 /* Global Variables */
-// string trajectory_file = "./trajectory.txt";
-// string trajectory_file = "../../examples/trajectory.txt";
-string trajectory_file = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch3/examples/trajectory.txt";
+string trajectory_file = "../../examples/trajectory.txt";
 
 TrajectoryType ReadTrajectory(const string &path){
     ifstream fin(path);
@@ -49,7 +47,7 @@ TrajectoryType ReadTrajectory(const string &path){
 
         trajectory.push_back(Twr);
     }
-    cout << "Read total of " << trajectory.size() << " pose entries." << endl;
+    cout << "Read total of " << trajectory.size() << " pose entries." << endl << endl;
 
     return trajectory;
 }
@@ -67,8 +65,11 @@ int main(int argc, char** argv){
     return 0;
 }
 
-// Function Implementation
-void DrawTrajectory(TrajectoryType poses){
+
+/* =========== */
+/*  Functions  */
+/* =========== */
+void DrawTrajectory(const TrajectoryType &poses){
     // Create Pangolin window and plot the trajectory
     pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
 
@@ -79,15 +80,14 @@ void DrawTrajectory(TrajectoryType poses){
     pangolin::OpenGlRenderState s_cam(
         pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
         pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
-    );    // Object representing attached OpenGl Matrices/transforms
+    );  // Object representing attached OpenGl Matrices/transforms
 
     pangolin::View &d_cam = pangolin::CreateDisplay()
-    .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f /768.0f)
+    .SetBounds(0.0, 1.0, 0.0, 1.0, -1024.0f/768.0f)
     .SetHandler(new pangolin::Handler3D(s_cam));
 
     /* Loop */
     while (pangolin::ShouldQuit() == false){
-        pangolin::FinishFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         d_cam.Activate(s_cam);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -122,7 +122,7 @@ void DrawTrajectory(TrajectoryType poses){
             glEnd();
         }
 
-        /* Draw a connection between Poses */
+        /* Draw the connections between Poses */
         for(size_t i=0; i < poses.size()-1; i++){
             // Get two consecutive poses
             auto p1 = poses[i], p2 = poses[i+1];  // Placeholder type specifiers. https://en.cppreference.com/w/cpp/language/auto
