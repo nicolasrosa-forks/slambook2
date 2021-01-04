@@ -63,14 +63,16 @@ int main(int argc, char** argv){
     printMatrix<Matrix3d>("SO(3) updated: ", SO3_updated.matrix());
 
     /* ----------------- */
-    /*  S3(3) Lie Group  */
+    /*  SE(3) Lie Group  */
     /* ----------------- */
-    // Declaration
-    Vector3d t(1, 0, 0);  // Translate 1 along X-axis
-    Sophus::SE3d SE3_Rt(R, t);  // SE3 Declaration from R, t
-    Sophus::SE3d SE3_qt(q, t);  // or from q, t
+    // Translation Vector Declaration
+    Vector3d t(1, 0, 0);  // Translates 1 along X-axis
+    
+    // SE(3) Declaration, also known as Transformation matrix (T) or Pose
+    // It can be initialized ...
+    Sophus::SE3d SE3_Rt(R, t);  // ... from R, t
+    Sophus::SE3d SE3_qt(q, t);  // or  from q, t
 
-    // Also known as Transformation matrix (T)
     printMatrix<Matrix4d>("SE(3) from R,t: ", SE3_Rt.matrix());
     printMatrix<Matrix4d>("SE(3) from q,t: ", SE3_qt.matrix());
     

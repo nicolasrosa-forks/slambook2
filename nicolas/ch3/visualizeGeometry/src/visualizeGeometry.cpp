@@ -81,10 +81,10 @@ istream &operator>>(istream &in, const QuaternionDraw quat) {
   return in;
 }
 
-/* ================================================================ */
-/*  This program demonstrates how to create a Visualization Program */
-/* for the Rotation Matrix, Eugle Angle, quaternion.                */
-/* ================================================================ */
+/* ================================================================= */
+/*  This program demonstrates how to create a Visualization Program  */
+/*  for the Rotation Matrix, Eugle Angle, quaternion.                */
+/* ================================================================= */
 int main(int argc, char** argv){
     pangolin::CreateWindowAndBind("Visualize Geometry", 1000, 600);  // Initialize OpenGL window
     

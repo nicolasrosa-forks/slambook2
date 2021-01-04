@@ -19,23 +19,23 @@ using namespace std;
 using namespace Eigen;
 
 /* Functions Scope */
-void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>>);
+typedef vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> TrajectoryType;
+void DrawTrajectory(TrajectoryType);
 
 /* Global Variables */
 // string trajectory_file = "./trajectory.txt";
 // string trajectory_file = "../../examples/trajectory.txt";
 string trajectory_file = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch3/examples/trajectory.txt";
 
-int main(int argc, char** argv){
-    vector <Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses;
-    
-    // Read Trajectory file
-    ifstream fin(trajectory_file);
+TrajectoryType ReadTrajectory(const string &path){
+    ifstream fin(path);
+    TrajectoryType trajectory;
+
     if(!fin){
-        cout << "Cannot find trajectory file at '" << trajectory_file << "'." << endl;
-        return 1;
+        cout << "Cannot find trajectory file at '" << path << "'." << endl;
+        return trajectory;
     }else{
-        cout << "Read '" << trajectory_file << "' was sucessful." << endl;
+        cout << "Read '" << path << "' was sucessful." << endl;
     }
     
     while(!fin.eof()){
@@ -47,9 +47,19 @@ int main(int argc, char** argv){
 
         printMatrix<Matrix4d>("Twr: ", Twr.matrix());
 
-        poses.push_back(Twr);
+        trajectory.push_back(Twr);
     }
-    cout << "Read total of " << poses.size() << " pose entries." << endl;
+    cout << "Read total of " << trajectory.size() << " pose entries." << endl;
+
+    return trajectory;
+}
+
+/* ====== */
+/*  Main  */
+/* ====== */
+int main(int argc, char** argv){
+    // Read trajectory file
+    TrajectoryType poses = ReadTrajectory(trajectory_file);
 
     // Draw trajectory in pangolin
     DrawTrajectory(poses);
@@ -58,7 +68,7 @@ int main(int argc, char** argv){
 }
 
 // Function Implementation
-void DrawTrajectory(vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> poses){
+void DrawTrajectory(TrajectoryType poses){
     // Create Pangolin window and plot the trajectory
     pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
 
