@@ -2,13 +2,13 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-
+#include <iomanip>      // std::fixed, std::setprecision
 
 /* Eigen3 Libraries */
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
-/* Sophys Libraries */
+/* Sophus Libraries */
 #include "sophus/se3.hpp"
 #include "sophus/so3.hpp"
 
@@ -22,48 +22,62 @@ using namespace std;
 using namespace Eigen;
 
 /* Global Variables */
-string estimated_file = "../../trajectoryError/src/estimated.txt";
-string groundtruth_file = "../../trajectoryError/src/groundtruth.txt";
+typedef vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
+typedef vector<double, Eigen::aligned_allocator<double>> TimeStamp;
+
+string traj_est_filepath = "../../trajectoryError/src/estimated.txt";
+string traj_gt_filepath = "../../trajectoryError/src/groundtruth.txt";
+
+TimeStamp time_est, time_gt;
 
 /* Function Scopes */
-typedef vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
+TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path);
+void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt);
 
-TrajectoryType ReadTrajectory(const string &path);
-void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &est);
+/* ================================================================================================ */
+/*                                     Metrics Description                                          */
+/* ------------------------------------------------------------------------------------------------ */
+/*  This Program demonstrates the calculation of the Absolute Trajectory Error (ATE)                */
+/*  a) Absolute Trajectory Error (ATE), which measures the difference between the translation       */
+/*     part of two trajectories by first aligning them into a common reference frame, and           */
+/*                                                                                                  */
+/*  b) Relative Pose Error (RPE), which measures the difference between relative transformations    */
+/*     at time instances i and i+k, for different values of k. This method is independent of the    */
+/*     reference frame but when the scale of the map is not known (for example monocular mapping),  */ 
+/*     a scale alignment needs to be done before comparing trajectories using RPE.                  */
+/*                                                                                                  */
+/*  Ref: Salas, Marta, et al. "Trajectory alignment and evaluation in SLAM: Horns method vs         */
+/*       alignment on the manifold." Robotics: Science and Systems Workshop: The problem of         */
+/*       mobile sensors. 2015.                                                                      */
+/* ================================================================================================ */
 
-/* ====== */
-/*  Main  */
-/* ====== */
-/*  This Program demonstrates the calculation of the Absolute Trajectory Error (ATE) */
+/* This Program demonstrates the calculation of the Absolute Trajectory Error (ATE) and Relative Pose Error (RPE) */
 int main(int argc, char **argv){
-    cout << argc << endl; 
-
-
-
     print("helloTrajectoryError!");
 
     // 1. Read the two trajectories (Sequences of Poses)
-    TrajectoryType groundtruth = ReadTrajectory(groundtruth_file);
-    TrajectoryType estimated = ReadTrajectory(estimated_file);
+    TrajectoryType estimated = ReadTrajectory(time_est, traj_est_filepath);
+    TrajectoryType groundtruth = ReadTrajectory(time_gt, traj_gt_filepath);
+    
+    assert(!estimated.empty() && !groundtruth.empty());
+    assert(estimated.size() == groundtruth.size());
 
-    assert(!groundtruth.empty() && !estimated.empty());
-    assert(groundtruth.size() == estimated.size());
-
-    int N = estimated.size();
+    int N = groundtruth.size();
 
     // 2. Calculate the Absolute Trajectory Error (ATE)
+    // FIXME: Do I still need to align the trajectories? Do I need to use that HORN algorithm?
     double ate_all_sum = 0;
     double ate_trans_sum = 0;
     
     for(size_t i=0; i < N; i++){
         auto pose_est = estimated[i], pose_gt = groundtruth[i];
 
-        string pose_gt_str = ("pose_gt[" + to_string(i) + "]: ");
-        string pose_est_str = ("pose_est[" + to_string(i) + "]: ");
-
-        printMatrix<Matrix4d>(pose_gt_str.c_str(), pose_gt.matrix());  
+        string pose_est_str = "pose_est[" + to_string(i) + "]: ";
+        string pose_gt_str = "pose_gt[" + to_string(i) + "]: ";
+        
         printMatrix<Matrix4d>(pose_est_str.c_str(), pose_est.matrix());
-
+        printMatrix<Matrix4d>(pose_gt_str.c_str(), pose_gt.matrix());  
+        
         double ate_all_error = (pose_gt.inverse()*pose_est).log().norm();
         double ate_trans_error = (pose_gt.inverse()*pose_est).translation().norm();
         
@@ -75,42 +89,64 @@ int main(int argc, char **argv){
     double ate_trans = sqrt(ate_trans_sum/double(N));
 
     cout << "Absolute Trajectory Error (ATE_all)/Root-Mean-Squared Error (RMSE): " << ate_all << endl;
-    cout << "Average Translational Error (ATE_trans): " << ate_trans << endl << endl;
+    cout << "Average Translational Error (ATE_trans): " << ate_trans << endl << endl;  //TODO: Is this result correct?
 
     // 3. Calculate the Relative Pose Error (RPE)
     double rpe_all_sum = 0;
     double rpe_trans_sum = 0;
 
-    int dt = 1;
-
-    for(size_t i=0; i < N-dt; i++){
+    double dt = 1;  //Remember: dt isn't a increment of i-index, but time.
+    size_t k=1;
+    int j=0;
+    
+    for(size_t i=0; i < N; i++){  // In practice, this for run 'j=N-dt' times.
         auto pose_est = estimated[i], pose_gt = groundtruth[i];
-        auto pose_est_dt = estimated[i+dt], pose_gt_dt = groundtruth[i+dt];
         
-        double rpe_all_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).log().norm();
-        double rpe_trans_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).translation().norm();
+        cout << "i: " << i << endl;
+        cout << "t_diff:" << time_gt[i+k] - time_gt[i] << endl;
+    
+        while(i+k < N && (time_gt[i+k] - time_gt[i] < dt)){
+          k++;
+        }
+
+        if (i+k < N){
+          auto pose_est_dt = estimated[i+k], pose_gt_dt = groundtruth[i+k];  
+          
+          double rpe_all_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).log().norm();
+          double rpe_trans_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).translation().norm();
         
-        rpe_all_sum += rpe_all_error * rpe_all_error;
-        rpe_trans_sum += rpe_trans_error * rpe_trans_error;
+          rpe_all_sum += rpe_all_error * rpe_all_error;
+          rpe_trans_sum += rpe_trans_error * rpe_trans_error;
+
+          cout << "error value updated!" << endl;
+
+          k=1;
+          j++;
+          
+          cout << "k: " << k << endl << endl;
+        }else{
+          break;
+        }   
     }
 
-    double rpe_all = sqrt(rpe_all_sum/(double(N)-dt));
-    double rpe_trans = sqrt(rpe_trans_sum/(double(N)-dt));
+    cout << "\nNumber of error updates (j): " << j << endl << endl;
 
-    cout << "Relative Pose Error (RPE_all): " << rpe_all << endl;
-    cout << "Relative Pose Error Error (RPE_trans): " << rpe_trans << endl << endl;
+    double rpe_all = sqrt(rpe_all_sum/(double(j)));
+    double rpe_trans = sqrt(rpe_trans_sum/(double(j)));
+
+    cout << "Relative Pose Error (RPE_all): " << rpe_all << endl;  //TODO: Is this result correct? Implementation was supervised by Nuno
+    cout << "Relative Pose Error Error (RPE_trans): " << rpe_trans << endl << endl;  //TODO: Is this result correct? Implementation was supervised by Nuno
 
     // 4. Display the trajectories in a 3D Window.
     DrawTrajectory(groundtruth, estimated);
 
     cout << "Done." << endl;
-
 }
 
 /* =========== */
 /*  Functions  */
 /* =========== */
-TrajectoryType ReadTrajectory(const string &path){
+TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
     ifstream fin(path);
     TrajectoryType trajectory;
 
@@ -127,6 +163,7 @@ TrajectoryType ReadTrajectory(const string &path){
 
         // Transformation Matrix (T), Pose
         Sophus::SE3d pose(Eigen::Quaterniond(qx, qy, qz, qw), Eigen::Vector3d(tx, ty, tz)); // T, SE(3) from q,t.
+        timestamps.push_back(time);
         trajectory.push_back(pose);
     }
     cout << "Read total of " << trajectory.size() << " pose entries." << endl << endl;
@@ -134,8 +171,7 @@ TrajectoryType ReadTrajectory(const string &path){
     return trajectory;
 }
 
-
-void DrawTrajectory(const TrajectoryType &gt, const TrajectoryType &est) {
+void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt) {
   // Create Pangolin window and plot the trajectory
   pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
   

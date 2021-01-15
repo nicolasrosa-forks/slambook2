@@ -20,11 +20,30 @@ using namespace Eigen;
 
 /* Functions Scope */
 typedef vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> TrajectoryType;
+
+
+TrajectoryType ReadTrajectory(const string &path);
 void DrawTrajectory(const TrajectoryType &poses);
 
 /* Global Variables */
-string trajectory_file = "../../examples/trajectory.txt";
+string trajectory_path = "../../examples/trajectory.txt";
 
+/* ====== */
+/*  Main  */
+/* ====== */
+int main(int argc, char** argv){
+    // Read trajectory file
+    TrajectoryType poses = ReadTrajectory(trajectory_path);
+
+    // Draw trajectory in pangolin
+    DrawTrajectory(poses);
+
+    return 0;
+}
+
+/* =========== */
+/*  Functions  */
+/* =========== */
 TrajectoryType ReadTrajectory(const string &path){
     ifstream fin(path);
     TrajectoryType trajectory;
@@ -52,23 +71,6 @@ TrajectoryType ReadTrajectory(const string &path){
     return trajectory;
 }
 
-/* ====== */
-/*  Main  */
-/* ====== */
-int main(int argc, char** argv){
-    // Read trajectory file
-    TrajectoryType poses = ReadTrajectory(trajectory_file);
-
-    // Draw trajectory in pangolin
-    DrawTrajectory(poses);
-
-    return 0;
-}
-
-
-/* =========== */
-/*  Functions  */
-/* =========== */
 void DrawTrajectory(const TrajectoryType &poses){
     // Create Pangolin window and plot the trajectory
     pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
