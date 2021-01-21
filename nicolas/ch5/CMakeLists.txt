@@ -3,3 +3,4 @@ project(chapter5)
 
 # Add each subproject
 add_subdirectory(imageBasics)
+add_subdirectory(stereoVision)

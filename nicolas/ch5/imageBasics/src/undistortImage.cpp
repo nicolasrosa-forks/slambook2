@@ -1,22 +1,7 @@
 /* System Libraries */
 #include <iostream>
-// #include <fstream>
-// #include <unistd.h>
-// #include <iomanip>      // std::fixed, std::setprecision
 #include <chrono>
 #include <math.h>          // pow
-
-
-/* Eigen3 Libraries */
-// #include <eigen3/Eigen/Core>
-// #include <eigen3/Eigen/Geometry>
-
-/* Sophus Libraries */
-// #include "sophus/se3.hpp"
-// #include "sophus/so3.hpp"
-
-/* Pangolin Library */
-// #include <pangolin/pangolin.h>
 
 /* OpenCV Library */
 #include <opencv2/core/core.hpp>
@@ -26,42 +11,23 @@
 #include "../../include/libUtils.h"
 
 using namespace std;
-// using namespace Eigen;
 
 /* Global Variables */
 bool debug = false;
 string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
 
-
 // Rad-Tan model params
 double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;
 
-// Camera intrinsics
+// Camera intrinsics params
 double fx = 458.654, fy = 457.296, cx = 367.215, cy = 248.375;
 
 /* Function Scopes */
-void printImageShape(const cv:: Mat image){
+void printImageShape(const cv:: Mat &image){
     cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")" << endl; // (Height, Width, Channels)
 }
 
-int checkImage(const cv::Mat image){
-    // Check if the data is correctly loaded
-    if (image.data == nullptr) { 
-        cerr << "File doesn't exist." << endl;
-        return 0;
-    } else{
-        cout << "Successful." << endl;
-    }
-
-    // Check image type
-    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
-        // We need grayscale image or RGB image
-        cout << "Image type incorrect!" << endl;
-        return 0;
-    }
-
-    return 1;
-}
+int checkImage(const cv::Mat &image);
 
 /* In this program we implement the undistortion by ourselves rather than using OpenCV */
 int main(int argc, char **argv){
@@ -69,9 +35,7 @@ int main(int argc, char **argv){
     
     // Read the image
     cout << "Reading '" << image_path << "'...";
-    cv::Mat image;
-    image = cv::imread(image_path, 0); // The image type is CV_8UC1
-    
+    cv::Mat image = cv::imread(image_path, 0);  // The image type is CV_8UC1
 
     if(!checkImage(image)){
         return 0;
@@ -127,8 +91,8 @@ int main(int argc, char **argv){
     // Display
     cv::imshow("image (distorted)", image);
     cv::imshow("image (undistorted)", image_undistorted);
-
     cv::waitKey(0);
+    
     cv::destroyAllWindows();
 
     cout << "\nDone." << endl;
@@ -138,3 +102,21 @@ int main(int argc, char **argv){
 /* =========== */
 /*  Functions  */
 /* =========== */
+int checkImage(const cv::Mat &image){
+    // Check if the data is correctly loaded
+    if (image.data == nullptr) { 
+        cerr << "File doesn't exist." << endl;
+        return 0;
+    } else{
+        cout << "Successful." << endl;
+    }
+
+    // Check image type
+    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
+        // We need grayscale image or RGB image
+        cout << "Image type incorrect!" << endl;
+        return 0;
+    }
+
+    return 1;
+}

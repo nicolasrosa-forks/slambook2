@@ -180,13 +180,13 @@ void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Pixels can be drawn using a function that blends the incoming (source) RGBA values with the RGBA values that are already in the frame buffer (the destination values). https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBlendFunc.xml
 
   pangolin::OpenGlRenderState s_cam(
-      pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
-      pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
+    pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
+    pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
   );  // Object representing attached OpenGl Matrices/transforms
 
   pangolin::View &d_cam = pangolin::CreateDisplay()
-  .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
-  .SetHandler(new pangolin::Handler3D(s_cam));
+    .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
+    .SetHandler(new pangolin::Handler3D(s_cam));
 
   /* Loop */
   while (pangolin::ShouldQuit() == false){
