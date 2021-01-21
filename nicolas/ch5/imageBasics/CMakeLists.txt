@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Declares a cmake project
-project(trajectoryError)
+project(imageBasics)
 
 # Compilation Settings
 set(CMAKE_CXX_FLAGS "-std=c++11")  # Set C++ Standard
@@ -25,14 +25,19 @@ include_directories(${Pangolin_INCLUDE_DIRS})
 find_package(Sophus REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})  # Sophus is header only
 
+# OpenCV
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})  # OpenCV is header only
+
 # ----- Custom Libraries ----- #
 # Utils
 # Adds a shared library containing the functions declared in "include/libHelloSLAM.cpp"
 # add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libhello_shared.so" file
 
-# ================= #
-#  trajectoryError  #
-# ================= #
+# ============= #
+#  imageBasics  #
+# ============= #
 # Adds an executable program
-add_executable(trajectoryError src/trajectoryError.cpp)
-target_link_libraries(trajectoryError ${Pangolin_LIBRARIES})
+add_executable(imageBasics src/imageBasics.cpp)
+target_link_libraries(imageBasics ${Pangolin_LIBRARIES})
+target_link_libraries(imageBasics ${OpenCV_LIBS})

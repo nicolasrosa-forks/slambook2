@@ -11,8 +11,10 @@ set(CMAKE_BUILD_TYPE "Debug")      # Set compilation mode
 # =========== #
 #  Libraries  #
 # =========== #
+# We need to use find_package to make cmake find Pangolin
+
 # Eigen3
-# Because the Eigen library only has header files, so you don’t need to link the program to the library with the target_link_libraries statement.
+# Because the Eigen library only has header files, so you don’t need to link the program to the library with the 'target_link_libraries' statement.
 include_directories("/usr/include/eigen3")
 
 # Pangolin
