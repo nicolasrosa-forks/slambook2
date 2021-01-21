@@ -41,3 +41,18 @@ include_directories(${OpenCV_INCLUDE_DIRS})  # OpenCV is header only
 add_executable(imageBasics src/imageBasics.cpp)
 target_link_libraries(imageBasics ${Pangolin_LIBRARIES})
 target_link_libraries(imageBasics ${OpenCV_LIBS})
+
+
+# ================ #
+#  undistortImage  #
+# ================ #
+# Adds an executable program
+add_executable(undistortImage src/undistortImage.cpp)
+target_link_libraries(undistortImage ${OpenCV_LIBS})
+
+# ========================== #
+#  retained_undistort_image  #
+# ========================== #
+# Adds an executable program
+add_executable(retained_undistort_image src/retained_undistort_image.cpp)
+target_link_libraries(retained_undistort_image ${OpenCV_LIBS})
