@@ -147,14 +147,14 @@ int main(int argc, char **argv){
 /*  Functions  */
 /* =========== */
 TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
-    ifstream fin(path);
+    ifstream fin(path);  // The 'pose.txt' contains the Twc transformations!
     TrajectoryType trajectory;
 
     if(!fin){
         cout << "Cannot find trajectory file at '" << path << "'." << endl;
         return trajectory;
     }else{
-        cout << "Read '" << path << "' was sucessful." << endl;
+        cout << "Read '" << path << "' was successful." << endl;
     }
 
     while(!fin.eof()){
@@ -162,7 +162,7 @@ TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
         fin >> time >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
 
         // Transformation Matrix (T), Pose
-        Sophus::SE3d pose(Eigen::Quaterniond(qx, qy, qz, qw), Eigen::Vector3d(tx, ty, tz));  // T, SE(3) from q,t.
+        Sophus::SE3d pose(Eigen::Quaterniond(qw, qx, qy, qz), Eigen::Vector3d(tx, ty, tz));  // T, SE(3) from q,t.
         timestamps.push_back(time);
         trajectory.push_back(pose);
     }

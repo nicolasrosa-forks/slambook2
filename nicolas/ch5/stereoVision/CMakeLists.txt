@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Declares a cmake project
-project(imageBasics)
+project(stereoVision)
 
 # Compilation Settings
 set(CMAKE_CXX_FLAGS "-std=c++11 -O2")  # Set C++ Standard

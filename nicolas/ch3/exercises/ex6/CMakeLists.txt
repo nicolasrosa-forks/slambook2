@@ -6,7 +6,7 @@ project(ex6)
 
 # Compilation Settings
 set(CMAKE_CXX_FLAGS "-std=c++11")  # Set C++ Standard
-set(CMAKE_BUILD_TYPE "Debug")      # Set compilation mode
+set(CMAKE_BUILD_TYPE "Release")    # Set compilation mode
 
 # =========== #
 #  Libraries  #

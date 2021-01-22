@@ -48,8 +48,8 @@ int main(int argc, char **argv){
     // 1. First, convert the pixels coordinates of 'image' to normalized coordinates [x, y, 1]'.
     // 2. Apply the Distortion Models and convert them back to pixel coordinates.
     // 3. Update the 'image_undistorted' with the new undistorted pixel values.
-    for(int v=0; v<rows; v++){
-        for(int u=0; u<cols; u++){
+    for(size_t v=0; v<rows; v++){
+        for(size_t u=0; u<cols; u++){
             // Note we are computing the pixel of (u,v) of the undistorted image
             // According to the rad-tan model, compute the coordinates in the distorted image
             // Step 1

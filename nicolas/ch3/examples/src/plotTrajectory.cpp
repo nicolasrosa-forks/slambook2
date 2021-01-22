@@ -26,7 +26,8 @@ TrajectoryType ReadTrajectory(const string &path);
 void DrawTrajectory(const TrajectoryType &poses);
 
 /* Global Variables */
-string trajectory_path = "../../examples/trajectory.txt";
+// string trajectory_path = "../../examples/trajectory.txt";
+string trajectory_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch3/examples/trajectory.txt";
 
 /* ====== */
 /*  Main  */
@@ -52,7 +53,7 @@ TrajectoryType ReadTrajectory(const string &path){
         cout << "Cannot find trajectory file at '" << path << "'." << endl;
         return trajectory;
     }else{
-        cout << "Read '" << path << "' was sucessful." << endl;
+        cout << "Read '" << path << "' was successful." << endl;
     }
     
     while(!fin.eof()){

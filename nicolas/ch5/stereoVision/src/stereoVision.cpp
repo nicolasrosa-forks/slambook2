@@ -26,11 +26,11 @@ typedef vector<Vector4d, Eigen::aligned_allocator<Vector4d>> PointCloud;
 string left_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/stereoVision/src/left.png";
 string right_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/stereoVision/src/right.png";
     
-// Camera Intrinsics params
-double fx = 718.856, fy = 718.856, cx = 607.1928, cy = 185.2157;
+// Stereo Camera Intrinsics params
+double fx = 718.856,  fy = 718.856;   // Focal lengths
+double cx = 607.1928, cy = 185.2157;  // Optical Centers
 
-// Stereo Camera baseline
-double b = 0.573;
+double b = 0.573;                     // Baseline
 
 /* Function Scopes */
 void showPointCloud(const PointCloud &pointcloud);
@@ -86,22 +86,26 @@ int main(int argc, char **argv){
         for (int u=0; u < left.cols; u++){
             // If disparity (d) is in (-inf, 0.0] U [96.0, +inf).
             // These are the numDisparitiesMin and numDisparitiesMax params of SGBM
-            if(disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0) 
+            float d = disparity.at<float>(v, u);
+            if(d <= 0.0 || d >= 96.0) 
                 continue;  // Skips current iteration
 
-            // Create the 4D Point
-            // point = (x, y, z, color)
-            Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud Viewer.
-            
-            // Compute the Depth from disparity
+            // Compute the Depth from the disparity values
             // P = ~Pc = [X, Y, Z]', P described in the Camera System
             // Pc = [X/Y, Y/Z, 1]', Normalized Coordinates
 
-            // First, Pixel -> Normalized Coordinates
+
+            // 1. Create a 4D Vector for holding the Camera 3D Point + Color (GreyScale)
+            // point = [X, Y, Z, I(v,u)]'
+            Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud Viewer.
+            
+            
+            // 2. Pixel, Puv=[u,v]' -> Normalized, Pc=[X/Z, Y/Z, 1]'
             double x = (u - cx)/fx;                       // x = X/Z
             double y = (v - cy)/fy;                       // y = Y/Z
-            double Z = fx*b/(disparity.at<float>(v, u));  // Z of P (Depth)
+            double Z = fx*b/d;                            // Z of P (Depth)
 
+            // 3. Normalized, Pc=[X/Z, Y/Z, 1]' -> P Coordinates, ~Pc=[X, Y, Z]'
             point[0] = x*Z;                               // X of P
             point[1] = y*Z;                               // Y of P
             point[2] = Z;                                 
@@ -119,13 +123,13 @@ int main(int argc, char **argv){
     cv::imshow("left", left);
     cv::imshow("right", right);
     cv::imshow("disparity", disparity_norm);  
-    cv::waitKey(1);  // 1 ms (Non-Blockagle)
+    cv::waitKey(1);  // 1 ms (Non-Blocking)
 
-    // 5. Show the Point Cloud in Pangolin
+    // 5. Display Point Cloud (Pangolin)
     showPointCloud(pointcloud);
 
     cv::destroyAllWindows();
-    cout << "\nDone." << endl;
+    cout << "Done." << endl;
     return 0;
 }
 
