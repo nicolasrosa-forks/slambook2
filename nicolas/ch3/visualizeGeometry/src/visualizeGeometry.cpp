@@ -130,7 +130,7 @@ int main(int argc, char** argv){
         translation_vector = t;
 
         TranslationVector euler;
-        euler.trans = R.matrix.eulerAngles(2, 1, 0); // [yaw, pitch, roll]
+        euler.trans = R.matrix.eulerAngles(2, 1, 0);  // [yaw, pitch, roll]
         euler_angles = euler;
 
         QuaternionDraw quat;

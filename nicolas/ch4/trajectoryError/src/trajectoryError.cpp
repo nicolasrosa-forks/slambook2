@@ -162,7 +162,7 @@ TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
         fin >> time >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
 
         // Transformation Matrix (T), Pose
-        Sophus::SE3d pose(Eigen::Quaterniond(qx, qy, qz, qw), Eigen::Vector3d(tx, ty, tz)); // T, SE(3) from q,t.
+        Sophus::SE3d pose(Eigen::Quaterniond(qx, qy, qz, qw), Eigen::Vector3d(tx, ty, tz));  // T, SE(3) from q,t.
         timestamps.push_back(time);
         trajectory.push_back(pose);
     }

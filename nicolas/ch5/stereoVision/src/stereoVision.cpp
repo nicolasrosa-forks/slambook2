@@ -1,8 +1,5 @@
 /* System Libraries */
 #include <iostream>
-// #include <fstream>
-// #include <unistd.h>
-// #include <iomanip>      // std::fixed, std::setprecision
 #include <chrono>
 #include <vector>
 #include <string>
@@ -10,11 +7,6 @@
 
 /* Eigen3 Libraries */
 #include <eigen3/Eigen/Core>
-// #include <eigen3/Eigen/Geometry>
-
-/* Sophus Libraries */
-// #include "sophus/se3.hpp"
-// #include "sophus/so3.hpp"
 
 /* Pangolin Library */
 #include <pangolin/pangolin.h>
@@ -34,19 +26,13 @@ typedef vector<Vector4d, Eigen::aligned_allocator<Vector4d>> PointCloud;
 string left_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/stereoVision/src/left.png";
 string right_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/stereoVision/src/right.png";
     
-// Camera's intrinsics params
+// Camera Intrinsics params
 double fx = 718.856, fy = 718.856, cx = 607.1928, cy = 185.2157;
 
-// Stereo Camera's baseline
+// Stereo Camera baseline
 double b = 0.573;
 
 /* Function Scopes */
-void printImageShape(const cv:: Mat image){
-    cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")" << endl; // (Height, Width, Channels)
-}
-
-int checkImage(const cv::Mat image);
-
 void showPointCloud(const PointCloud &pointcloud);
 
 /* Now we start from the left and right images, calculate the disparity map corresponding to the left eye, and
@@ -71,14 +57,15 @@ int main(int argc, char **argv){
 
     // Print some basic information
     cout << endl;
-    printImageShape(left);
-    printImageShape(right);
+    printImageInfo(left);
+    printImageInfo(right);
     
     // 2. Stereo Matching (Pixel Correspondence)
-    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32); // SGBM is senstive to parameters
+    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);  // SGBM is senstive to parameters
     cv::Mat disparity_sgbm, disparity;
 
     chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+    cout << "\n[stereoVision] Computing SGBM (Semi-Global Block Matching) Disparity Map..." << endl;
     sgbm->compute(left, right, disparity_sgbm);  // Outputs a 32-bit Disparity Map
     chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
 
@@ -87,16 +74,29 @@ int main(int argc, char **argv){
 
     disparity_sgbm.convertTo(disparity, CV_32F, 1.0/16.0f);
 
+    // cout << disparity_sgbm << endl;
+    // cout << "Press Enter to Continue..." << endl;
+    // cin.ignore();
+
+    double minVal, maxVal; 
+
+    cv::minMaxLoc(disparity_sgbm, &minVal, &maxVal);
+    cout << "disparity_sgbm: [" << minVal << "," << maxVal << "]";
+
+    cv::minMaxLoc(disparity, &minVal, &maxVal);
+    cout << "disparity: [" << minVal << "," << maxVal << "]";
+
+    
     // 3. Compute the point cloud
     PointCloud pointcloud;  // Vector of 4D Points
 
     // Change v++ and u++ to v+=2, u+=2, if your machine is slow to get a sparser cloud
     for (int v=0; v < left.rows; v++)
         for (int u=0; u < left.cols; u++){
-            if(disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0)  // d = [0.0, 96.0] //TODO: Why these values?
+            if(disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0)  // d = (-inf, 0.0] U [96.0, +inf) //TODO: Why?
                 continue;
 
-            Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0); // Point = (x, y, z, color)   // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud.
+            Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Point = (x, y, z, color)   // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud.
             
             // Compute the Depth from disparity
             // P = ~Pc = [X, Y, Z]', P described in the Camera System
@@ -114,17 +114,18 @@ int main(int argc, char **argv){
             pointcloud.push_back(point);
         }
 
-    // Display
+    
+
+    // 4. Display Images
     cv::imshow("left", left);
     cv::imshow("right", right);
-    cv::imshow("disparity", disparity / 96.0); // Normalizes the Disparity values to [0, 1] for displaying it in cv::imshow().
+    cv::imshow("disparity", disparity / 96.0);  // Normalizes the Disparity values to [0, 1] for displaying it in cv::imshow().
     cv::waitKey(0);
 
-    // Show the point cloud in pangolin
+    // 5. Show the Point Cloud in Pangolin
     showPointCloud(pointcloud);
 
     cv::destroyAllWindows();
-
     cout << "\nDone." << endl;
     return 0;
 }
@@ -132,25 +133,6 @@ int main(int argc, char **argv){
 /* =========== */
 /*  Functions  */
 /* =========== */
-int checkImage(const cv::Mat image){
-    // Check if the data is correctly loaded
-    if (image.data == nullptr) { 
-        cerr << "File doesn't exist." << endl;
-        return 0;
-    } else{
-        cout << "Successful." << endl;
-    }
-
-    // Check image type
-    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
-        // We need grayscale image or RGB image
-        cout << "Image type incorrect!" << endl;
-        return 0;
-    }
-
-    return 1;
-}
-
 void showPointCloud(const PointCloud &pointcloud){
     if(pointcloud.empty()){
         cerr << "Point cloud is empty!" << endl;

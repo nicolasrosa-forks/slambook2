@@ -86,7 +86,7 @@ int main(int argc, char** argv){
     /* ----- Eigen::Matrix Dimensions ----- */
     // Also you can't misjudge the dimensions of the matrix
     // Try canceling the comments below to see what Eigen will report.
-    // Matrix<double, 2, 3> result1_wrong_dimension = matrix_2x3.cast<double>() * v_3d; // Uncomment, it will throw an error!
+    // Matrix<double, 2, 3> result1_wrong_dimension = matrix_2x3.cast<double>() * v_3d;  // Uncomment, it will throw an error!
 
     /* ----- Eigen::Matrix Operations ----- */
     matrix_3x3 = Matrix3d::Random();  // Random 3x3 Matrix
@@ -142,7 +142,7 @@ int main(int argc, char** argv){
     
     // 2. QR Decomposition
     // Usually solved by matrix decomposition, such as QR decomposition, the speed will be much faster
-    t_start = clock(); //reset timer
+    t_start = clock();  //reset timer
     x = matrix_NxN.colPivHouseholderQr().solve(v_Nd);
     t_elapsed = getElapsedTime_ms(t_start);
 

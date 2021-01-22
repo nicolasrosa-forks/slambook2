@@ -16,6 +16,10 @@ void printVector(const char text[], TTypeVec vec);
 template <typename TTypeQuat>
 void printQuaternion(const char text[], TTypeQuat quat);
 
+void printImageInfo(const cv:: Mat &image);
+
+int checkImage(const cv::Mat &image);
+
 #include "libUtils.cpp"
 
 #endif

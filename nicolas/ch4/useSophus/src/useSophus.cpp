@@ -101,6 +101,7 @@ int main(int argc, char** argv){
     printVector<Vector6d>("small_se3_xi: ", small_se3_xi);
     printMatrix<Matrix4d>("SE(3) updated: ", SE3_updated.matrix());
 
-    
+    print("Done.");
+
     return 0;
 }

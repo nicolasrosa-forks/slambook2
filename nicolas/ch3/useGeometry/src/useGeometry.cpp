@@ -135,7 +135,7 @@ int main(int argc, char** argv){
 
     /* ----- Method 2, returns a Quaterniond ----- */
     // Option 1: Quaternion Initialization by Vector4d, (x, y, z, w)!
-    // Vector4d v1_aux{1, 0, 0, 0}; // [v1, 0]
+    // Vector4d v1_aux{1, 0, 0, 0};  // [v1, 0]
     // Quaterniond q_v1 = Quaterniond(v1_aux);
     
     // Option 2: Quaternion Initialization by scalar values, (w, x, y, z)!

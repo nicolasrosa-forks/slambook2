@@ -23,18 +23,13 @@ double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;
 double fx = 458.654, fy = 457.296, cx = 367.215, cy = 248.375;
 
 /* Function Scopes */
-void printImageShape(const cv:: Mat &image){
-    cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")" << endl; // (Height, Width, Channels)
-}
-
-int checkImage(const cv::Mat &image);
 
 /* In this program we implement the undistortion by ourselves rather than using OpenCV */
 int main(int argc, char **argv){
     print("[undistortImage] Hello!");
     
-    // Read the image
-    cout << "Reading '" << image_path << "'...";
+    // 1. Read the image as 8UC1 (Grayscale)
+    cout << "[undistortImage] Reading '" << image_path << "'...";
     cv::Mat image = cv::imread(image_path, 0);  // The image type is CV_8UC1
 
     if(!checkImage(image)){
@@ -42,13 +37,13 @@ int main(int argc, char **argv){
     }
 
     // Print some basic information
-    printImageShape(image);
+    printImageInfo(image);
 
-    // Declaration of the undistorted image
+    // 2. Declaration of the undistorted image
     int rows = image.rows, cols = image.cols;
     cv::Mat image_undistorted = cv::Mat(rows, cols, CV_8UC1);
 
-    // Compute the pixels for the undistorted one
+    // 3. Compute the pixels for the undistorted one
     // Remember: The Distortion models need to be applied to the normalized coordinates, so:
     // 1. First, convert the pixels coordinates of 'image' to normalized coordinates [x, y, 1]'.
     // 2. Apply the Distortion Models and convert them back to pixel coordinates.
@@ -61,6 +56,7 @@ int main(int argc, char **argv){
             double x = (u - cx)/fx, y = (v-cy)/fy;
             double r = sqrt(pow(x,2) + pow(y,2));
 
+            // Step 2
             double x_distorted = x*(1+k1*pow(r,2)+k2*pow(r,4))+2*p1*x*y+p2*(pow(r,2)+2*pow(x,2));
             double y_distorted = y*(1+k1*pow(r,2)+k2*pow(r,4))+2*p2*x*y+p1*(pow(r,2)+2*pow(y,2));
 
@@ -75,20 +71,17 @@ int main(int argc, char **argv){
                 cin.ignore();
             }
 
-            // Check if the computed pixel is in the image boarder
-            image_undistorted.at<uchar>(v, u) = image.at<uchar>((int) v_distorted, (int) u_distorted);
-            
+            // Step 3
+            // Check if the computed pixels are beyond the image edges
             if (u_distorted >= 0 && v_distorted >= 0 && u_distorted < cols && v_distorted < rows){
                 image_undistorted.at<uchar>(v, u) = image.at<uchar>((int) v_distorted, (int) u_distorted);
             }else{
                 image_undistorted.at<uchar>(v, u) = 0;
-            }
-
-            
+            }            
         }
     }
 
-    // Display
+    // 4. Display
     cv::imshow("image (distorted)", image);
     cv::imshow("image (undistorted)", image_undistorted);
     cv::waitKey(0);
@@ -102,21 +95,3 @@ int main(int argc, char **argv){
 /* =========== */
 /*  Functions  */
 /* =========== */
-int checkImage(const cv::Mat &image){
-    // Check if the data is correctly loaded
-    if (image.data == nullptr) { 
-        cerr << "File doesn't exist." << endl;
-        return 0;
-    } else{
-        cout << "Successful." << endl;
-    }
-
-    // Check image type
-    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
-        // We need grayscale image or RGB image
-        cout << "Image type incorrect!" << endl;
-        return 0;
-    }
-
-    return 1;
-}

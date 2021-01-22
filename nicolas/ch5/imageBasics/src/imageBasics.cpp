@@ -16,30 +16,26 @@ string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicol
 // string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/ubuntu.png";
     
 /* Function Scopes */
-void printImageShape(const cv:: Mat &image){
-    cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")" << endl; // (Height, Width, Channels)
-}
-
-int checkImage(const cv::Mat &image);
 
 /* This Program demonstrates the following operations: image reading, displaying, pixel vising, copying, assignment, etc */
 int main(int argc, char **argv){
     print("[imageBasics] Hello!");
     
-    // Read the image
-    cout << "Reading '" << image_path << "'...";
-    cv::Mat image = cv::imread(image_path);  // call cv::imread to read the image from file
+    // Read the image as 8UC3 (BGR)
+    cout << "[imageBasics] Reading '" << image_path << "'...";
+    cv::Mat image = cv::imread(image_path);  // call cv::imread() to read the image from file
     
     if(!checkImage(image)){
         return 0;
     }
 
     // Print some basic information
-    printImageShape(image);
+    printImageInfo(image);
+    
     cv::imshow("image", image);  // Use cv::imshow() to show the image
     cv::waitKey(0);              // Display and wait for a keyboard input
 
-    // Check hte pixels
+    // Accessing Image Pixel data
     chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
     for(size_t y=0; y < image.rows; y++){  // [0, H-1]
         // Use cv::Mat::ptr to get the pointer of each row
@@ -50,7 +46,7 @@ int main(int argc, char **argv){
             unsigned char *data_ptr = &row_ptr[x*image.channels()];  // data_ptr is the pointer to (x,y)
 
             for(size_t c=0; c!= image.channels();c++){
-                unsigned char data = data_ptr[c]; // data should be pixel of I(x,y) in c-th channel
+                unsigned char data = data_ptr[c];  // data should be pixel of I(x,y) in c-th channel
                 // cout << "I(" << x << "," << y << "," << c << "): " << int(data) << endl;
             }
         }
@@ -83,7 +79,6 @@ int main(int argc, char **argv){
     cv::imshow("image", image);
     cv::imshow("image_modified2", image_clone);
     cv::waitKey(0);
-
     cv::destroyAllWindows();
 
     cout << "\nDone." << endl;
@@ -93,21 +88,3 @@ int main(int argc, char **argv){
 /* =========== */
 /*  Functions  */
 /* =========== */
-int checkImage(const cv::Mat &image){
-    // Check if the data is correctly loaded
-    if (image.data == nullptr) { 
-        cerr << "File doesn't exist." << endl;
-        return 0;
-    } else{
-        cout << "Successful." << endl;
-    }
-
-    // Check image type
-    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
-        // We need grayscale image or RGB image
-        cout << "Image type incorrect!" << endl;
-        return 0;
-    }
-
-    return 1;
-}

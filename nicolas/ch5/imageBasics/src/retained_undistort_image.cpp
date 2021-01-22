@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 				/*out*/undistortedCorners, dminx, dminy, dmaxx, dmaxy);
 	int new_image_width = int(dmaxx+0.5) - int(dminx-0.5);
 	int new_image_height = int(dmaxy+0.5) - int(dminy-0.5);
-	cv::Size new_image_size = cv::Size(new_image_width, new_image_height); // for undistorted_image
+	cv::Size new_image_size = cv::Size(new_image_width, new_image_height);  // for undistorted_image
 
 	// ------- OPTION#0 --------
 	{
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 		// 4.2 Compute the undistortion and rectification transformation map
 		cv::Mat map_x, map_y;
 		cv::initUndistortRectifyMap(K, distortionCoef, cv::Mat(), new_K, new_image_size, CV_32FC1, map_x, map_y);
-		cv::Mat undistorted_image_out1; // output undistorted image
+		cv::Mat undistorted_image_out1;  // output undistorted image
 		cv::remap(/*in*/distorted_image, /*out*/undistorted_image_out1, map_x, map_y, cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 		cv::imwrite("undistorted_out1.jpg", undistorted_image_out1);
 	
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 			}
 		}
 		// 5.3 Construct the undistorted image
-		cv::Mat undistorted_image_out2; // output undistorted image
+		cv::Mat undistorted_image_out2;  // output undistorted image
 		cv::remap(/*in*/distorted_image, /*out*/undistorted_image_out2, map_x, map_y, cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 		cv::imwrite("undistorted_out2.jpg", undistorted_image_out2);
 
