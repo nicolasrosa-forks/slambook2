@@ -35,6 +35,27 @@ void printQuaternion(const char text[], TTypeQuat quat){
 /* ==================== */
 /*  OpenCV's Functions  */
 /* ==================== */
+
+
+int checkImage(const cv::Mat &image){
+    // Check if the data is correctly loaded
+    if (image.data == nullptr) { 
+        cerr << "File doesn't exist." << endl;
+        return 0;
+    } else{
+        cout << "Successful." << endl;
+    }
+
+    // Check image type
+    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
+        // We need grayscale image or RGB image
+        cout << "Image type incorrect!" << endl;
+        return 0;
+    }
+
+    return 1;
+}
+
 string type2str(int type){
     string r;
 
@@ -58,7 +79,7 @@ string type2str(int type){
     return r;
 }
 
-void printImageInfo(const cv::Mat &image){
+void printImageInfo(const char var[], const cv::Mat &image){
 /*  +--------+----+----+----+----+----+----+----+----+
     |        | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 |
     +--------+----+----+----+----+----+----+----+----+
@@ -70,25 +91,12 @@ void printImageInfo(const cv::Mat &image){
     | CV_32F |  5 | 13 | 21 | 29 | 37 | 45 | 53 | 61 |
     | CV_64F |  6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 |
     +--------+----+----+----+----+----+----+----+----+ */
+
+    double minVal, maxVal; 
+    cv::minMaxLoc(image, &minVal, &maxVal);
+    
+    cout << var << ":" << endl;
     cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")";  // (Height, Width, Channels)
     cout << ", " << type2str(image.type()) << endl;
-}
-
-int checkImage(const cv::Mat &image){
-    // Check if the data is correctly loaded
-    if (image.data == nullptr) { 
-        cerr << "File doesn't exist." << endl;
-        return 0;
-    } else{
-        cout << "Successful." << endl;
-    }
-
-    // Check image type
-    if (image.type()!= CV_8UC1 && image.type() != CV_8UC3){
-        // We need grayscale image or RGB image
-        cout << "Image type incorrect!" << endl;
-        return 0;
-    }
-
-    return 1;
+    cout << "min: " << minVal << ", max: " << maxVal << endl << endl;
 }

@@ -57,35 +57,26 @@ int main(int argc, char **argv){
 
     // Print some basic information
     cout << endl;
-    printImageInfo(left);
-    printImageInfo(right);
+    printImageInfo("left", left);
+    printImageInfo("right", right);
     
     // 2. Stereo Matching (Pixel Correspondence)
-    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);  // SGBM is senstive to parameters
+    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);  // SGBM is sensitive to parameters
     cv::Mat disparity_sgbm, disparity;
 
+    cout << "[stereoVision] Computing SGBM (Semi-Global Block Matching) Disparity Map..." << endl;
     chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
-    cout << "\n[stereoVision] Computing SGBM (Semi-Global Block Matching) Disparity Map..." << endl;
     sgbm->compute(left, right, disparity_sgbm);  // Outputs a 32-bit Disparity Map
     chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
 
     chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>> (t2-t1);
-    cout << "time elapsed: " << time_elapsed.count() << " s" << endl;
+    cout << "time elapsed: " << time_elapsed.count() << " s" << endl << endl;
 
-    disparity_sgbm.convertTo(disparity, CV_32F, 1.0/16.0f);
-
-    // cout << disparity_sgbm << endl;
-    // cout << "Press Enter to Continue..." << endl;
-    // cin.ignore();
-
-    double minVal, maxVal; 
-
-    cv::minMaxLoc(disparity_sgbm, &minVal, &maxVal);
-    cout << "disparity_sgbm: [" << minVal << "," << maxVal << "]";
-
-    cv::minMaxLoc(disparity, &minVal, &maxVal);
-    cout << "disparity: [" << minVal << "," << maxVal << "]";
-
+    // SGBM returns a Disparity Map that uses 1/16 increments.
+    disparity_sgbm.convertTo(disparity, CV_32F, 1.0/16.0f);  //So to get the true disparity it's necessary to divided by 16.
+    
+    printImageInfo("disparity_sgbm", disparity_sgbm);
+    printImageInfo("disparity", disparity);
     
     // 3. Compute the point cloud
     PointCloud pointcloud;  // Vector of 4D Points
@@ -93,34 +84,42 @@ int main(int argc, char **argv){
     // Change v++ and u++ to v+=2, u+=2, if your machine is slow to get a sparser cloud
     for (int v=0; v < left.rows; v++)
         for (int u=0; u < left.cols; u++){
-            if(disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0)  // d = (-inf, 0.0] U [96.0, +inf) //TODO: Why?
-                continue;
+            // If disparity (d) is in (-inf, 0.0] U [96.0, +inf).
+            // These are the numDisparitiesMin and numDisparitiesMax params of SGBM
+            if(disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0) 
+                continue;  // Skips current iteration
 
-            Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Point = (x, y, z, color)   // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud.
+            // Create the 4D Point
+            // point = (x, y, z, color)
+            Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud Viewer.
             
             // Compute the Depth from disparity
             // P = ~Pc = [X, Y, Z]', P described in the Camera System
             // Pc = [X/Y, Y/Z, 1]', Normalized Coordinates
 
             // First, Pixel -> Normalized Coordinates
-            double x = (u - cx)/fx;                             // x = X/Z
-            double y = (v - cy)/fy;                             // y = Y/Z
-            double depth = fx*b/(disparity.at<float>(v, u));  // Z
+            double x = (u - cx)/fx;                       // x = X/Z
+            double y = (v - cy)/fy;                       // y = Y/Z
+            double Z = fx*b/(disparity.at<float>(v, u));  // Z of P (Depth)
 
-            point[0] = x*depth;                               // X of Pc
-            point[1] = y*depth;                               // Y of Pc
-            point[2] = depth;                                 
+            point[0] = x*Z;                               // X of P
+            point[1] = y*Z;                               // Y of P
+            point[2] = Z;                                 
 
             pointcloud.push_back(point);
         }
 
-    
+    // Normalizes the Disparity values to ~[0, 1] for displaying it in cv::imshow().
+    cv::Mat disparity_norm = disparity.clone();
+    cv::normalize(disparity/96.0, disparity_norm, 0, 1, cv::NORM_MINMAX);
 
+    printImageInfo("disparity_norm", disparity_norm);
+    
     // 4. Display Images
     cv::imshow("left", left);
     cv::imshow("right", right);
-    cv::imshow("disparity", disparity / 96.0);  // Normalizes the Disparity values to [0, 1] for displaying it in cv::imshow().
-    cv::waitKey(0);
+    cv::imshow("disparity", disparity_norm);  
+    cv::waitKey(1);  // 1 ms (Non-Blockagle)
 
     // 5. Show the Point Cloud in Pangolin
     showPointCloud(pointcloud);

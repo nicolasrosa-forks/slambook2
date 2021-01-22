@@ -12,7 +12,7 @@
 using namespace std;
 
 /* Global Variables */
-string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/dog.jpg";
+string image_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/dog.jpg";
 // string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/ubuntu.png";
     
 /* Function Scopes */
@@ -22,15 +22,15 @@ int main(int argc, char **argv){
     print("[imageBasics] Hello!");
     
     // Read the image as 8UC3 (BGR)
-    cout << "[imageBasics] Reading '" << image_path << "'...";
-    cv::Mat image = cv::imread(image_path);  // call cv::imread() to read the image from file
+    cout << "[imageBasics] Reading '" << image_filepath << "'...";
+    cv::Mat image = cv::imread(image_filepath);  // call cv::imread() to read the image from file
     
     if(!checkImage(image)){
         return 0;
     }
 
     // Print some basic information
-    printImageInfo(image);
+    printImageInfo("image", image);
     
     cv::imshow("image", image);  // Use cv::imshow() to show the image
     cv::waitKey(0);              // Display and wait for a keyboard input

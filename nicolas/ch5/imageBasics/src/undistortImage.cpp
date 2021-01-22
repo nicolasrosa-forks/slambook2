@@ -14,7 +14,7 @@ using namespace std;
 
 /* Global Variables */
 bool debug = false;
-string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
+string image_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
 
 // Rad-Tan model params
 double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;
@@ -29,15 +29,15 @@ int main(int argc, char **argv){
     print("[undistortImage] Hello!");
     
     // 1. Read the image as 8UC1 (Grayscale)
-    cout << "[undistortImage] Reading '" << image_path << "'...";
-    cv::Mat image = cv::imread(image_path, 0);  // The image type is CV_8UC1
+    cout << "[undistortImage] Reading '" << image_filepath << "'...";
+    cv::Mat image = cv::imread(image_filepath, 0);  // The image type is CV_8UC1
 
     if(!checkImage(image)){
         return 0;
     }
 
     // Print some basic information
-    printImageInfo(image);
+    printImageInfo("image", image);
 
     // 2. Declaration of the undistorted image
     int rows = image.rows, cols = image.cols;

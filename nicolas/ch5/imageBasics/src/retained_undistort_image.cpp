@@ -38,7 +38,7 @@ void distortPoint(	cv::Mat &K, cv::Mat &distortionCoef,
 int main(int argc, char *argv[])
 {
 	// Image to perform undistort
-	std::string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
+	std::string image_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
 
 	// // Intrinsic parameters
 	// double fx = 1738.06409;
@@ -64,10 +64,10 @@ int main(int argc, char *argv[])
 	cv::Mat distortionCoef = (cv::Mat_<double>(1,4) << k1, k2, p1, p2);
 
 	// 2. Read-in the input image
-	cv::Mat distorted_image = cv::imread(image_path, cv::IMREAD_COLOR);
+	cv::Mat distorted_image = cv::imread(image_filepath, cv::IMREAD_COLOR);
 	if (distorted_image.data == NULL)
 	{
-		std::cout << "Failed to read the image: " << image_path << ", terminating..." << std::endl;
+		std::cout << "Failed to read the image: " << image_filepath << ", terminating..." << std::endl;
 		return -1;
 	}
 	cv::Size image_size = distorted_image.size();
