@@ -25,11 +25,6 @@ include_directories(${Pangolin_INCLUDE_DIRS})
 find_package(Sophus REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})  # Sophus is header only
 
-# ----- Custom Libraries ----- #
-# Utils
-# Adds a shared library containing the functions declared in "include/libHelloSLAM.cpp"
-# add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libhello_shared.so" file
-
 # =========== #
 #  useSophus  #
 # =========== #

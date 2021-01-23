@@ -1,22 +1,14 @@
-/* System Libraries */
-#include <iostream>
-#include <chrono>
-
-/* OpenCV Library */
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-/* Custom Libraries */
-#include "../../include/libUtils.h"
+/* Libraries */
+#include "../include/imageBasics.h"
 
 using namespace std;
 
 /* Global Variables */
-string image_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/dog.jpg";
-// string image_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/ubuntu.png";
-    
-/* Function Scopes */
+string image_filepath = "../../imageBasics/src/dog.jpg";
 
+/* ====== */
+/*  Main  */
+/* ====== */
 /* This Program demonstrates the following operations: image reading, displaying, pixel vising, copying, assignment, etc */
 int main(int argc, char **argv){
     print("[imageBasics] Hello!");
@@ -84,7 +76,3 @@ int main(int argc, char **argv){
     cout << "\nDone." << endl;
     return 0;
 }
-
-/* =========== */
-/*  Functions  */
-/* =========== */

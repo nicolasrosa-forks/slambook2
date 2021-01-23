@@ -1,30 +1,12 @@
-/* System Libraries */
-#include <iostream>
-#include <chrono>
-#include <vector>
-#include <string>
-#include <unistd.h>
-
-/* Eigen3 Libraries */
-#include <eigen3/Eigen/Core>
-
-/* Pangolin Library */
-#include <pangolin/pangolin.h>
-
-/* OpenCV Library */
-#include <opencv2/opencv.hpp>
-
-/* Custom Libraries */
-#include "../../include/libUtils.h"
+/* Libraries */
+#include "../include/stereoVision.h"
 
 using namespace std;
 using namespace Eigen;
 
 /* Global Variables */
-typedef vector<Vector4d, Eigen::aligned_allocator<Vector4d>> PointCloud;
-
-string left_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/stereoVision/src/left.png";
-string right_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/stereoVision/src/right.png";
+string left_filepath = "../../stereoVision/src/left.png";
+string right_filepath = "../../stereoVision/src/right.png";
     
 // Stereo Camera Intrinsics params
 double fx = 718.856,  fy = 718.856;   // Focal lengths
@@ -32,9 +14,9 @@ double cx = 607.1928, cy = 185.2157;  // Optical Centers
 
 double b = 0.573;                     // Baseline
 
-/* Function Scopes */
-void showPointCloud(const PointCloud &pointcloud);
-
+/* ====== */
+/*  Main  */
+/* ====== */
 /* Now we start from the left and right images, calculate the disparity map corresponding to the left eye, and
 then calculate the coordinates of each pixel in the camera coordinate system, which will form a point cloud */
 int main(int argc, char **argv){
@@ -120,12 +102,15 @@ int main(int argc, char **argv){
     printImageInfo("disparity_norm", disparity_norm);
     
     // 4. Display Images
+    cout << "[stereoVision] Displaying OpenCV's images..." << endl;
     cv::imshow("left", left);
     cv::imshow("right", right);
     cv::imshow("disparity", disparity_norm);  
     cv::waitKey(1);  // 1 ms (Non-Blocking)
 
     // 5. Display Point Cloud (Pangolin)
+    cout << "[stereoVision] Initializing Pangolin's Point Cloud Viewer..." << endl;
+    cout << "Press 'ESC' to exit the program" << endl;
     showPointCloud(pointcloud);
 
     cv::destroyAllWindows();

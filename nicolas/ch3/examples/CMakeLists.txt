@@ -21,18 +21,11 @@ include_directories("/usr/include/eigen3")
 find_package(Pangolin REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
-# ----- Custom Libraries ----- #
-# Utils
-# Adds a shared library containing the functions declared in "include/libUtilsSLAM.cpp"
-# add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libutils_shared.so" file
-
 # ===================== #
 #  coordinateTransform  #
 # ===================== #
 # Adds an executable program
 add_executable(coordinateTransform src/coordinateTransform.cpp)
-# target_link_libraries(coordinateTransform utils_shared)
-# target_link_libraries(useGeometry ${CMAKE_SOURCE_DIR}/libUtils_shared.so)
 
 # ================ #
 #  plotTrajectory  #

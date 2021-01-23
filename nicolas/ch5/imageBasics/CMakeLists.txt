@@ -29,11 +29,6 @@ include_directories(${Sophus_INCLUDE_DIRS})  # Sophus is header only
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})  # OpenCV is header only
 
-# ----- Custom Libraries ----- #
-# Utils
-# Adds a shared library containing the functions declared in "include/libHelloSLAM.cpp"
-# add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libhello_shared.so" file
-
 # ============= #
 #  imageBasics  #
 # ============= #

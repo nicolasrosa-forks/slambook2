@@ -19,6 +19,9 @@
 
 #include <opencv2/opencv.hpp>
 
+// Image to perform undistort
+std::string image_filepath = "../../imageBasics/src/distorted.png";
+
 // Compute the image size of the undistorted image
 void computeUndistortedBoundary(/*in*/cv::Size &image_size, 
 								/*in*/cv::Mat &K,
@@ -35,11 +38,11 @@ void distortPoint(	cv::Mat &K, cv::Mat &distortionCoef,
 					double in_x, double in_y, 
 					/*out*/double &out_x, /*out*/double &out_y);
 
+/* ====== */
+/*  Main  */
+/* ====== */
 int main(int argc, char *argv[])
 {
-	// Image to perform undistort
-	std::string image_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
-
 	// // Intrinsic parameters
 	// double fx = 1738.06409;
 	// double fy = 1736.96128;
@@ -140,6 +143,9 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+/* =========== */
+/*  Functions  */
+/* =========== */
 // Compute the image size of the undistorted image
 void computeUndistortedBoundary(/*in*/cv::Size &image_size, 
 								/*in*/cv::Mat &K,

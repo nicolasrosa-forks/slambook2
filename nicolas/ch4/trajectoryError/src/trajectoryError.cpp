@@ -1,38 +1,14 @@
-/* System Libraries */
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <iomanip>      // std::fixed, std::setprecision
-
-/* Eigen3 Libraries */
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
-
-/* Sophus Libraries */
-#include "sophus/se3.hpp"
-#include "sophus/so3.hpp"
-
-/* Pangolin Library */
-#include <pangolin/pangolin.h>
-
-/* Custom Libraries */
-#include "../../include/libUtils.h"
+/* Libraries */
+#include "../include/trajectoryError.h"
 
 using namespace std;
 using namespace Eigen;
 
 /* Global Variables */
-typedef vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
-typedef vector<double, Eigen::aligned_allocator<double>> TimeStamp;
-
 string traj_est_filepath = "../../trajectoryError/src/estimated.txt";
 string traj_gt_filepath = "../../trajectoryError/src/groundtruth.txt";
 
 TimeStamp time_est, time_gt;
-
-/* Function Scopes */
-TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path);
-void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt);
 
 /* ================================================================================================ */
 /*                                     Metrics Description                                          */
@@ -138,6 +114,7 @@ int main(int argc, char **argv){
     cout << "Relative Pose Error Error (RPE_trans): " << rpe_trans << endl << endl;  //TODO: Is this result correct? Implementation was supervised by Nuno
 
     // 4. Display the trajectories in a 3D Window.
+    cout << "Press 'ESC' to exit the program" << endl;
     DrawTrajectory(groundtruth, estimated);
 
     cout << "Done." << endl;
@@ -150,11 +127,12 @@ TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
     ifstream fin(path);  // The 'pose.txt' contains the Twc transformations!
     TrajectoryType trajectory;
 
+    cout << "[trajectoryError] Reading '" << path << "'... ";
     if(!fin){
-        cout << "Cannot find trajectory file at '" << path << "'." << endl;
+        cerr << "File not found!" << endl;
         return trajectory;
     }else{
-        cout << "Read '" << path << "' was successful." << endl;
+        cout << "Successful" << endl;
     }
 
     while(!fin.eof()){

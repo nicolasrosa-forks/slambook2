@@ -21,15 +21,9 @@ include_directories("/usr/include/eigen3")
 find_package(Pangolin REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
-# ----- Custom Libraries ----- #
-# Utils
-# Adds a shared library containing the functions declared in "include/libHelloSLAM.cpp"
-# add_library(utils_shared SHARED include/libUtils.cpp)  # Will generate the "libhello_shared.so" file
-
 # =================== #
 #  visualizeGeometry  #
 # =================== #
 # Adds an executable program
 add_executable(visualizeGeometry src/visualizeGeometry.cpp)
 target_link_libraries(visualizeGeometry ${Pangolin_LIBRARIES})
-

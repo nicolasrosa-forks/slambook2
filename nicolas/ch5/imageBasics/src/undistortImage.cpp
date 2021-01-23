@@ -1,20 +1,11 @@
-/* System Libraries */
-#include <iostream>
-#include <chrono>
-#include <math.h>          // pow
-
-/* OpenCV Library */
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-/* Custom Libraries */
-#include "../../include/libUtils.h"
+/* Libraries */
+#include "../include/undistortImage.h"
 
 using namespace std;
 
 /* Global Variables */
 bool debug = false;
-string image_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/imageBasics/src/distorted.png";
+string image_filepath = "../../imageBasics/src/distorted.png";
 
 // Rad-Tan model params
 double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;
@@ -22,8 +13,9 @@ double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;
 // Camera intrinsics params
 double fx = 458.654, fy = 457.296, cx = 367.215, cy = 248.375;
 
-/* Function Scopes */
-
+/* ====== */
+/*  Main  */
+/* ====== */
 /* In this program we implement the undistortion by ourselves rather than using OpenCV */
 int main(int argc, char **argv){
     print("[undistortImage] Hello!");
@@ -91,7 +83,3 @@ int main(int argc, char **argv){
     cout << "\nDone." << endl;
     return 0;
 }
-
-/* =========== */
-/*  Functions  */
-/* =========== */

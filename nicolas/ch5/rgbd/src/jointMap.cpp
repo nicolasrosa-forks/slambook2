@@ -1,42 +1,12 @@
-/* System Libraries */
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <iomanip>      // std::fixed, std::setprecision
-#include <chrono>
-
-/* Eigen3 Libraries */
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
-
-/* Sophus Libraries */
-#include "sophus/se3.hpp"
-#include "sophus/so3.hpp"
-
-/* Pangolin Library */
-#include <pangolin/pangolin.h>
-
-/* OpenCV Library */
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-/* Boost */
-#include <boost/format.hpp>  // For formating strings
-
-/* Custom Libraries */
-#include "../../include/libUtils.h"
+/* Libraries */
+#include "../include/jointMap.h"
 
 using namespace std;
 using namespace Eigen;
 
 /* Global Variables */
-typedef vector<double, Eigen::aligned_allocator<double>> TimeStamp;
-typedef vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
-typedef Eigen::Matrix<double, 6, 1> Vector6d;  // Since Eigen doesn't have Vector6d, we need to create it.
-typedef vector<Vector6d, Eigen::aligned_allocator<Vector6d>> PointCloud;
-
-string pose_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch5/rgbd/src/pose.txt";
-string rgbd_folder_path = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/ch5/rgbd/";
+string pose_filepath = "../../rgbd/src/pose.txt";
+string rgbd_folder_path = "../../rgbd/src/";
 
 // RGB-D Camera Intrinsics params
 double fx = 518.0, fy = 519.0;  // Focal Lengths
@@ -44,15 +14,12 @@ double cx = 325.5, cy = 253.5;  // Optical Centers
     
 double depthScale = 1000.0;     // Depth Scale for decoding the Depth data.
 
-/* Function Scopes */
-TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path);
-TrajectoryType ReadTrajectory2(const string &path);
-void showPointCloud(const PointCloud &pointcloud);
-
-/* This program accomplishes two things: 
-    1. Calculate the point cloud corresponding to each pair of RGB-D images based on internal parameters;
-    2. According to the camera pose of each image (that is, external parameters), put the points to a global cloud by the camera poses. 
-*/
+/* ====== */
+/*  Main  */
+/* ====== */
+// This program accomplishes two things: 
+// 1. Calculate the point cloud corresponding to each pair of RGB-D images based on internal parameters;
+// 2. According to the camera pose of each image (that is, external parameters), put the points to a global cloud by the camera poses.
 int main(int argc, char **argv){
     print("[jointMap] Hello!");
 
@@ -62,37 +29,33 @@ int main(int argc, char **argv){
     // 2. Read RGB-D images
     vector<cv::Mat> colorImgs, depthImgs;
     for(size_t i=0; i<poses.size(); i++){  // [0, 4]
+        cout << "[jointMap] Reading RGB-D images..." << i+1 << endl;
         boost::format fmt(rgbd_folder_path+"%s/%d.%s");  // the image filename format
+        cout << (fmt % "color" % (i+1) % "png").str() << endl;
         colorImgs.push_back(cv::imread((fmt % "color" % (i+1) % "png").str()));
         depthImgs.push_back(cv::imread((fmt % "depth" % (i+1) % "pgm").str(), -1));  // Use -1 (IMREAD_UNCHANGED) flag to load the depth image
 
         boost::format fmt2("%sImgs[%d]");
-
-        // cv::imshow((fmt2 % "color" % i).str(), colorImgs[i]);
-        // cv::imshow((fmt2 % "depth" % i).str(), depthImgs[i]);
-
-        cv::imshow("color", colorImgs[i]);
-        cv::imshow("depth", depthImgs[i]);
-        cv::waitKey(1);  // 1 s (Non-Blocking)
+        cv::imshow((fmt2 % "color" % i).str(), colorImgs[i]);
+        cv::imshow((fmt2 % "depth" % i).str(), depthImgs[i]);
     }
 
     // 3. Compute the point cloud using the camera intrinsics params
-
-
     PointCloud pointcloud;
     pointcloud.reserve(1000000);  // Requests that the vector capacity be at least enough to contain n elements.
 
     for(size_t i=0; i<poses.size(); i++){
-        cout << "[jointMap] Converting RGBD images..." << i+1 << endl;
-        auto color = colorImgs[i];
-        auto depth = depthImgs[i];
+        cout << "[jointMap] Converting RGB-D images to World Coordinates..." << i+1 << endl;
+        cv::Mat color = colorImgs[i];
+        cv::Mat depth = depthImgs[i];
 
         Sophus::SE3d T = poses[i];  // Remember: T belongs to SE(3)
 
         for (int v=0; v<color.rows; v++){
             for (int u=0; u<depth.cols;u++){
                 unsigned int d = depth.ptr<unsigned short>(v)[u]; // depth value is 16-bit (unsigned short)
-                // unsigned int d = depth.at<unsigned short>(v, u); // depth value is 16-bit (unsigned short) //FIXME: igual à instrução de cima?
+                // Or
+                // unsigned int d = depth.at<unsigned short>(v, u);
 
                 if(d==0)
                     continue;  // If d is 0 (no valid value), skips current iteration.
@@ -131,10 +94,14 @@ int main(int argc, char **argv){
     }
 
     // 4. Display Images
-    // cv::waitKey(1);  // 1 ms (Non-Blocking)
+    cout << "[jointMap] Displaying OpenCV's images..." << endl;
+    cv::waitKey(1);  // 1 ms (Non-Blocking)
 
     // 5. Display Point Cloud (Pangolin)
+    cout << "[jointMap] Initializing Pangolin's Point Cloud Viewer..." << endl;
+    cout << "Press 'ESC' to exit the program" << endl;
     showPointCloud(pointcloud);
+    
     cv::destroyAllWindows();
     cout << "Done." << endl;
     return 0;
