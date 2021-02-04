@@ -34,5 +34,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})  # OpenCV is header only
 # ============== #
 # Adds an executable program
 add_executable(stereoVision src/stereoVision.cpp)
-target_link_libraries(stereoVision ${Pangolin_LIBRARIES})
-target_link_libraries(stereoVision ${OpenCV_LIBS})
+target_link_libraries(stereoVision ${Pangolin_LIBRARIES} ${OpenCV_LIBS})

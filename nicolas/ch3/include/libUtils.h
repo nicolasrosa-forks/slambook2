@@ -2,10 +2,12 @@
 #define LIBUTILS_H_
 // The above macro definition is to prevent redefinition errors caused by repeated references to this header file
 
+#include "libUtils.cpp"
+
 /* ================== */
 /*  Functions Scopes  */
 /* ================== */
-void print(char var[]);
+void print(char text[]);
 
 template <typename TTypeMat>
 void printMatrix(const char text[], TTypeMat mat);
@@ -15,7 +17,5 @@ void printVector(const char text[], TTypeVec vec);
 
 template <typename TTypeQuat>
 void printQuaternion(const char text[], TTypeQuat quat);
-
-#include "libUtils.cpp"
 
 #endif

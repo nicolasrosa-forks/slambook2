@@ -9,6 +9,8 @@
 /* ================== */
 void print(char text[]);
 
+void printVec(const char text[], const std::vector<double> &vec);
+
 template <typename TTypeMat>
 void printMatrix(const char text[], TTypeMat mat);
 

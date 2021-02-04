@@ -6,8 +6,8 @@ using namespace std;
 /* =========== */
 /*  Functions  */
 /* =========== */
-void print(const char var[]){
-    cout << var << endl;
+void print(const char text[]){
+    cout << text << endl;
 }
 
 template <typename TTypeMat>

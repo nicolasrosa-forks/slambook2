@@ -34,5 +34,4 @@ include_directories(${OpenCV_INCLUDE_DIRS})  # OpenCV is header only
 # ========== #
 # Adds an executable program
 add_executable(jointMap src/jointMap.cpp)
-target_link_libraries(jointMap ${Pangolin_LIBRARIES})
-target_link_libraries(jointMap ${OpenCV_LIBS})
+target_link_libraries(jointMap ${Pangolin_LIBRARIES} ${OpenCV_LIBS})

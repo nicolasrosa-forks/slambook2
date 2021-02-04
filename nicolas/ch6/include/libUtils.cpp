@@ -1,6 +1,8 @@
 /* System Libraries */
 #include <iostream>
 #include <string>
+#include <vector>
+#include <chrono>
 
 /* OpenCV Library */
 #include <opencv2/core/core.hpp>
@@ -8,11 +10,34 @@
 
 using namespace std;
 
+/* Chrono */
+typedef chrono::steady_clock::time_point Timer;
+void printTimeElapsed(const char text[], Timer t1, Timer t2){
+    chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+    cout << text << time_elapsed.count() << " s" << endl << endl;
+}
+
 /* ======================== */
 /*  Eigen/Sophus' Functions  */
 /* ======================== */
 void print(const char text[]){
     cout << text << endl;
+}
+
+void print(std::string text){
+    cout << text << endl;
+}
+
+void printVec(const char text[], const vector<double> &vec){
+  cout << text << "[";
+  for(int i; i < vec.size(); i++){
+    if(i != vec.size()-1){
+      cout << vec.at(i) << ", ";
+    }else{
+      cout << vec.at(i);
+    }
+  }
+  cout << "]" << endl;
 }
 
 template <typename TTypeMat>
@@ -35,8 +60,6 @@ void printQuaternion(const char text[], TTypeQuat quat){
 /* ==================== */
 /*  OpenCV's Functions  */
 /* ==================== */
-
-
 int checkImage(const cv::Mat &image){
     // Check if the data is correctly loaded
     if (image.data == nullptr) { 
