@@ -5,17 +5,16 @@ using namespace std;
 
 /* Functor */
 /* This is a functor, which represents the objective function to be minimized.
-   
-   1. A primeira linha só está guardando os valores dentro dos campos da struct mesmo;
-   2. A segunda parte define o que deve ser feito quando o operador () é chamado (Invocado internamente na função ceres::AutoDiffCostFunction?);
-   3. Correspondem às variáveis privadas da struct, sendo preenchidas com o construtor CURVE_FITTING_COST(double x, double y).
-   
+    1. The first line just stores the values within the attributes (private variables) of the struct;
+    2. The second part defines what should be done when the operator () is called (which is invoked internally in the ceres::AutoDiffCostFunction? Function);
+    3. They correspond to the private variables of the struct, being filled with the CURVE_FITTING_COST constructor (double x, double y).
+
 */
 struct CURVE_FITTING_COST{
-    // Constructor
+    // 1. Constructor
     CURVE_FITTING_COST(double x, double y): _x(x), _y(y) {}
 
-    // Calculation of residuals
+    // 2. Calculation of residuals
     template<typename T>
     bool operator()(const T *const abc_e, // model parameters, there are 3 dimensions.
     T *residual) const {
@@ -25,7 +24,7 @@ struct CURVE_FITTING_COST{
         return true;
     }
 
-    // Private attributes
+    // 3. Private attributes
     const double _x, _y;    // x,y data
 };
 
@@ -84,17 +83,17 @@ int main(int argc, char **argv) {
                 Template parameters: error type, output dimension, input dimension. 
                   Dimensions should be consistent with the passed struct.
                 Function parameters:
-                  Quando o código faz "new CURVE_FITTING_COST(x_data[i], y_data[i])",
-                  ele está apenas criando o functor "CURVE_FITTING_COST" utilizando o construtor dele.
+                  When the code run "new CURVE_FITTING_COST(x_data[i], y_data[i])",
+                  it's just creating the functor "CURVE_FITTING_COST" by using its the declared constructor.
 
-                O operador () da "CURVE_FITTING_COST" será chamado internamente pelo AutoDiffCostFunction
+                The operator () of "CURVE_FITTING_COST" will be called internally by the "ceres::AutoDiffCostFunction"
             */
             new ceres::AutoDiffCostFunction<CURVE_FITTING_COST, 1, 3>(new CURVE_FITTING_COST(x_data[i], y_data[i])),
             
-            /* 2. O "nullptr" é porque não temos função de perda, só mínimos quadrados mesmo. */
+            /* 2. The reason of "nullptr" is due to we don't have a loss function, just the least squares equation. */
             nullptr,  // Core function, not used here, empty
 
-            /* 3. "abc_e" são os parâmetros a serem estimados */
+            /* 3. "abc_e" are the parameters to be estimated */
             abc_e);  // Parameters to be estimated
     }
 

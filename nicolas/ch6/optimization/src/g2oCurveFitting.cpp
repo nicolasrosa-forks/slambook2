@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
     printVec("y_data: ", y_data);
     cout << endl;
 
-    /* ----- Graph Optimization ----- */  //FIXME: Esta linha está certa?
+    /* ----- Graph Optimization ----- */
     // Build graph optimization
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<3, 1>> BlockSolverType;  // The optimization variable dimension of each error term is 3, and the error value dimension is 1
     typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Linear Solver type
