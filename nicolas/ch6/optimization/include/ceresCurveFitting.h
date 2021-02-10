@@ -20,5 +20,3 @@
 #include "../../include/libUtils.h"
 
 /* Function Scopes */
-
-// void showPointCloud(const PointCloud &pointcloud);

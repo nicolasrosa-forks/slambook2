@@ -28,6 +28,10 @@ void print(std::string text){
     cout << text << endl;
 }
 
+void print(double var){
+    cout << to_string(var) << endl;
+}
+
 void printVec(const char text[], const vector<double> &vec){
   cout << text << "[";
   for(int i; i < vec.size(); i++){

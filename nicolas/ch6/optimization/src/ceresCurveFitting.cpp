@@ -20,10 +20,10 @@ struct CURVE_FITTING_COST{
 
     // Calculation of residuals
     template<typename T>
-    bool operator()(const T *const abc, // model parameters, there are 3 dimensions.
+    bool operator()(const T *const abc_e, // model parameters, there are 3 dimensions.
     T *residual) const {
         // Residual = Y_real - Y_estimated
-        residual[0] = T(_y) - ceres::exp(abc[0]*T(_x)*T(_x) + abc[1]*T(_x) + abc[2]); // e = y-exp(a.x^2+b.c+c)
+        residual[0] = T(_y) - ceres::exp(abc_e[0]*T(_x)*T(_x) + abc_e[1]*T(_x) + abc_e[2]); // e = y-exp(a.x^2+b.c+c)
         
         return true;
     }
@@ -32,11 +32,22 @@ struct CURVE_FITTING_COST{
     const double _x, _y;    // x,y data
 };
 
+double RMSE(const double est[], const double gt[]){
+    double sum = 0.0;
+    int N = 3;
+
+    for(int i=0;i<N;i++){
+        sum += pow(est[i]-gt[i], 2.0);
+    }
+
+    return sqrt(sum/(double)N);
+}
+
 /* ====== */
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    std::cout << "[ceresCurveFitting] Hello!" << endl<< endl;
+    cout << "[ceresCurveFitting] Hello!" << endl<< endl;
 
     /* Variables */
     double ar = 1.0, br = 2.0, cr = 1.0;        // Real parameters values
@@ -52,7 +63,7 @@ int main(int argc, char **argv) {
   
     for(int i=0; i < N; i++){
         double x = i/100.0;
-        double y = exp(ar*pow(x, 2) + br*x + cr) + rng.gaussian(pow(w_sigma,2));
+        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);
     
         x_data.push_back(x);
         y_data.push_back(y);
@@ -65,7 +76,8 @@ int main(int argc, char **argv) {
 
     /* ----- Least Squares Estimation ----- */
     // Construct a least squares problem
-    double abc[3] = {ae, be, ce};  // Vector with the values to be estimated
+    double abc_e[3] = {ae, be, ce};    // Vector with the values to be estimated
+    double abc_r[3] = {ar, br, cr};  // Vector with the real values
 
     ceres::Problem problem;        
 
@@ -87,7 +99,7 @@ int main(int argc, char **argv) {
             nullptr,            // Core function, not used here, empty
 
             // 3. "abc" são os parâmetros a serem estimados
-            abc);               // Parameters to be estimated
+            abc_e);               // Parameters to be estimated
     }
 
     // Configure the solver
@@ -106,16 +118,21 @@ int main(int argc, char **argv) {
 
     printTimeElapsed("Solver time: ", t1, t2);
 
-    // Output Result
+    /* ----- Results ----- */ 
     print(summary.BriefReport());
 
+    double rmse = RMSE(abc_e, abc_r);
+
     cout << "\n---" << endl;
-    cout << "Real:\t   a,b,c = " << ar << ", " << br << ", " << cr;
+    cout << "Real:\t   a,b,c = ";
+    for(auto item:abc_r) cout << item << ", ";
     cout << endl;
 
     cout << "Estimated: a,b,c = ";
-    for(auto item:abc) cout << item << ", ";
+    for(auto item:abc_e) cout << item << ", ";
     cout << "\n---" <<endl;
+
+    cout << "RMSE: " << rmse << endl;
 
     cout << "\nDone." << endl;
 
