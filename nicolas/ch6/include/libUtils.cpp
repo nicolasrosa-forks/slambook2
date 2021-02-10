@@ -41,7 +41,7 @@ void printVec(const char text[], const vector<double> &vec){
       cout << vec.at(i);
     }
   }
-  cout << "]" << endl;
+  cout << "]" << endl << endl;
 }
 
 template <typename TTypeMat>
