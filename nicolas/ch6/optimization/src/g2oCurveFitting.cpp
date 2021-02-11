@@ -30,7 +30,14 @@ using namespace std;
 /* 
 /* Example:
 /*  struct Base { virtual void foo() {} };
-/*  struct Derived: Base { void foo() override {} };
+/*  struct Derived : Base { void foo() override {} };
+*/
+
+/* ----------------- */
+/*  C++ static_cast  */
+/* ----------------- */
+/* "static_cast": static conversion
+/* Ex: static_cast<new_type>(expression)
 */
 
 /* --------------------------------------- */
@@ -58,7 +65,8 @@ public:
 
     // Update
     virtual void oplusImpl(const double *update) override {
-        _estimate += Eigen::Vector3d(update);
+        // x_{k+1} = x_k + ∆x_k
+        _estimate += Eigen::Vector3d(update);  // _estimate was inherited from g2o::BaseVertex
     }
 
     // Save and read: leave blank
@@ -71,37 +79,46 @@ public:
 /*  CurveFittingEdge  */
 /* ------------------ */
 /* Description: Error model 
-/* Template parameters: observation dimension, type, connection vertex type
+/* Template parameters: measurement dimension, measurement type, connection vertex type
 */
 class CurveFittingEdge : public g2o::BaseUnaryEdge<1, double, CurveFittingVertex> {  // Inheritance of the class "g2o::BaseUnaryEdge"
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
     // Constructor
-    // 1. This is the construct declaration when using the operator () to pass a given parameter, in this case a double variable "x".
-    // 2. Since this class inherited the "BaseUnaryEdge" class we also need to initialized it.
+    // 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x".
+    // 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
     // 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
     CurveFittingEdge(double x) : BaseUnaryEdge(), _x(x) {}
 
     // Calculate the curve model error
     virtual void computeError() override {
-        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);  // Initializing conversion the a temporary variable, static_cast<new_type>(expression)
+        // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
+        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
         const Eigen::Vector3d abc = v->estimate();
 
         // Calculation of residuals
-        // Residual = Y_real - Y_estimated
-        _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0)); 
+        // Residual = Y_real - Y_estimated = _measurement - f(_estimate)
+        _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0));  // err = y-y^ = y-exp(a.x^2+b.c+c)
     }
 
+    
     // Calculate the Jacobian matrix
+    /**
+     * Linearizes the oplus operator in the vertex, and stores
+     * the result in temporary variables _jacobianOplusXi and _jacobianOplusXj
+     */
     virtual void linearizeOplus() override {
-        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *> (_vertices[0]);
+        // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
+        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
         const Eigen::Vector3d abc = v->estimate();
         
-        double y = exp(abc[0]*_x*_x + abc[1]*_x + abc[2]);
-        _jacobianOplusXi[0] = -_x*_x*y;
-        _jacobianOplusXi[1] = -_x*y;
-        _jacobianOplusXi[2] = -y;
+        double y = exp(abc[0]*_x*_x + abc[1]*_x + abc[2]);  // Y_estimated
+        
+        // J(x)J(x)'∆x = −J(x)f(x) ~= H(x)*∆x = g(x)
+        _jacobianOplusXi[0] = -_x*_x*y;  // df(x)/da = x^2*exp(a*x^2 + b*x + c) = x^2*y
+        _jacobianOplusXi[1] = -_x*y;     // df(x)/db =   x*exp(a*x^2 + b*x + c) = x*y
+        _jacobianOplusXi[2] = -y;        // df(x)/dc =   1*exp(a*x^2 + b*x + c) = y
     }
 
     // Save and read: leave blank
@@ -110,8 +127,19 @@ public:
     virtual bool write(ostream &out) const {}
 
 public:
-    double _x;  // x value, y value _measurement
+    double _x;  // x value, y value (_measurement)
 };
+
+double RMSE(const Eigen::Vector3d est, const Eigen::Vector3d gt){
+    double sum = 0.0;
+    int N = 3;
+
+    for(int i=0;i<N;i++){
+        sum += pow(est[i]-gt[i], 2.0);
+    }
+
+    return sqrt(sum/(double)N);
+}
 
 /* ====== */
 /*  Main  */
@@ -124,10 +152,8 @@ int main(int argc, char **argv) {
     double ae = 2.0, be = -1.0, ce = 5.0;       // Estimated parameters values
     int N = 100;                                // Number of Data points
 
-    // cv::theRNG().state = 150;
     cv::RNG rng;                                // OpenCV Random Number generator
     double w_sigma = 1.0;                       // Noise sigma value
-    double inv_sigma = 1.0 / w_sigma;
 
     /* ----- Data Generation ----- */
     vector<double> x_data, y_data;              // Data Vectors
@@ -141,16 +167,15 @@ int main(int argc, char **argv) {
     }
 
     printVec("x_data: ", x_data);
-    cout << endl;
     printVec("y_data: ", y_data);
-    cout << endl;
 
     /* ----- Graph Optimization ----- */
     // Build graph optimization
-    typedef g2o::BlockSolver<g2o::BlockSolverTraits<3, 1>> BlockSolverType;  // The optimization variable dimension of each error term is 3, and the error value dimension is 1
+    // The described problem is just a Curve Fitting problem, but we're using the classes types used in a Pose/Landmark Estimation problem.
+    typedef g2o::BlockSolver<g2o::BlockSolverTraits<3, 1>> BlockSolverType;            // The optimization variable dimension of each error term is 3, and the error value dimension is 1. template <int _PoseDim, int _LandmarkDim>
     typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Linear Solver type
 
-    // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's DogLeg
+    // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
     auto solver = new g2o::OptimizationAlgorithmGaussNewton(
         g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
     
@@ -166,13 +191,44 @@ int main(int argc, char **argv) {
     optimizer.addVertex(v);
 
     // Add edges to the graph
+    for (int i=0; i<N; i++){
+        CurveFittingEdge *edge = new CurveFittingEdge(x_data[i]);  // Creates the i-th edge
+        edge->setId(i);                                            // Specifies the edge ID
+        edge->setVertex(0, v);                                     // Connects edge to the vertex (Node, 0)
+        edge->setMeasurement(y_data[i]);                           // Observed value
+        edge->setInformation(Eigen::Matrix<double, 1, 1>::Identity()*(1/(w_sigma*w_sigma)));  // Information matrix: the inverse of the covariance matrix
+        optimizer.addEdge(edge);
+    }
 
+    /* ----- Solve (Perform optimization) ----- */
+    cout << "[g2oCurveFitting] Start optimization..." << endl;
+    
+    print("Summary: ");
+    Timer t1 = chrono::steady_clock::now();
+    optimizer.initializeOptimization();
+    optimizer.optimize(10);  // Number of optimization steps
+    Timer t2 = chrono::steady_clock::now();
 
+    printTimeElapsed("Solver time: ", t1, t2);
 
-    /* ----- Solve ----- */
+    // Computes the RMSE
+    Eigen::Vector3d abc_e = v->estimate();
+    Eigen::Vector3d abc_r = {ar, br,cr};
+
+    double rmse = RMSE(abc_e, abc_r);
 
     /* ----- Results ----- */ 
 
+    cout << "RMSE: " << rmse << endl;
+
+    cout << "\n---" << endl;
+    cout << "Real:\t   a,b,c = ";
+    cout << ar << ", " << br << ", " << cr;
+    cout << endl;
+
+    cout << "Estimated: a,b,c = ";
+    cout << abc_e[0] << ", " << abc_e[1] << ", " << abc_e[2];
+    cout << "\n---" <<endl;
 
     cout << "\nDone." << endl;
 
