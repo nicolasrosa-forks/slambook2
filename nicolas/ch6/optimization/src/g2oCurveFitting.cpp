@@ -2,6 +2,7 @@
 #include "../include/g2oCurveFitting.h"
 
 using namespace std;
+using namespace Eigen;
 
 /* --------------------- */
 /*  C++ Virtual Methods  */
@@ -54,7 +55,7 @@ using namespace std;
 /* Description: The vertex of the curve model
 /* Template parameters: optimized variable dimensions and data types
 */
-class CurveFittingVertex : public g2o::BaseVertex<3, Eigen::Vector3d> {  // Inheritance of the class "g2o::BaseVertex"
+class CurveFittingVertex : public g2o::BaseVertex<3, Vector3d> {  // Inheritance of the class "g2o::BaseVertex"
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW  
 
@@ -66,7 +67,7 @@ public:
     // Update
     virtual void oplusImpl(const double *update) override {
         // x_{k+1} = x_k + ∆x_k
-        _estimate += Eigen::Vector3d(update);  // _estimate was inherited from g2o::BaseVertex
+        _estimate += Vector3d(update);  // _estimate was inherited from g2o::BaseVertex
     }
 
     // Save and read: leave blank
@@ -95,13 +96,12 @@ public:
     virtual void computeError() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
         const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        const Eigen::Vector3d abc = v->estimate();
+        const Vector3d abc = v->estimate();
 
         // Calculation of residuals
-        // Residual = Y_real - Y_estimated = _measurement - f(_estimate)
-        _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0));  // err = y-y^ = y-exp(a.x^2+b.c+c)
+        // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
+        _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0));  // e(x) = y_r - y_e =  y_r - exp(a.x^2+b.x+c).
     }
-
     
     // Calculate the Jacobian matrix
     /**
@@ -111,14 +111,14 @@ public:
     virtual void linearizeOplus() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
         const CurveFittingVertex *v = static_cast<const CurveFittingVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        const Eigen::Vector3d abc = v->estimate();
+        const Vector3d abc = v->estimate();
         
         double y = exp(abc[0]*_x*_x + abc[1]*_x + abc[2]);  // Y_estimated
         
-        // J(x)J(x)'∆x = −J(x)f(x) ~= H(x)*∆x = g(x)
-        _jacobianOplusXi[0] = -_x*_x*y;  // df(x)/da = x^2*exp(a*x^2 + b*x + c) = x^2*y
-        _jacobianOplusXi[1] = -_x*y;     // df(x)/db =   x*exp(a*x^2 + b*x + c) = x*y
-        _jacobianOplusXi[2] = -y;        // df(x)/dc =   1*exp(a*x^2 + b*x + c) = y
+        // J(x).J(x)'.∆x = −J(x).f(x) ~= H(x).∆x = g(x)
+        _jacobianOplusXi[0] = -_x*_x*y;  // de(x)/da = -x^2*exp(a*x^2 + b*x + c) = -x^2*y
+        _jacobianOplusXi[1] = -_x*y;     // de(x)/db =   -x*exp(a*x^2 + b*x + c) = -x*y
+        _jacobianOplusXi[2] = -y;        // de(x)/dc =   -1*exp(a*x^2 + b*x + c) = -y
     }
 
     // Save and read: leave blank
@@ -130,7 +130,7 @@ public:
     double _x;  // x value, y value (_measurement)
 };
 
-double RMSE(const Eigen::Vector3d est, const Eigen::Vector3d gt){
+double RMSE(const Vector3d est, const Vector3d gt){
     double sum = 0.0;
     int N = 3;
 
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
 
     // Add vertices to the graph
     CurveFittingVertex *v = new CurveFittingVertex();
-    v->setEstimate(Eigen::Vector3d(ae, be, ce));  //! set the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
+    v->setEstimate(Vector3d(ae, be, ce));  //! set the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
     v->setId(0);                                  //! sets the id of the node in the graph be sure that the graph keeps consistent after changing the id
     optimizer.addVertex(v);
 
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
         edge->setId(i);                                            // Specifies the edge ID
         edge->setVertex(0, v);                                     // Connects edge to the vertex (Node, 0)
         edge->setMeasurement(y_data[i]);                           // Observed value
-        edge->setInformation(Eigen::Matrix<double, 1, 1>::Identity()*(1/(w_sigma*w_sigma)));  // Information matrix: the inverse of the covariance matrix
+        edge->setInformation(Matrix<double, 1, 1>::Identity()*(1/(w_sigma*w_sigma)));  // Information matrix: the inverse of the covariance matrix
         optimizer.addEdge(edge);
     }
 
@@ -212,8 +212,8 @@ int main(int argc, char **argv) {
     printTimeElapsed("Solver time: ", t1, t2);
 
     // Computes the RMSE
-    Eigen::Vector3d abc_e = v->estimate();
-    Eigen::Vector3d abc_r = {ar, br,cr};
+    Vector3d abc_r = {ar, br,cr};
+    Vector3d abc_e = v->estimate();
 
     double rmse = RMSE(abc_e, abc_r);
 

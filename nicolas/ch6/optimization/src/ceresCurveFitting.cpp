@@ -19,7 +19,7 @@ struct CURVE_FITTING_COST{
     bool operator()(const T *const abc_e, // model parameters, there are 3 dimensions.
     T *residual) const {
         // Residual = Y_real - Y_estimated
-        residual[0] = T(_y) - ceres::exp(abc_e[0]*T(_x)*T(_x) + abc_e[1]*T(_x) + abc_e[2]);  // err = y-y^ = y-exp(a.x^2+b.c+c)
+        residual[0] = T(_y) - ceres::exp(abc_e[0]*T(_x)*T(_x) + abc_e[1]*T(_x) + abc_e[2]);  // e(x) = y_r - y_e = y_r - exp(a.x^2+b.x+c)
         
         return true;
     }
@@ -118,7 +118,6 @@ int main(int argc, char **argv) {
 
     /* ----- Results ----- */ 
     print(summary.BriefReport());
-
 
     cout << "\n---" << endl;
     cout << "Real:\t   a,b,c = ";
