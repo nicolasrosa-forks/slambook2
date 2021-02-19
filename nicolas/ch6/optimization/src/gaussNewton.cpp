@@ -68,13 +68,16 @@ int main(int argc, char **argv) {
             double error = yi - yi_e;                // e(x) = y_r - y_e = y_r - exp(a.x^2+b.x+c)
             
             /* ----- Jacobians ----- */
-            Vector3d J;        // Jacobian matrix of the error
+            Vector3d J;          // Jacobian matrix of the error
             J[0] = -xi*xi*yi_e;  // de(x)/da
             J[1] = -xi*yi_e;     // de(x)/db
             J[2] = -yi_e;        // de(x)/dc
 
-            H +=  inv_sigma * inv_sigma * J * J.transpose();  //FIXME: ?
-            g += -inv_sigma * inv_sigma * J * error;  // -J(x)*f(x), f(x)=e(x)
+            // The Slambook2 doesn't have the Gauss-Newton equation considering the information matrix (inverse of covariance)
+            // The following equations are from Wangxin's Blog
+            // http://wangxinliu.com/slam/optimization/research&study/g2o-3/
+            H +=  inv_sigma * inv_sigma * J * J.transpose();  // H(x) = J(x)'*Ω*J(x)
+            g += -inv_sigma * inv_sigma * J * error;          // g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
 
             // Least Squares Cost
             cost += error * error;  // The actual error function being minimized in the loop is e(x)^2.

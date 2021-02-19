@@ -102,7 +102,7 @@ int main(int argc, char **argv){
     printImageInfo("disparity_norm", disparity_norm);
     
     // 4. Display Images
-    cout << "[stereoVision] Displaying OpenCV's images..." << endl;
+    cout << "[stereoVision] Displaying OpenCV images..." << endl;
     cv::imshow("left", left);
     cv::imshow("right", right);
     cv::imshow("disparity", disparity_norm);  
