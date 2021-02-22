@@ -21,7 +21,8 @@ struct CURVE_FITTING_COST{
         // Residual = Y_real - Y_estimated
         residual[0] = T(_y) - ceres::exp(abc_e[0]*T(_x)*T(_x) + abc_e[1]*T(_x) + abc_e[2]);  // e(x) = y_r - y_e = y_r - exp(a.x^2+b.x+c)
         
-        return true;
+
+        return true;  /* "After Ceres sums the squares of them (residuals), it is used as the value of the objective function." */
     }
 
     // 3. Private attributes
@@ -55,14 +56,14 @@ int main(int argc, char **argv) {
     int N = 100;                                // Number of Data points
 
     cv::RNG rng;                                // OpenCV Random Number generator
-    double w_sigma = 1.0;                       // Noise sigma value
+    double w_sigma = 1.0;                       // Noise sigma value, w ~ N(0,σ^2)
 
     /* ----- Data Generation ----- */
     vector<double> x_data, y_data;              // Data Vectors
   
     for(int i=0; i < N; i++){
         double x = i/100.0;
-        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);
+        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);  // y = exp(a.x^2+b.x+c) + w
     
         x_data.push_back(x);
         y_data.push_back(y);
@@ -75,9 +76,9 @@ int main(int argc, char **argv) {
     // Construct a least squares problem
     ceres::Problem problem;        
 
-    // Calculation of residuals
+    // Residual Block Definition
     for(int i=0; i<N; i++){
-        // Add error term to the problem
+        // Adds each error term to the objective function
         problem.AddResidualBlock(
             /* 1. Use automatic derivation 
                 Template parameters: error type, output dimension, input dimension. 
@@ -87,13 +88,16 @@ int main(int argc, char **argv) {
                   it's just creating the functor "CURVE_FITTING_COST" by using its the declared constructor.
 
                 The operator () of "CURVE_FITTING_COST" will be called internally by the "ceres::AutoDiffCostFunction"
+
+                "In fact, Ceres will pass the Jacobian matrix as a type parameter to this function to realize the 
+                function of automatic derivation (auto-diff, which is one of the best feature of Ceres)."
             */
             new ceres::AutoDiffCostFunction<CURVE_FITTING_COST, 1, 3>(new CURVE_FITTING_COST(x_data[i], y_data[i])),
             
             /* 2. The reason of "nullptr" is due to we don't have a loss function, just the least squares equation. */
             nullptr,  // Core function, not used here, empty
 
-            /* 3. "abc_e" are the parameters to be estimated */
+            /* 3. Parameter Block */
             abc_e);  // Parameters to be estimated
     }
 

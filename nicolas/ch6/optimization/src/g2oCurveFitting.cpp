@@ -4,6 +4,11 @@
 using namespace std;
 using namespace Eigen;
 
+/* Global Variables */
+// Choose the optimization algorithm: 
+// 1: Gauss-Newton, 2: Levenberg-Marquardt, 3: Powell's Dog Leg
+int optimization_algorithm_selected = 1;
+
 /* --------------------- */
 /*  C++ Virtual Methods  */
 /* --------------------- */
@@ -153,14 +158,14 @@ int main(int argc, char **argv) {
     int N = 100;                                // Number of Data points
 
     cv::RNG rng;                                // OpenCV Random Number generator
-    double w_sigma = 1.0;                       // Noise sigma value
+    double w_sigma = 1.0;                       // Noise sigma value, w ~ N(0,σ^2)
 
     /* ----- Data Generation ----- */
     vector<double> x_data, y_data;              // Data Vectors
   
     for(int i=0; i < N; i++){
         double x = i/100.0;
-        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);
+        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);  // y = exp(a.x^2+b.x+c) + w
     
         x_data.push_back(x);
         y_data.push_back(y);
@@ -176,9 +181,24 @@ int main(int argc, char **argv) {
     typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Linear Solver type
 
     // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
-    auto solver = new g2o::OptimizationAlgorithmGaussNewton(
-        g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+    g2o::OptimizationAlgorithmWithHessian *solver;
     
+    switch (optimization_algorithm_selected){
+        case 1:  // Option 1: Gauss-Newton method
+            solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+            break;
+        case 2:  // Option 2: Levenberg-Marquardt method
+            solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+            break;
+        case 3:  //Option 3: Powell's Dog Leg Method
+            solver = new g2o::OptimizationAlgorithmDogleg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+            break;
+        default:
+            break;
+    }
+
+    cout << "Optimization Algorithm selected: " << optimization_algorithm_selected << endl;
+            
     // Configure the optimizer
     g2o::SparseOptimizer optimizer;  // Graph model
     optimizer.setAlgorithm(solver);  // Set the solver
@@ -218,10 +238,7 @@ int main(int argc, char **argv) {
     double rmse = RMSE(abc_e, abc_r);
 
     /* ----- Results ----- */ 
-
-    cout << "RMSE: " << rmse << endl;
-
-    cout << "\n---" << endl;
+    cout << "---" << endl;
     cout << "Real:\t   a,b,c = ";
     cout << ar << ", " << br << ", " << cr;
     cout << endl;
@@ -229,6 +246,8 @@ int main(int argc, char **argv) {
     cout << "Estimated: a,b,c = ";
     cout << abc_e[0] << ", " << abc_e[1] << ", " << abc_e[2];
     cout << "\n---" <<endl;
+
+    cout << "RMSE: " << rmse << endl;
 
     cout << "\nDone." << endl;
 

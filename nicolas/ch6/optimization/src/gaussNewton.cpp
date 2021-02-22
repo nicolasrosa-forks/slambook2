@@ -23,11 +23,11 @@ int main(int argc, char **argv) {
 
     /* Variables */
     double ar = 1.0, br = 2.0, cr = 1.0;        // Real parameters values
-    double ae = 2.0, be = -1.0, ce = 5.0;       // Estimated parameters values
+    double ae = 2.0, be = -1.0, ce = 5.0;       // Estimated parameters values (x0, Initial Guess)
     int N = 100;                                // Number of Data points
 
     cv::RNG rng;                                // OpenCV Random Number generator
-    double w_sigma = 1.0;                       // Noise sigma value
+    double w_sigma = 1.0;                       // Noise sigma value, w ~ N(0,σ^2)
     double inv_sigma = 1.0 / w_sigma;
 
     /* ----- Data Generation ----- */
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   
     for(int i=0; i < N; i++){
         double x = i/100.0;
-        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);
+        double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);  // y = exp(a.x^2+b.x+c) + w
     
         x_data.push_back(x);
         y_data.push_back(y);
@@ -54,18 +54,18 @@ int main(int argc, char **argv) {
     for(int iter=0; iter < iterations; iter++){
         cout << iter << endl;
 
-        Matrix3d H = Matrix3d::Zero();     // Hessian, H(x) = J^T.inv(W).J in Gauss-Newton //FIXME: This equation is not in the book!
+        Matrix3d H = Matrix3d::Zero();     // Hessian, H(x) = J(x)'*Ω*J(x) in Gauss-Newton
         Vector3d g = Vector3d::Zero();     // Bias, g(x) = -J(x).f(x)
         cost = 0.0;                        // Reset
 
         // Data Loop
         for(int i=0; i<N; i++){
-            double xi = x_data[i], yi = y_data[i];  // the i-th data point
+            double xi = x_data[i], yi_r = y_data[i];  // the i-th data point
             
             /* ----- Compute Error ----- */
             // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
             double yi_e = exp(ae*xi*xi + be*xi + ce);
-            double error = yi - yi_e;                // e(x) = y_r - y_e = y_r - exp(a.x^2+b.x+c)
+            double ei = yi_r - yi_e;                // e(x) = y_r - y_e = y_r - exp(a.x^2+b.x+c)
             
             /* ----- Jacobians ----- */
             Vector3d J;          // Jacobian matrix of the error
@@ -76,11 +76,11 @@ int main(int argc, char **argv) {
             // The Slambook2 doesn't have the Gauss-Newton equation considering the information matrix (inverse of covariance)
             // The following equations are from Wangxin's Blog
             // http://wangxinliu.com/slam/optimization/research&study/g2o-3/
-            H +=  inv_sigma * inv_sigma * J * J.transpose();  // H(x) = J(x)'*Ω*J(x)
-            g += -inv_sigma * inv_sigma * J * error;          // g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
+            H +=  inv_sigma * inv_sigma * J * J.transpose();  // Hessian, H(x) = J(x)'*Ω*J(x)
+            g += -inv_sigma * inv_sigma * J * ei;             // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
 
-            // Least Squares Cost
-            cost += error * error;  // The actual error function being minimized in the loop is e(x)^2.
+            // Least-Squares Cost (Objective Function)
+            cost += ei * ei;  // The actual error function being minimized by solving the proposed linear system is min_x(sum_i ||ei(x)||^2).
         }
 
         // Solve the Linear System Ax=b, H(x)*∆x = g(x)
@@ -91,13 +91,13 @@ int main(int argc, char **argv) {
             break;
         }
 
-        // Early Stop
+        // Stopping Criteria
         if(iter > 0 && cost >= lastCost){
             cout << "cost: " << cost << " >= lastCost: " << lastCost << ", break." << endl;
             break;
         }
 
-        // Update
+        // Update, x_k+1 = x_k + ∆x_k
         ae += dx[0];
         be += dx[1];
         ce += dx[2];
@@ -116,8 +116,6 @@ int main(int argc, char **argv) {
     double rmse = RMSE(abc_e, abc_r);
 
     /* ----- Results ----- */ 
-    cout << "RMSE: " << rmse << endl;
-
     cout << "\n---" << endl;
     cout << "Real:\t   a,b,c = ";
     cout << ar << ", " << br << ", " << cr;
@@ -126,6 +124,8 @@ int main(int argc, char **argv) {
     cout << "Estimated: a,b,c = ";
     cout << ae << ", " << be << ", " << ce;
     cout << "\n---" <<endl;
+
+    cout << "RMSE: " << rmse << endl;
 
     cout << "\nDone." << endl;
 
