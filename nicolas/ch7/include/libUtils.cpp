@@ -14,7 +14,7 @@ using namespace std;
 typedef chrono::steady_clock::time_point Timer;
 void printTimeElapsed(const char text[], Timer t1, Timer t2){
     chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    cout << text << time_elapsed.count() << " s" << endl << endl;
+    cout << text << time_elapsed.count() << " s" << endl;
 }
 
 /* ======================== */
