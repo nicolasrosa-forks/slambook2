@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     printf("-- Min dist: %f \n", min_dist);
     printf("-- Max dist: %f \n\n", max_dist);
 
-    // When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
+    // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
     // But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
     vector<DMatch> goodMatches;
 
