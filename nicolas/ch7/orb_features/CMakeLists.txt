@@ -28,5 +28,5 @@ target_link_libraries(orb_cv ${OpenCV_LIBS})
 # ========== #
 #  orb_self  #
 # ========== #
-# add_executable(orb_self src/orb_self.cpp)
-# target_link_libraries(orb_self ${OpenCV_LIBS})
+add_executable(orb_self src/orb_self.cpp)
+target_link_libraries(orb_self ${OpenCV_LIBS})

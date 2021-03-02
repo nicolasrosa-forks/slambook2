@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    cout << "-- Number of good matches: " << goodMatches.size() << endl << endl;
+    cout << "-- Number of good matches: " << goodMatches.size() << endl;
 
     /* Step 5: Visualize the Matching result */
     Mat image_matches;
@@ -111,6 +111,9 @@ int main(int argc, char **argv) {
 
     drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
+
+    /* Save */
+    imwrite("../../orb_features/src/results_orb_cv_goodMatches.png", image_goodMatches);
 
     /* Display */
     imshow("image1", image1);

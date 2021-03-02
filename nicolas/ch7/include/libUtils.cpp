@@ -32,7 +32,8 @@ void print(double var){
     cout << to_string(var) << endl;
 }
 
-void printVec(const char text[], const vector<double> &vec){
+template <typename TTypeVector>
+void printVec(const char text[], const TTypeVector &vec){
   cout << text << "[";
   for(int i; i < vec.size(); i++){
     if(i != vec.size()-1){
