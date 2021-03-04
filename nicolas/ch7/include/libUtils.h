@@ -26,4 +26,6 @@ void printImageInfo(const cv::Mat &image);
 
 void printMatrix(const char text[], cv::Mat var);
 
+void printMatrix(const char text[], cv::MatExpr var);
+
 #endif

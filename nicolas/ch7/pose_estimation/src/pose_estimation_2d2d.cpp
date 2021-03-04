@@ -8,6 +8,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include "opencv2/opencv.hpp"
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"
@@ -21,6 +22,11 @@ string image2_filepath = "../../orb_features/src/2.png";
 
 double matches_lower_bound = 30.0;
 
+// Camera Internal parameters, TUM Freiburg2
+Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
+Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates, TUM Dataset calibration value
+double focal_length = 521.0;            // Camera focal length, TUM dataset calibration value.
+
 /* ================= */
 /*  Functions Scope  */
 /* ================= */
@@ -33,6 +39,18 @@ void pose_estimation_2d2d(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
     Mat &R, Mat &t);
+
+Mat vee2hat(const Mat var){
+    Mat var_hat = (Mat_<double>(3,3) << 0.0, -var.at<double>(2,0), var.at<double>(1,0), 
+        var.at<double>(2,0), 0.0, -var.at<double>(0,0),
+        -var.at<double>(1,0), var.at<double>(0,0), 0.0);  // Inline Initializer
+    
+    //printMatrix("var_hat:", var_hat);
+
+    return var_hat;
+}
+
+Point2d pixel2cam(const Point2d &p, const Mat &K);
 
 /* ====== */
 /*  Main  */
@@ -67,6 +85,39 @@ int main(int argc, char **argv) {
     Mat R, t;
     pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);
     
+    //--- Step 7: Verify E = t^*R*scale
+    Mat t_hat = vee2hat(t);
+
+    printMatrix("t_hat:\n", t_hat);
+    printMatrix("t^*R=\n", t_hat*R);
+
+    //--- Verify the Epipolar Constraint, x2^T*E*x1 = 0
+    // For each matched pair (p1, p2)_n, do...
+    int counter = 0;
+    for(DMatch m: goodMatches){
+        // Pixel Coordinates to Normalized Coordinates, (p1, p2)_n to (x1, x2)_n
+        Point2d x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // x1, n-th Feature Keypoint in Image 1
+        Point2d x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // x2, n-th Feature Keypoint in Image 2
+
+        // Homogeneous Coordinates
+        Mat xh1 = (Mat_<double>(3,1) << x1.x, x1.y, 1);
+        Mat xh2 = (Mat_<double>(3,1) << x2.x, x2.y, 1);
+
+        Mat res = xh2.t()*t_hat*R*xh1;
+
+        string flag;
+        if(res.at<double>(0) > -0.25 && res.at<double>(0) < 0.25){
+            flag = "Ok!";
+            counter++;
+        }else
+            flag = "Failed!";
+
+        cout << "Epipolar constraint = " << res.at<double>(0) << " " << flag << endl;
+
+    }
+
+    cout << "\nFinal Result: " << counter << "/" << goodMatches.size() << " Features Pairs respected the Epipolar Constraint!"<< endl;
+
     /* Display */
     imshow("image1", image1);
     imshow("image2", image2);
@@ -163,16 +214,10 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 }
 
 void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
-    // Camera Internal parameters, TUM Freiburg2
-    Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
-    Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates, TUM Dataset calibration value
-    double focal_length = 521.0;            // Camera focal length, TUM dataset calibration value.
-
     printMatrix("\nK:\n", K);
     
-    //--- Convert the matching point to the form of vector<Point2f> (Pixels Coordinates)
-    vector<Point2f> points1;
-    vector<Point2f> points2;
+    //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
+    vector<Point2f> points1, points2;
 
     for (int i=0; i < matches.size(); i++){
         cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
@@ -182,22 +227,54 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
 
     cout << endl;
 
-    //--- Calculate the Fundamental Matrix, p2^T.F.p1 = 0
+    //--- Calculate the Fundamental Matrix
     Timer t1 = chrono::steady_clock::now();
     Mat F = findFundamentalMat(points1, points2, CV_FM_8POINT);  // 8-Points Algorithm
     Timer t2 = chrono::steady_clock::now();
 
     //--- Calculate the Essential Matrix
-    Mat E = findEssentialMat(points1, points2, focal_length, principal_point);  // Remember: E = t^.R = K^T.F.K, Essential matrix needs intrinsics info.
+    Mat E = findEssentialMat(points1, points2, focal_length, principal_point);  // Remember: E = t^*R = K^T*F*K, Essential matrix needs intrinsics info.
     Timer t3 = chrono::steady_clock::now();
 
+    //--- Calculate the Homography Matrix
+    //--- But the scene in this example is not flat, and then Homography matrix has little meaning.
+    Mat H = findHomography(points1, points2, RANSAC, 3);
+    Timer t4 = chrono::steady_clock::now();
 
-    printTimeElapsed("Pose estimation 2D-2D: ", t1, t3);
+    //--- Restore Rotation and Translation Information from the Essential Matrix, E = t^*R
+    // This function is only available in OpenCV3
+    recoverPose(E, points1, points2, R, t, focal_length, principal_point);
+    Timer t5 = chrono::steady_clock::now();
+
+
+
+    printTimeElapsed("Pose estimation 2D-2D: ", t1, t5);
     printTimeElapsed(" | Fundamental Matrix Calculation: ", t1, t2);
     printTimeElapsed(" |   Essential Matrix Calculation: ", t2, t3);
+    printTimeElapsed(" |  Homography Matrix Calculation: ", t3, t4);
+    printTimeElapsed(" |             Pose Recover(R, t): ", t4, t5);
+    
     cout << endl;
 
     printMatrix("F:\n", F);
     printMatrix("E:\n", E);
+    printMatrix("H:\n", H);
 
+    printMatrix("R:\n", R);
+    printMatrix("t:\n", t);
+}
+
+/**
+ * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
+ * 
+ * @param p Point2d in Pixel Coordinates, p=(u,v)
+ * @param K Intrinsic Parameters Matrix 
+ * @return Point2d in Normalized Coordinates, x=(x,y)
+ */
+Point2d pixel2cam(const Point2d &p, const Mat &K) {
+  return Point2d
+    (
+      (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
+      (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
+    );
 }

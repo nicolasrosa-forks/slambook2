@@ -132,3 +132,7 @@ void printImageInfo(const char var[], const cv::Mat &image){
 void printMatrix(const char text[], cv::Mat var){
     cout << text << var << "\n(" << var.rows << ", " << var.cols << ")" << endl << endl;
 }
+
+void printMatrix(const char text[], cv::MatExpr var){
+    cout << text << var << "\n(" << var.size().height << ", " << var.size().width << ")" << endl << endl;
+}
