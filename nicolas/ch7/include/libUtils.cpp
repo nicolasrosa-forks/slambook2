@@ -128,3 +128,7 @@ void printImageInfo(const char var[], const cv::Mat &image){
     cout << ", " << type2str(image.type()) << endl;
     cout << "min: " << minVal << ", max: " << maxVal << endl << endl;
 }
+
+void printMatrix(const char text[], cv::Mat var){
+    cout << text << var << "\n(" << var.rows << ", " << var.cols << ")" << endl << endl;
+}

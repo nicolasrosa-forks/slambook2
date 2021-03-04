@@ -20,8 +20,10 @@ void printVector(const char text[], TTypeVec vec);
 template <typename TTypeQuat>
 void printQuaternion(const char text[], TTypeQuat quat);
 
+int checkImage(const cv::Mat &image);
+
 void printImageInfo(const cv::Mat &image);
 
-int checkImage(const cv::Mat &image);
+void printMatrix(const char text[], cv::Mat var);
 
 #endif

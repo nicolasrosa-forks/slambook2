@@ -7,6 +7,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"
@@ -24,11 +25,14 @@ double matches_lower_bound = 30.0;
 /*  Functions Scope  */
 /* ================= */
 void find_features_matches(
-    const Mat &image1,
-    const Mat &image2,
-    vector<KeyPoint> &keypoints1,
-    vector<KeyPoint> &keypoints2,
+    const Mat &image1, const Mat &image2,
+    vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2,
     vector<DMatch> &goodMatches);
+
+void pose_estimation_2d2d(
+    const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
+    const vector<DMatch> &matches,
+    Mat &R, Mat &t);
 
 /* ====== */
 /*  Main  */
@@ -50,12 +54,19 @@ int main(int argc, char **argv) {
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches);
-
-     /* --- Step 5: Visualize the Matching result */
+    
+    //--- Step 5: Visualize the Matching result
     Mat image_goodMatches;
 
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
 
+    /* ----------------------- */
+    /*  Pose Estimation 2D-2D  */
+    /* ----------------------- */
+    //--- Step 6: Estimate the motion (R, t) between the two images
+    Mat R, t;
+    pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);
+    
     /* Display */
     imshow("image1", image1);
     imshow("image2", image2);
@@ -148,5 +159,45 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 
     printTimeElapsed("ORB Features Filtering: ", t1, t2);
     cout << "-- Number of good matches: " << goodMatches.size() << endl;
+
+}
+
+void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
+    // Camera Internal parameters, TUM Freiburg2
+    Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
+    Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates, TUM Dataset calibration value
+    double focal_length = 521.0;            // Camera focal length, TUM dataset calibration value.
+
+    printMatrix("\nK:\n", K);
+    
+    //--- Convert the matching point to the form of vector<Point2f> (Pixels Coordinates)
+    vector<Point2f> points1;
+    vector<Point2f> points2;
+
+    for (int i=0; i < matches.size(); i++){
+        cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
+        points1.push_back(keypoints1[matches[i].queryIdx].pt);
+        points2.push_back(keypoints1[matches[i].trainIdx].pt);
+    }
+
+    cout << endl;
+
+    //--- Calculate the Fundamental Matrix, p2^T.F.p1 = 0
+    Timer t1 = chrono::steady_clock::now();
+    Mat F = findFundamentalMat(points1, points2, CV_FM_8POINT);  // 8-Points Algorithm
+    Timer t2 = chrono::steady_clock::now();
+
+    //--- Calculate the Essential Matrix
+    Mat E = findEssentialMat(points1, points2, focal_length, principal_point);  // Remember: E = t^.R = K^T.F.K, Essential matrix needs intrinsics info.
+    Timer t3 = chrono::steady_clock::now();
+
+
+    printTimeElapsed("Pose estimation 2D-2D: ", t1, t3);
+    printTimeElapsed(" | Fundamental Matrix Calculation: ", t1, t2);
+    printTimeElapsed(" |   Essential Matrix Calculation: ", t2, t3);
+    cout << endl;
+
+    printMatrix("F:\n", F);
+    printMatrix("E:\n", E);
 
 }
