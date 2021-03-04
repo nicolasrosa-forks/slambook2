@@ -92,8 +92,8 @@ int main(int argc, char **argv) {
     double min_dist = min_max.first->distance;
     double max_dist = min_max.second->distance;
 
-    printf("-- Min dist: %f \n", min_dist);
-    printf("-- Max dist: %f \n\n", max_dist);
+    cout << "-- Min dist: " << min_dist << endl;
+    cout << "-- Max dist: " << max_dist << endl << endl;
 
     // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
     // But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.

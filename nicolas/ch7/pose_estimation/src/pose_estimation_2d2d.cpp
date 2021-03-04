@@ -1,6 +1,9 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 #define OPENCV3  // If not defined, OpenCV2
 
-/* Libraries */
+/* System Libraries */
 #include <iostream>
 #include <chrono>
 
@@ -40,15 +43,7 @@ void pose_estimation_2d2d(
     const vector<DMatch> &matches,
     Mat &R, Mat &t);
 
-Mat vee2hat(const Mat var){
-    Mat var_hat = (Mat_<double>(3,3) << 0.0, -var.at<double>(2,0), var.at<double>(1,0), 
-        var.at<double>(2,0), 0.0, -var.at<double>(0,0),
-        -var.at<double>(1,0), var.at<double>(0,0), 0.0);  // Inline Initializer
-    
-    //printMatrix("var_hat:", var_hat);
-
-    return var_hat;
-}
+Mat vee2hat(const Mat var);
 
 Point2d pixel2cam(const Point2d &p, const Mat &K);
 
@@ -72,11 +67,6 @@ int main(int argc, char **argv) {
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches);
-    
-    //--- Step 5: Visualize the Matching result
-    Mat image_goodMatches;
-
-    drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
 
     /* ----------------------- */
     /*  Pose Estimation 2D-2D  */
@@ -91,38 +81,41 @@ int main(int argc, char **argv) {
     printMatrix("t_hat:\n", t_hat);
     printMatrix("t^*R=\n", t_hat*R);
 
-    //--- Verify the Epipolar Constraint, x2^T*E*x1 = 0
-    // For each matched pair (p1, p2)_n, do...
+    //--- Step8: Verify the Epipolar Constraint, x2^T*E*x1 = 0
     int counter = 0;
-    for(DMatch m: goodMatches){
+    string flag;
+
+    for(DMatch m: goodMatches){  // For each matched pair (p1, p2)_n, do...
         // Pixel Coordinates to Normalized Coordinates, (p1, p2)_n to (x1, x2)_n
         Point2d x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // x1, n-th Feature Keypoint in Image 1
         Point2d x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // x2, n-th Feature Keypoint in Image 2
 
-        // Homogeneous Coordinates
+        // Convert to Homogeneous Coordinates
         Mat xh1 = (Mat_<double>(3,1) << x1.x, x1.y, 1);
         Mat xh2 = (Mat_<double>(3,1) << x2.x, x2.y, 1);
 
-        Mat res = xh2.t()*t_hat*R*xh1;
+        // Calculate Epipolar Constraint
+        double res = ((cv::Mat)(xh2.t()*t_hat*R*xh1)).at<double>(0);
 
-        string flag;
-        if(res.at<double>(0) > -0.25 && res.at<double>(0) < 0.25){
+        if(res > -0.25 && res < 0.25){
             flag = "Ok!";
             counter++;
         }else
             flag = "Failed!";
 
-        cout << "Epipolar constraint = " << res.at<double>(0) << " " << flag << endl;
+        //cout << "x2^T*E*x1 = " << res << "\t" << flag << endl;
+        printf("x2^T*E*x1 = % 01f\t%s\n", res, flag.c_str());
 
     }
 
     cout << "\nFinal Result: " << counter << "/" << goodMatches.size() << " Features Pairs respected the Epipolar Constraint!"<< endl;
 
-    /* Display */
+    /* --------- */
+    /*  Results  */
+    /* --------  */
+    /* Display Images */
     imshow("image1", image1);
     imshow("image2", image2);
-    imshow("image_goodMatches", image_goodMatches); 
-
     waitKey(0);
 
     cout << "\nDone." << endl;
@@ -150,20 +143,13 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     Timer t1 = chrono::steady_clock::now();
     detector->detect(image1, keypoints1);
     detector->detect(image2, keypoints2);
+    Timer t2 = chrono::steady_clock::now();
 
     //--- Step 2: Calculate the BRIEF descriptors based on the position of Oriented FAST keypoints
-    Timer t2 = chrono::steady_clock::now();
     descriptor->compute(image1, keypoints1, descriptors1);
     descriptor->compute(image2, keypoints2, descriptors2);
     Timer t3 = chrono::steady_clock::now();
     
-    printTimeElapsed("ORB Features Extraction: ", t1, t3);
-    printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
-    printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
-
-    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
-    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
-
     //cout << descriptors1 << endl;
     //cout << descriptors2 << endl;    
 
@@ -174,14 +160,10 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
 
-    t1 = chrono::steady_clock::now();
+    Timer t4 = chrono::steady_clock::now();
     //BFMatcher matcher (NORM_HAMMING);
     matcher->match(descriptors1, descriptors2, matches);
-    t2 = chrono::steady_clock::now();
-
-    printTimeElapsed("ORB Features Matching: ", t1, t2);
-
-    cout << "-- Number of matches: " << matches.size() << endl;
+    Timer t5 = chrono::steady_clock::now();
 
     //--- Step 4: Select correct matching (filtering)
     // Calculate the min & max distances
@@ -194,28 +176,42 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
         if(dist>max_dist) max_dist = dist;
     }
 
-    printf("-- Min dist: %f \n", min_dist);
-    printf("-- Max dist: %f \n\n", max_dist);
-
     // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
     // But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
-    t1 = chrono::steady_clock::now();
+    Timer t6 = chrono::steady_clock::now();
     for (int i=0; i<descriptors1.rows; i++){
         // cout << matches[i].distance << endl;
         if (matches[i].distance <= max(2*min_dist, matches_lower_bound)){
             goodMatches.push_back(matches[i]);
         }
     }
-    t2 = chrono::steady_clock::now();
+    Timer t7 = chrono::steady_clock::now();
 
-    printTimeElapsed("ORB Features Filtering: ", t1, t2);
+    //--- Step 5: Visualize the Matching result
+    Mat image_goodMatches;
+
+    drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
+    
+    imshow("image_goodMatches", image_goodMatches);
+
+    /* Results */
+    printTimeElapsed("ORB Features Extraction: ", t1, t3);
+    printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
+    printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
+    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
+    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
+
+    printTimeElapsed("ORB Features Matching: ", t4, t5);
+    cout << "-- Number of matches: " << matches.size() << endl;
+    cout << "-- Min dist: " << min_dist << endl;
+    cout << "-- Max dist: " << max_dist << endl << endl;
+
+    printTimeElapsed("ORB Features Filtering: ", t6, t7);
     cout << "-- Number of good matches: " << goodMatches.size() << endl;
 
 }
 
-void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
-    printMatrix("\nK:\n", K);
-    
+void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){    
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
     vector<Point2f> points1, points2;
 
@@ -246,22 +242,31 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     recoverPose(E, points1, points2, R, t, focal_length, principal_point);
     Timer t5 = chrono::steady_clock::now();
 
-
-
+    /* Results */
     printTimeElapsed("Pose estimation 2D-2D: ", t1, t5);
     printTimeElapsed(" | Fundamental Matrix Calculation: ", t1, t2);
     printTimeElapsed(" |   Essential Matrix Calculation: ", t2, t3);
     printTimeElapsed(" |  Homography Matrix Calculation: ", t3, t4);
     printTimeElapsed(" |             Pose Recover(R, t): ", t4, t5);
-    
     cout << endl;
 
+    printMatrix("K:\n", K);
     printMatrix("F:\n", F);
     printMatrix("E:\n", E);
     printMatrix("H:\n", H);
 
     printMatrix("R:\n", R);
     printMatrix("t:\n", t);
+}
+
+Mat vee2hat(const Mat var){
+    Mat var_hat = (Mat_<double>(3,3) << 0.0, -var.at<double>(2,0), var.at<double>(1,0), 
+        var.at<double>(2,0), 0.0, -var.at<double>(0,0),
+        -var.at<double>(1,0), var.at<double>(0,0), 0.0);  // Inline Initializer
+    
+    //printMatrix("var_hat:", var_hat);
+
+    return var_hat;
 }
 
 /**
