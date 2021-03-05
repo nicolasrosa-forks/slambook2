@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches);
+    cout << "In total, we get " << goodMatches.size() << " set of feature points." << endl << endl;
 
     /* ----------------------- */
     /*  Pose Estimation 2D-2D  */
@@ -81,7 +82,7 @@ int main(int argc, char **argv) {
     printMatrix("t_hat:\n", t_hat);
     printMatrix("t^*R=\n", t_hat*R);
 
-    //--- Step8: Verify the Epipolar Constraint, x2^T*E*x1 = 0
+    //--- Step 8: Verify the Epipolar Constraint, x2^T*E*x1 = 0
     int counter = 0;
     string flag;
 
@@ -103,8 +104,7 @@ int main(int argc, char **argv) {
         }else
             flag = "Failed!";
 
-        //cout << "x2^T*E*x1 = " << res << "\t" << flag << endl;
-        printf("x2^T*E*x1 = % 01f\t%s\n", res, flag.c_str());
+        printf("x2^T*E*x1 = % 01.19f\t%s\n", res, flag.c_str());
 
     }
 
@@ -131,14 +131,14 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
         cout << "'OpenCV3' selected." << endl << endl;
         Ptr<FeatureDetector> detector = ORB::create();
         Ptr<DescriptorExtractor> descriptor = ORB::create();
+        Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
     #else
         cout << "'OpenCV2' selected." << endl << endl;
         Ptr<FeatureDetector> detector = FeatureDetector::create ("ORB" );
         Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB" );
+        BFMatcher matcher(NORM_HAMMING);
     #endif
-
-    Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
-
+    
     //--- Step 1: Detect the position of the Oriented FAST keypoints (Corner Points)
     Timer t1 = chrono::steady_clock::now();
     detector->detect(image1, keypoints1);
@@ -161,7 +161,6 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     vector<DMatch> matches;
 
     Timer t4 = chrono::steady_clock::now();
-    //BFMatcher matcher (NORM_HAMMING);
     matcher->match(descriptors1, descriptors2, matches);
     Timer t5 = chrono::steady_clock::now();
 
@@ -172,8 +171,8 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     // Find the mininum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
     for (int i = 0; i < descriptors1.rows; i++){
         double dist = matches[i].distance;
-        if(dist<min_dist) min_dist = dist;
-        if(dist>max_dist) max_dist = dist;
+        if(dist < min_dist) min_dist = dist;
+        if(dist > max_dist) max_dist = dist;
     }
 
     // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
@@ -183,6 +182,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
         // cout << matches[i].distance << endl;
         if (matches[i].distance <= max(2*min_dist, matches_lower_bound)){
             goodMatches.push_back(matches[i]);
+            // cout << matches[i].distance << endl;
         }
     }
     Timer t7 = chrono::steady_clock::now();
@@ -215,10 +215,10 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
     vector<Point2f> points1, points2;
 
-    for (int i=0; i < matches.size(); i++){
+    for (int i=0; i < (int) matches.size(); i++){
         cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
         points1.push_back(keypoints1[matches[i].queryIdx].pt);
-        points2.push_back(keypoints1[matches[i].trainIdx].pt);
+        points2.push_back(keypoints2[matches[i].trainIdx].pt);
     }
 
     cout << endl;
