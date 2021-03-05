@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         // Calculate Epipolar Constraint
         double res = ((cv::Mat)(xh2.t()*t_hat*R*xh1)).at<double>(0);
 
-        if(res > -0.25 && res < 0.25){
+        if(res > -1e-2 && res < 1e-2){
             flag = "Ok!";
             counter++;
         }else
@@ -238,8 +238,9 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     Timer t4 = chrono::steady_clock::now();
 
     //--- Restore Rotation and Translation Information from the Essential Matrix, E = t^*R
-    // This function is only available in OpenCV3
-    recoverPose(E, points1, points2, R, t, focal_length, principal_point);
+    // In this program, OpenCV will use triangulation to detect whether the detected point’s depth is positive to select the correct solution.
+    // This function is only available in OpenCV3!
+    recoverPose(E, points1, points2, R, t, focal_length, principal_point); 
     Timer t5 = chrono::steady_clock::now();
 
     /* Results */
