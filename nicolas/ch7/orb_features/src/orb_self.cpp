@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
     //cout << descriptors1 << endl;
-    //cout << descriptors2 << endl;    
+    //cout << descriptors2 << endl;
 
     Mat outImage1, outImage2;
     drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
     /* Step 3: Match BRIEF descriptors of the two images using Hamming distance */
     vector<DMatch> matches;
-    
+
     t1 = chrono::steady_clock::now();
     BFMatcher_custom(descriptors1, descriptors2, matches);
     t2 = chrono::steady_clock::now();
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     imshow("image1", image1);
     imshow("image2", image2);
     imshow("outImage1", outImage1);
-    imshow("outImage2", outImage2);  
+    imshow("outImage2", outImage2);
     imshow("image_matches", image_matches);
     waitKey(0);
 
@@ -401,7 +401,7 @@ void ComputeORB(const Mat &img, vector<KeyPoint> &keypoints, vector<DescType> &d
         float sin_theta = m01/m_sqrt;
         float cos_theta = m10/m_sqrt;
 
-        // Compute the angle of this point        
+        // Compute the angle of this point
         DescType desc(8, 0);  // (Number Elements, Initial Value for all positions), 8*32 = 256 bits
         for(int i = 0; i < 8; i++){
             uint32_t d = 0;
@@ -440,16 +440,16 @@ void BFMatcher_custom(const vector<DescType> &desc1, const vector<DescType> &des
     for (size_t i1 = 0; i1 < desc1.size(); ++i1) {
         if (desc1[i1].empty()) continue;
         cv::DMatch m{i1, 0, 256};
-        
+
         for (size_t i2 = 0; i2 < desc2.size(); ++i2) {
             if (desc2[i2].empty()) continue;
-            
+
             int distance = 0;
-            
+
             for (int k = 0; k < 8; k++) {
                 distance += _mm_popcnt_u32(desc1[i1][k] ^ desc2[i2][k]);
             }
-            
+
             if (distance < d_max && distance < m.distance) {
                 m.distance = distance;
                 m.trainIdx = i2;

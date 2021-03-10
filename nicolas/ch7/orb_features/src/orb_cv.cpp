@@ -45,13 +45,13 @@ int main(int argc, char **argv) {
     Timer t1 = chrono::steady_clock::now();
     detector->detect(image1, keypoints1);
     detector->detect(image2, keypoints2);
-    
+
     //--- Step 2: Calculate the BRIEF descriptors based on the position of Oriented FAST keypoints
     Timer t2 = chrono::steady_clock::now();
     descriptor->compute(image1, keypoints1, descriptors1);
-    descriptor->compute(image2, keypoints2, descriptors2);     
+    descriptor->compute(image2, keypoints2, descriptors2);
     Timer t3 = chrono::steady_clock::now();
-    
+
     printTimeElapsed("ORB Features Extraction: ", t1, t3);
     printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
     printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
     //cout << descriptors1 << endl;
-    //cout << descriptors2 << endl;    
+    //cout << descriptors2 << endl;
 
     Mat outImage1, outImage2;
     drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
-    
+
     t1 = chrono::steady_clock::now();
     matcher->match(descriptors1, descriptors2, matches);
     t2 = chrono::steady_clock::now();
@@ -79,16 +79,16 @@ int main(int argc, char **argv) {
 
     //--- Step 4: Select correct matching (filtering)
     // Calculate the min & max distances
-    
+
     /* Parameters: __first – Start of range.
                    __last – End of range.
                    __comp – Comparison functor.
     */
-    auto min_max = minmax_element(matches.begin(), matches.end(), 
+    auto min_max = minmax_element(matches.begin(), matches.end(),
         [](const DMatch &m1, const DMatch &m2) {
         //cout << m1.distance << " " << m2.distance << endl;
         return m1.distance < m2.distance;});  // Return a pair of iterators pointing to the minimum and maximum elements in a range.
-    
+
     double min_dist = min_max.first->distance;
     double max_dist = min_max.second->distance;
 
@@ -125,9 +125,9 @@ int main(int argc, char **argv) {
     imshow("image1", image1);
     imshow("image2", image2);
     imshow("outImage1", outImage1);
-    imshow("outImage2", outImage2);  
+    imshow("outImage2", outImage2);
     imshow("image_matches", image_matches);
-    imshow("image_goodMatches", image_goodMatches); 
+    imshow("image_goodMatches", image_goodMatches);
     waitKey(0);
 
     // Save

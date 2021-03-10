@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     //--- Step 6: Estimate the motion (R, t) between the two images
     Mat R, t;
     pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);
-    
+
     //--- Step 7: Verify E = t^*R*scale
     Mat t_hat = vee2hat(t);
 
@@ -138,7 +138,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
         Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB" );
         BFMatcher matcher(NORM_HAMMING);
     #endif
-    
+
     //--- Step 1: Detect the position of the Oriented FAST keypoints (Corner Points)
     Timer t1 = chrono::steady_clock::now();
     detector->detect(image1, keypoints1);
@@ -149,9 +149,9 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     descriptor->compute(image1, keypoints1, descriptors1);
     descriptor->compute(image2, keypoints2, descriptors2);
     Timer t3 = chrono::steady_clock::now();
-    
+
     //cout << descriptors1 << endl;
-    //cout << descriptors2 << endl;    
+    //cout << descriptors2 << endl;
 
     //Mat outImage1, outImage2;
     //drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
@@ -191,7 +191,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     Mat image_goodMatches;
 
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
-    
+
     imshow("image_goodMatches", image_goodMatches);
 
     /* Results */
@@ -211,7 +211,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 
 }
 
-void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){    
+void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
     vector<Point2f> points1, points2;
 
@@ -240,7 +240,7 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     //--- Restore Rotation and Translation Information from the Essential Matrix, E = t^*R
     // In this program, OpenCV will use triangulation to detect whether the detected point’s depth is positive to select the correct solution.
     // This function is only available in OpenCV3!
-    recoverPose(E, points1, points2, R, t, focal_length, principal_point); 
+    recoverPose(E, points1, points2, R, t, focal_length, principal_point);
     Timer t5 = chrono::steady_clock::now();
 
     /* Results */
@@ -261,10 +261,10 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
 }
 
 Mat vee2hat(const Mat var){
-    Mat var_hat = (Mat_<double>(3,3) << 0.0, -var.at<double>(2,0), var.at<double>(1,0), 
+    Mat var_hat = (Mat_<double>(3,3) << 0.0, -var.at<double>(2,0), var.at<double>(1,0),
         var.at<double>(2,0), 0.0, -var.at<double>(0,0),
         -var.at<double>(1,0), var.at<double>(0,0), 0.0);  // Inline Initializer
-    
+
     //printMatrix("var_hat:", var_hat);
 
     return var_hat;
@@ -272,9 +272,9 @@ Mat vee2hat(const Mat var){
 
 /**
  * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
- * 
+ *
  * @param p Point2d in Pixel Coordinates, p=(u,v)
- * @param K Intrinsic Parameters Matrix 
+ * @param K Intrinsic Parameters Matrix
  * @return Point2d in Normalized Coordinates, x=(x,y)
  */
 Point2d pixel2cam(const Point2d &p, const Mat &K) {

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   //   cout << "usage: triangulation img1 img2" << endl;
   //   return 1;
   // }
-  
+
   //--- read image
   //Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
   //Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);

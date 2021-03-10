@@ -67,7 +67,7 @@ void printQuaternion(const char text[], TTypeQuat quat){
 /* ==================== */
 int checkImage(const cv::Mat &image){
     // Check if the data is correctly loaded
-    if (image.data == nullptr) { 
+    if (image.data == nullptr) {
         cerr << "File doesn't exist." << endl;
         return 0;
     } else{
@@ -120,9 +120,9 @@ void printImageInfo(const char var[], const cv::Mat &image){
     | CV_64F |  6 | 14 | 22 | 30 | 38 | 46 | 54 | 62 |
     +--------+----+----+----+----+----+----+----+----+ */
 
-    double minVal, maxVal; 
+    double minVal, maxVal;
     cv::minMaxLoc(image, &minVal, &maxVal);
-    
+
     cout << var << ":" << endl;
     cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")";  // (Height, Width, Channels)
     cout << ", " << type2str(image.type()) << endl;
