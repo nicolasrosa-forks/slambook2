@@ -57,7 +57,7 @@ int main(int argc, char** argv){
     // Update by using the perturbation model.
     Vector3d small_so3_phi(1e-4, 0, 0);  // This is a small update (rotation vector in Lie Algebra)
     Sophus::SO3d SO3_updated = Sophus::SO3d::exp(small_so3_phi)*SO3_R;  // Update: Lie Group (SO(3)) Left Multiplication, ΔR.R = exp(δ𝜙).R
-    
+
     printVector<Vector3d>("small_so3_phi: ", small_so3_phi);
     printMatrix<Matrix3d>("SO(3) updated: ", SO3_updated.matrix());
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv){
     /* ----------------- */
     // Translation Vector Declaration
     Vector3d t(1, 0, 0);  // Translates 1 along X-axis
-    
+
     // SE(3) Declaration, also known as Transformation matrix (T) or Pose
     // It can be initialized ...
     Sophus::SE3d SE3_Rt(R, t);  // ... from R, t
@@ -74,7 +74,7 @@ int main(int argc, char** argv){
 
     printMatrix<Matrix4d>("SE(3) from R,t: ", SE3_Rt.matrix());
     printMatrix<Matrix4d>("SE(3) from q,t: ", SE3_qt.matrix());
-    
+
     // Use the logarithmic map to get the 𝖘𝖊(3) Lie Algebra, which is a 6D vector.
     // Reminder: 𝛏 = vee(ln(T)), SE(3) -> 𝖘𝖊(3)
     typedef Eigen::Matrix<double, 6, 1> Vector6d;  // Since Eigen doesn't have Vector6d, we need to create it.
@@ -90,7 +90,7 @@ int main(int argc, char** argv){
 
     // To save back again to SE(3), we have to use the exponential:
     printMatrix<Matrix4d>("T, SE3_Rt: ", Sophus::SE3d::exp(se3_xi).matrix());  // When programming, we can just use 𝛏, but according to book it should be 𝛏^.
-    
+
     // Finally, update by using the perturbation model.
     Vector6d small_se3_xi;
     small_se3_xi << 1e-4, 0, 0, 0, 0, 0;

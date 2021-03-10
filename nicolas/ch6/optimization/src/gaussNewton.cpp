@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
 
     /* ----- Data Generation ----- */
     vector<double> x_data, y_data;              // Data Vectors
-  
+
     for(int i=0; i < N; i++){
         double x = i/100.0;
         double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);  // y = exp(a.x^2+b.x+c) + w
-    
+
         x_data.push_back(x);
         y_data.push_back(y);
     }
@@ -61,12 +61,12 @@ int main(int argc, char **argv) {
         // Data Loop
         for(int i=0; i<N; i++){
             double xi = x_data[i], yi_r = y_data[i];  // the i-th data point
-            
+
             /* ----- Compute Error ----- */
             // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
             double yi_e = exp(ae*xi*xi + be*xi + ce);
             double ei = yi_r - yi_e;                // e(x) = y_r - y_e = y_r - exp(a.x^2+b.x+c)
-            
+
             /* ----- Jacobians ----- */
             Vector3d J;          // Jacobian matrix of the error
             J[0] = -xi*xi*yi_e;  // de(x)/da
@@ -112,10 +112,10 @@ int main(int argc, char **argv) {
     // Computes the RMSE
     Vector3d abc_r = {ar, br, cr};
     Vector3d abc_e = {ae, be, ce};
-    
+
     double rmse = RMSE(abc_e, abc_r);
 
-    /* ----- Results ----- */ 
+    /* ----- Results ----- */
     cout << "\n---" << endl;
     cout << "Real:\t   a,b,c = ";
     cout << ar << ", " << br << ", " << cr;

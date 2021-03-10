@@ -12,18 +12,18 @@ string image_filepath = "../../imageBasics/src/dog.jpg";
 /* This Program demonstrates the following operations: image reading, displaying, pixel vising, copying, assignment, etc */
 int main(int argc, char **argv){
     print("[imageBasics] Hello!");
-    
+
     // Read the image as 8UC3 (BGR)
     cout << "[imageBasics] Reading '" << image_filepath << "'...";
     cv::Mat image = cv::imread(image_filepath);  // call cv::imread() to read the image from file
-    
+
     if(!checkImage(image)){
         return 0;
     }
 
     // Print some basic information
     printImageInfo("image", image);
-    
+
     cv::imshow("image", image);  // Use cv::imshow() to show the image
     cv::waitKey(0);              // Display and wait for a keyboard input
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv){
     for(size_t y=0; y < image.rows; y++){  // [0, H-1]
         // Use cv::Mat::ptr to get the pointer of each row
         unsigned char *row_ptr = image.ptr<unsigned char>(y);  // row_ptr is the pointer to y-th row
-        
+
         for(size_t x=0; x < image.cols; x++){  // [0, W-1]
             // Read the pixel on (x,y), x=column, y=row
             unsigned char *data_ptr = &row_ptr[x*image.channels()];  // data_ptr is the pointer to (x,y)

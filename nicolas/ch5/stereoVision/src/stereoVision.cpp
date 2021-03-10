@@ -7,7 +7,7 @@ using namespace Eigen;
 /* Global Variables */
 string left_filepath = "../../stereoVision/src/left.png";
 string right_filepath = "../../stereoVision/src/right.png";
-    
+
 // Stereo Camera Intrinsics params
 double fx = 718.856,  fy = 718.856;   // Focal lengths
 double cx = 607.1928, cy = 185.2157;  // Optical Centers
@@ -21,7 +21,7 @@ double b = 0.573;                     // Baseline
 then calculate the coordinates of each pixel in the camera coordinate system, which will form a point cloud */
 int main(int argc, char **argv){
     print("[stereoVision] Hello!");
-    
+
     // 1. Read the image as 8UC1
     cout << "[stereoVision] Reading '" << left_filepath << "'...";
     cv::Mat left = cv::imread(left_filepath, 0);
@@ -41,7 +41,7 @@ int main(int argc, char **argv){
     cout << endl;
     printImageInfo("left", left);
     printImageInfo("right", right);
-    
+
     // 2. Stereo Matching (Pixel Correspondence)
     cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);  // SGBM is sensitive to parameters
     cv::Mat disparity_sgbm, disparity;
@@ -56,10 +56,10 @@ int main(int argc, char **argv){
 
     // SGBM returns a Disparity Map that uses 1/16 increments.
     disparity_sgbm.convertTo(disparity, CV_32F, 1.0/16.0f);  //So to get the true disparity it's necessary to divided by 16.
-    
+
     printImageInfo("disparity_sgbm", disparity_sgbm);
     printImageInfo("disparity", disparity);
-    
+
     // 3. Compute the point cloud
     PointCloud pointcloud;  // Vector of 4D Points
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv){
             // If disparity (d) is in (-inf, 0.0] U [96.0, +inf).
             // These are the numDisparitiesMin and numDisparitiesMax params of SGBM
             float d = disparity.at<float>(v, u);
-            if(d <= 0.0 || d >= 96.0) 
+            if(d <= 0.0 || d >= 96.0)
                 continue;  // Skips current iteration
 
             // Compute the Depth from the disparity values
@@ -80,8 +80,8 @@ int main(int argc, char **argv){
             // 1. Create a 4D Vector for holding the Camera 3D Point + Color (GreyScale)
             // point = [X, Y, Z, I(v,u)]'
             Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud Viewer.
-            
-            
+
+
             // 2. Pixel, Puv=[u,v]' -> Normalized, Pc=[X/Z, Y/Z, 1]'
             double x = (u - cx)/fx;                       // x = X/Z
             double y = (v - cy)/fy;                       // y = Y/Z
@@ -90,7 +90,7 @@ int main(int argc, char **argv){
             // 3. Normalized, Pc=[X/Z, Y/Z, 1]' -> P Coordinates, ~Pc=[X, Y, Z]'
             point[0] = x*Z;                               // X of P
             point[1] = y*Z;                               // Y of P
-            point[2] = Z;                                 
+            point[2] = Z;
 
             pointcloud.push_back(point);
         }
@@ -100,12 +100,12 @@ int main(int argc, char **argv){
     cv::normalize(disparity/96.0, disparity_norm, 0, 1, cv::NORM_MINMAX);
 
     printImageInfo("disparity_norm", disparity_norm);
-    
+
     // 4. Display Images
     cout << "[stereoVision] Displaying OpenCV images..." << endl;
     cv::imshow("left", left);
     cv::imshow("right", right);
-    cv::imshow("disparity", disparity_norm);  
+    cv::imshow("disparity", disparity_norm);
     cv::waitKey(1);  // 1 ms (Non-Blocking)
 
     // 5. Display Point Cloud (Pangolin)
@@ -126,7 +126,7 @@ void showPointCloud(const PointCloud &pointcloud){
         cerr << "Point cloud is empty!" << endl;
         return;
     }
-    
+
     // Create Pangolin window and plot the trajectory
     pangolin::CreateWindowAndBind("Point Cloud Viewer", 1024, 768);
 
@@ -157,10 +157,10 @@ void showPointCloud(const PointCloud &pointcloud){
             glVertex3d(p[0], p[1], p[2]);
         }
         glEnd();
-   
+
         pangolin::FinishFrame();
         usleep(5000);  // sleep 5 ms
-        
+
         if(cv::waitKey(10)==27){    // 'Esc' key to stop
             break;
         }

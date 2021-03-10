@@ -11,13 +11,13 @@ string rgbd_folder_path = "../../rgbd/src/";
 // RGB-D Camera Intrinsics params
 double fx = 518.0, fy = 519.0;  // Focal Lengths
 double cx = 325.5, cy = 253.5;  // Optical Centers
-    
+
 double depthScale = 1000.0;     // Depth Scale for decoding the Depth data.
 
 /* ====== */
 /*  Main  */
 /* ====== */
-// This program accomplishes two things: 
+// This program accomplishes two things:
 // 1. Calculate the point cloud corresponding to each pair of RGB-D images based on internal parameters;
 // 2. According to the camera pose of each image (that is, external parameters), put the points to a global cloud by the camera poses.
 int main(int argc, char **argv){
@@ -59,10 +59,10 @@ int main(int argc, char **argv){
 
                 if(d==0)
                     continue;  // If d is 0 (no valid value), skips current iteration.
-    
+
                 // Compute the Depth from the RGB-D values
                 // P = ~Pc = [X, Y, Z]', P described in the Camera System
-                // Pc = [X/Y, Y/Z, 1]', Normalized Coordinates      
+                // Pc = [X/Y, Y/Z, 1]', Normalized Coordinates
 
                 // 1. Create a 3D Vector for holding the Camera 3D Point
                 // point = [X, Y, Z]'
@@ -72,7 +72,7 @@ int main(int argc, char **argv){
                 double x = (u - cx)/fx;                       // x = X/Z
                 double y = (v - cy)/fy;                       // y = Y/Z
                 double Z = double(d) / depthScale;            // Z of P (Depth)
-                
+
                 // 3. Normalized, Pc=[X/Z, Y/Z, 1]' -> P Coordinates, ~Pc=[X, Y, Z]'
                 point[0] = x*Z;                               // X of P
                 point[1] = y*Z;                               // Y of P
@@ -87,7 +87,7 @@ int main(int argc, char **argv){
                 p[5] = color.data[v*color.step + u*color.channels()];      // Blue
                 p[4] = color.data[v*color.step + u*color.channels() + 1];  // Green
                 p[3] = color.data[v*color.step + u*color.channels() + 2];  // Red
-                
+
                 pointcloud.push_back(p);
             }
         }
@@ -101,7 +101,7 @@ int main(int argc, char **argv){
     cout << "[jointMap] Initializing Pangolin's Point Cloud Viewer..." << endl;
     cout << "Press 'ESC' to exit the program" << endl;
     showPointCloud(pointcloud);
-    
+
     cv::destroyAllWindows();
     cout << "Done." << endl;
     return 0;
@@ -166,7 +166,7 @@ void showPointCloud(const PointCloud &pointcloud){
         cerr << "Point cloud is empty!" << endl;
         return;
     }
-    
+
     // Create Pangolin window and plot the trajectory
     pangolin::CreateWindowAndBind("Point Cloud Viewer", 1024, 768);
 
@@ -197,10 +197,10 @@ void showPointCloud(const PointCloud &pointcloud){
             glVertex3d(p[0], p[1], p[2]);
         }
         glEnd();
-   
+
         pangolin::FinishFrame();
         usleep(5000);  // sleep 5 ms
-        
+
         if(cv::waitKey(10)==27){    // 'Esc' key to stop
             break;
         }

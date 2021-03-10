@@ -5,7 +5,7 @@ using namespace std;
 using namespace Eigen;
 
 /* Global Variables */
-// Choose the optimization algorithm: 
+// Choose the optimization algorithm:
 // 1: Gauss-Newton, 2: Levenberg-Marquardt, 3: Powell's Dog Leg
 int optimization_algorithm_selected = 1;
 
@@ -14,26 +14,26 @@ int optimization_algorithm_selected = 1;
 /* --------------------- */
 /* Quick Remind: A virtual function is a member function which is declared within a base class and is re-defined (Overriden) by a derived class.
 /* Link: https://www.geeksforgeeks.org/virtual-function-cpp/
-/* 
+/*
 /* virtual & override:
 /* When you override a function you don't technically need to write either virtual or override.
-/* 
+/*
 /* The original base class declaration needs the keyword virtual to mark it as virtual.
-/* 
+/*
 /* In the derived class the function is virtual by way of having the ¹same type as the base class function.
-/* 
+/*
 /* However, an override can help avoid bugs by producing a compilation error when the intended override isn't technically an override. For instance, the function type isn't exactly like the base class function. Or that a maintenance of the base class changes that function's type, e.g. adding a defaulted argument.
-/* 
+/*
 /* In the same way, a virtual keyword in the derived class can make such a bug more subtle by ensuring that the function is still virtual in the further derived classes.
-/* 
+/*
 /* So the general advice is,
-/* 
+/*
 /* Use virtual for the base class function declaration.
 /* This is technically necessary.
-/* 
+/*
 /* Use override (only) for a derived class' override.
 /* This helps maintenance.
-/* 
+/*
 /* Example:
 /*  struct Base { virtual void foo() {} };
 /*  struct Derived : Base { void foo() override {} };
@@ -50,7 +50,7 @@ int optimization_algorithm_selected = 1;
 /*  Eigen: Structures Having Eigen Members */
 /* --------------------------------------- */
 /* If you define a structure having members of fixed-size vectorizable Eigen types, you must overload
-/* its "operator new" so that it generates 16-bytes-aligned pointers. 
+/* its "operator new" so that it generates 16-bytes-aligned pointers.
 /* Fortunately, Eigen provides you with a macro EIGEN_MAKE_ALIGNED_OPERATOR_NEW that does that for you.
 */
 
@@ -62,7 +62,7 @@ int optimization_algorithm_selected = 1;
 */
 class CurveFittingVertex : public g2o::BaseVertex<3, Vector3d> {  // Inheritance of the class "g2o::BaseVertex"
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW  
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     // Reset
     virtual void setToOriginImpl() override {
@@ -77,20 +77,20 @@ public:
 
     // Save and read: leave blank
     virtual bool read(istream &in) {}
-    
+
     virtual bool write(ostream &out) const {}
 };
 
 /* ------------------ */
 /*  CurveFittingEdge  */
 /* ------------------ */
-/* Description: Error model 
+/* Description: Error model
 /* Template parameters: measurement dimension, measurement type, connection vertex type
 */
 class CurveFittingEdge : public g2o::BaseUnaryEdge<1, double, CurveFittingVertex> {  // Inheritance of the class "g2o::BaseUnaryEdge"
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    
+
     // Constructor
     // 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x".
     // 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
@@ -107,7 +107,7 @@ public:
         // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
         _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0));  // e(x) = y_r - y_e =  y_r - exp(a.x^2+b.x+c).
     }
-    
+
     // Calculate the Jacobian matrix
     /**
      * Linearizes the oplus operator in the vertex, and stores
@@ -117,9 +117,9 @@ public:
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
         const CurveFittingVertex *v = static_cast<const CurveFittingVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
         const Vector3d abc = v->estimate();
-        
+
         double y = exp(abc[0]*_x*_x + abc[1]*_x + abc[2]);  // Y_estimated
-        
+
         // J(x).J(x)'.∆x = −J(x).f(x) ~= H(x).∆x = g(x)
         _jacobianOplusXi[0] = -_x*_x*y;  // de(x)/da = -x^2*exp(a*x^2 + b*x + c) = -x^2*y
         _jacobianOplusXi[1] = -_x*y;     // de(x)/db =   -x*exp(a*x^2 + b*x + c) = -x*y
@@ -162,11 +162,11 @@ int main(int argc, char **argv) {
 
     /* ----- Data Generation ----- */
     vector<double> x_data, y_data;              // Data Vectors
-  
+
     for(int i=0; i < N; i++){
         double x = i/100.0;
         double y = exp(ar*x*x + br*x + cr) + rng.gaussian(w_sigma*w_sigma);  // y = exp(a.x^2+b.x+c) + w
-    
+
         x_data.push_back(x);
         y_data.push_back(y);
     }
@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 
     // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
     g2o::OptimizationAlgorithmWithHessian *solver;
-    
+
     switch (optimization_algorithm_selected){
         case 1:  // Option 1: Gauss-Newton method
             solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     }
 
     cout << "Optimization Algorithm selected: " << optimization_algorithm_selected << endl;
-            
+
     // Configure the optimizer
     g2o::SparseOptimizer optimizer;  // Graph model
     optimizer.setAlgorithm(solver);  // Set the solver
@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
 
     /* ----- Solve (Perform optimization) ----- */
     cout << "[g2oCurveFitting] Start optimization..." << endl;
-    
+
     print("Summary: ");
     Timer t1 = chrono::steady_clock::now();
     optimizer.initializeOptimization();
@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
 
     double rmse = RMSE(abc_e, abc_r);
 
-    /* ----- Results ----- */ 
+    /* ----- Results ----- */
     cout << "---" << endl;
     cout << "Real:\t   a,b,c = ";
     cout << ar << ", " << br << ", " << cr;

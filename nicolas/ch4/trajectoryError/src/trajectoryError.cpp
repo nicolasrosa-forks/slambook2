@@ -19,7 +19,7 @@ TimeStamp time_est, time_gt;
 /*                                                                                                  */
 /*  b) Relative Pose Error (RPE), which measures the difference between relative transformations    */
 /*     at time instances i and i+k, for different values of k. This method is independent of the    */
-/*     reference frame but when the scale of the map is not known (for example monocular mapping),  */ 
+/*     reference frame but when the scale of the map is not known (for example monocular mapping),  */
 /*     a scale alignment needs to be done before comparing trajectories using RPE.                  */
 /*                                                                                                  */
 /*  Ref: Salas, Marta, et al. "Trajectory alignment and evaluation in SLAM: Horns method vs         */
@@ -34,7 +34,7 @@ int main(int argc, char **argv){
     // 1. Read the two trajectories (Sequences of Poses)
     TrajectoryType estimated = ReadTrajectory(time_est, traj_est_filepath);
     TrajectoryType groundtruth = ReadTrajectory(time_gt, traj_gt_filepath);
-    
+
     assert(!estimated.empty() && !groundtruth.empty());
     assert(estimated.size() == groundtruth.size());
 
@@ -44,19 +44,19 @@ int main(int argc, char **argv){
     // FIXME: Do I still need to align the trajectories? Do I need to use that HORN algorithm?
     double ate_all_sum = 0;
     double ate_trans_sum = 0;
-    
+
     for(size_t i=0; i < N; i++){
         auto pose_est = estimated[i], pose_gt = groundtruth[i];
 
         string pose_est_str = "pose_est[" + to_string(i) + "]: ";
         string pose_gt_str = "pose_gt[" + to_string(i) + "]: ";
-        
+
         printMatrix<Matrix4d>(pose_est_str.c_str(), pose_est.matrix());
-        printMatrix<Matrix4d>(pose_gt_str.c_str(), pose_gt.matrix());  
-        
+        printMatrix<Matrix4d>(pose_gt_str.c_str(), pose_gt.matrix());
+
         double ate_all_error = (pose_gt.inverse()*pose_est).log().norm();
         double ate_trans_error = (pose_gt.inverse()*pose_est).translation().norm();
-        
+
         ate_all_sum += ate_all_error * ate_all_error;
         ate_trans_sum += ate_trans_error * ate_trans_error;
     }
@@ -74,23 +74,23 @@ int main(int argc, char **argv){
     double dt = 1;  //Remember: dt isn't a increment of i-index, but time.
     size_t k=1;
     int j=0;
-    
+
     for(size_t i=0; i < N; i++){  // In practice, this for run 'j=N-dt' times.
         auto pose_est = estimated[i], pose_gt = groundtruth[i];
-        
+
         cout << "i: " << i << endl;
         cout << "t_diff:" << time_gt[i+k] - time_gt[i] << endl;
-    
+
         while(i+k < N && (time_gt[i+k] - time_gt[i] < dt)){
           k++;
         }
 
         if (i+k < N){
-          auto pose_est_dt = estimated[i+k], pose_gt_dt = groundtruth[i+k];  
-          
+          auto pose_est_dt = estimated[i+k], pose_gt_dt = groundtruth[i+k];
+
           double rpe_all_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).log().norm();
           double rpe_trans_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).translation().norm();
-        
+
           rpe_all_sum += rpe_all_error * rpe_all_error;
           rpe_trans_sum += rpe_trans_error * rpe_trans_error;
 
@@ -98,11 +98,11 @@ int main(int argc, char **argv){
 
           k=1;
           j++;
-          
+
           cout << "k: " << k << endl << endl;
         }else{
           break;
-        }   
+        }
     }
 
     cout << "\nNumber of error updates (j): " << j << endl << endl;
@@ -152,7 +152,7 @@ TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
 void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt) {
   // Create Pangolin window and plot the trajectory
   pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
-  
+
   glEnable(GL_DEPTH_TEST);                            // The Depth Test is a per-sample processing operation performed after the Fragment Shader (and sometimes before). https://www.khronos.org/opengl/wiki/Depth_Test
   glEnable(GL_BLEND);                                 // If enabled, blend the computed fragment color values with the values in the color buffers. https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glEnable.xml
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Pixels can be drawn using a function that blends the incoming (source) RGBA values with the RGBA values that are already in the frame buffer (the destination values). https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBlendFunc.xml
@@ -189,7 +189,7 @@ void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt) {
     for(size_t i=0; i < est.size()-1; i++){
       // Get two consecutive poses
       auto p1 = est[i], p2 = est[i + 1];
-      
+
       // Draw links vertexes
       glBegin(GL_LINES);
       glColor3f(1.0f, 0.0f, 0.0f);  // Red for estimated trajectory
@@ -197,7 +197,7 @@ void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt) {
       glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
       glEnd();
     }
-    
+
     pangolin::FinishFrame();
     usleep(5000);  // sleep 5 ms
   }

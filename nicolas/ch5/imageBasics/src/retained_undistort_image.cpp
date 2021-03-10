@@ -10,7 +10,7 @@
  *			produce the undistorted image for us.
  * Option#1 - Perform the reverse distortion in which an undistorted image is created by interpolating
  *			the pixel values from the distorted (input/raw) image using cv::remap.
- *			
+ *
  */
 
 #include <string>
@@ -23,7 +23,7 @@
 std::string image_filepath = "../../imageBasics/src/distorted.png";
 
 // Compute the image size of the undistorted image
-void computeUndistortedBoundary(/*in*/cv::Size &image_size, 
+void computeUndistortedBoundary(/*in*/cv::Size &image_size,
 								/*in*/cv::Mat &K,
 								/*in*/cv::Mat &distortionCoef,
 								/*out*/cv::Mat &undistortedCorners,
@@ -34,8 +34,8 @@ void computeUndistortedBoundary(/*in*/cv::Size &image_size,
 
 
 // Produce distorted point (out_x, out_y) from undistort (in_x, in_y) point
-void distortPoint(	cv::Mat &K, cv::Mat &distortionCoef, 
-					double in_x, double in_y, 
+void distortPoint(	cv::Mat &K, cv::Mat &distortionCoef,
+					double in_x, double in_y,
 					/*out*/double &out_x, /*out*/double &out_y);
 
 /* ====== */
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 		cv::Mat undistorted_image_out1;  // output undistorted image
 		cv::remap(/*in*/distorted_image, /*out*/undistorted_image_out1, map_x, map_y, cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
 		cv::imwrite("undistorted_out1.jpg", undistorted_image_out1);
-	
+
 		cv::imshow("undistorted_out1", undistorted_image_out1);
 
 	}
@@ -117,11 +117,11 @@ int main(int argc, char *argv[])
 				// Coordinates of undistorted points
 				double v = dminy + y;
 				double u = dminx + x;
-			
+
 				// Compute the distorted point
 				double distortedx, distortedy;
 				distortPoint(K, distortionCoef, u, v, distortedx, distortedy);
-			
+
 				// Construct map_x, map_y
 				map_x.at<float>(y,x) = (float)distortedx;
 				map_y.at<float>(y,x) = (float)distortedy;
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 		cv::imwrite("undistorted_out2.jpg", undistorted_image_out2);
 
 		cv::imshow("undistorted_out2", undistorted_image_out2);
-	
+
 	}
 
 	cv::waitKey(0);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 /*  Functions  */
 /* =========== */
 // Compute the image size of the undistorted image
-void computeUndistortedBoundary(/*in*/cv::Size &image_size, 
+void computeUndistortedBoundary(/*in*/cv::Size &image_size,
 								/*in*/cv::Mat &K,
 								/*in*/cv::Mat &distortionCoef,
 								/*out*/cv::Mat &undistortedCorners,
@@ -180,7 +180,7 @@ void computeUndistortedBoundary(/*in*/cv::Size &image_size,
 	{
 		// Un-normalized point coordinates
 		double normalized_x, normalized_y, non_normalized_x, non_normalized_y;
-		normalized_x = undistortedCorners.at<cv::Vec2d>(cor,0)[0]; 
+		normalized_x = undistortedCorners.at<cv::Vec2d>(cor,0)[0];
 		normalized_y = undistortedCorners.at<cv::Vec2d>(cor,0)[1];
 		non_normalized_x = normalized_x * K.at<double>(0, 0) + K.at<double>(0, 2);
 		non_normalized_y = normalized_y * K.at<double>(1, 1) + K.at<double>(1, 2);
@@ -202,8 +202,8 @@ void computeUndistortedBoundary(/*in*/cv::Size &image_size,
 }
 
 // Produce distorted point (out_x, out_y) from undistort (in_x, in_y) point
-void distortPoint(cv::Mat &K, cv::Mat &distortionCoef, 
-				double in_x, double in_y, 
+void distortPoint(cv::Mat &K, cv::Mat &distortionCoef,
+				double in_x, double in_y,
 				/*out*/double &out_x, /*out*/double &out_y)
 {
 	// Camera parameters and distortion coefficients
