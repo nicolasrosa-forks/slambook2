@@ -13,8 +13,10 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-string image1_filepath = "../../orb_features/src/1.png";
-string image2_filepath = "../../orb_features/src/2.png";
+// string image1_filepath = "../../orb_features/src/1.png";
+// string image2_filepath = "../../orb_features/src/2.png";
+string image1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1.png";
+string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2.png";
 
 double matches_lower_bound = 30.0;
 
@@ -78,11 +80,11 @@ int main(int argc, char **argv) {
     cout << "-- Number of matches: " << matches.size() << endl;
 
     //--- Step 4: Select correct matching (filtering)
-    // Calculate the min & max distances
+    // Calculate the minimum and maximum distances
 
     /* Parameters: __first – Start of range.
-                   __last – End of range.
-                   __comp – Comparison functor.
+    /*             __last – End of range.
+    /*             __comp – Comparison functor.
     */
     auto min_max = minmax_element(matches.begin(), matches.end(),
         [](const DMatch &m1, const DMatch &m2) {

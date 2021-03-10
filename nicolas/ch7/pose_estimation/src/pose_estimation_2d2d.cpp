@@ -11,7 +11,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"
@@ -20,8 +20,10 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-string image1_filepath = "../../orb_features/src/1.png";
-string image2_filepath = "../../orb_features/src/2.png";
+// string image1_filepath = "../../orb_features/src/1.png";
+// string image2_filepath = "../../orb_features/src/2.png";
+string image1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1.png";
+string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2.png";
 
 double matches_lower_bound = 30.0;
 
@@ -72,21 +74,21 @@ int main(int argc, char **argv) {
     /* ----------------------- */
     /*  Pose Estimation 2D-2D  */
     /* ----------------------- */
-    //--- Step 6: Estimate the motion (R, t) between the two images
+    //--- Step 6.1: Estimate the motion (R, t) between the two images
     Mat R, t;
     pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);
 
-    //--- Step 7: Verify E = t^*R*scale
+    //--- Step 6.2: Verify E = t^*R*scale
     Mat t_hat = vee2hat(t);
 
     printMatrix("t_hat:\n", t_hat);
     printMatrix("t^*R=\n", t_hat*R);
 
-    //--- Step 8: Verify the Epipolar Constraint, x2^T*E*x1 = 0
+    //--- Step 6.3: Verify the Epipolar Constraint, x2^T*E*x1 = 0
     int counter = 0;
     string flag;
 
-    for(DMatch m: goodMatches){  // For each matched pair (p1, p2)_n, do...
+    for(DMatch m : goodMatches){  // For each matched pair (p1, p2)_n, do...
         // Pixel Coordinates to Normalized Coordinates, (p1, p2)_n to (x1, x2)_n
         Point2d x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // x1, n-th Feature Keypoint in Image 1
         Point2d x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // x2, n-th Feature Keypoint in Image 2
