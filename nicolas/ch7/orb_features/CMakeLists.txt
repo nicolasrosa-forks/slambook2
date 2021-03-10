@@ -9,7 +9,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Libraries
 find_package(OpenCV 3 REQUIRED)
-find_package(G2O REQUIRED)
 find_package(Sophus REQUIRED)
 
 include_directories(

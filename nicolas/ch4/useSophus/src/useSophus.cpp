@@ -7,9 +7,8 @@
 #include <eigen3/Eigen/Geometry>
 
 /* Sophys Libraries */
-#include "sophus/se3.hpp"
-#include "sophus/so3.hpp"
-
+#include <sophus/se3.hpp>
+#include <sophus/so3.hpp>
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"

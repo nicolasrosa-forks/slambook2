@@ -20,6 +20,7 @@ find_package(Ceres REQUIRED)
 include_directories(${CERES_INCLUDE_DIRS})
 
 # g2o
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/")
 find_package(G2O REQUIRED)
 include_directories(${G2O_INCLUDE_DIRS})
 

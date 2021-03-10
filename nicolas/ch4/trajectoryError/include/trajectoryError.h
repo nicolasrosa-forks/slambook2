@@ -9,8 +9,8 @@
 #include <eigen3/Eigen/Geometry>
 
 /* Sophus Libraries */
-#include "sophus/se3.hpp"
-#include "sophus/so3.hpp"
+#include <sophus/se3.hpp>
+#include <sophus/so3.hpp>
 
 /* Pangolin Library */
 #include <pangolin/pangolin.h>
