@@ -9,7 +9,7 @@ class Pessoa{
     // Private
     string nome;
     int idade;
-    
+
     public:
         // Constructor
         Pessoa(string no, int id){
@@ -52,7 +52,7 @@ bool ordena_por_idade(Pessoa A, Pessoa B){
 
 int main(int argc, char** argv){
     std::vector<Pessoa> Pessoas; // Vector de Pessoas
-    
+
     Pessoas.push_back(Pessoa("Joao", 25));
     Pessoas.push_back(Pessoa("Maria", 32));
     Pessoas.push_back(Pessoa("Carla", 4));
@@ -60,7 +60,7 @@ int main(int argc, char** argv){
 
     cout << "Ordenado conforme foi preenchido:" << endl;
     printVector(Pessoas);
-    
+
     // Ordena por Nome
     sort(Pessoas.begin(), Pessoas.end(), ordena_por_nome);
     cout << "Ordenado por Nome:" << endl;

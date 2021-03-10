@@ -24,7 +24,7 @@ int main(int argc, char** argv){
     printQuaternion("q2: ", q2);
     cout << endl;
 
-    // Notes that quaternions need to be normalized before use! 
+    // Notes that quaternions need to be normalized before use!
     q1.normalize();
     q2.normalize();
 
@@ -44,14 +44,14 @@ int main(int argc, char** argv){
     // T(q) initializes Rot. Matrix (R) with Quaternion q of the Transformation Matrix (T)
     Isometry3d T1w(q1);  // Transformation Matrix from Frame {w} to Frame {1}
     Isometry3d T2w(q2);  // Transformation Matrix from Frame {w} to Frame {2}
- 
+
     T1w.pretranslate(t1);
     T2w.pretranslate(t2);
-    
+
     /* Coordinate Transformation */
     // Overload, Vector3d can multiply a Matrix4d
     Vector3d p1(0.5, 0, 0.2);  // Arbitrary point P in the Frame {1}
-    
+
     // Get the coordinates of the point P in Frame {2}, based on the coordinates of P in Frame {1}
     Vector3d p2 = T2w*T1w.inverse()*p1;  // p2 = T2w*Tw1*p1 = T2w*inv(T1w)*p1
 

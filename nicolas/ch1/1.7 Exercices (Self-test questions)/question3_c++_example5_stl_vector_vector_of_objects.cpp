@@ -9,7 +9,7 @@ class Pessoa{
     // Private
     string nome;
     int idade;
-    
+
     public:
         // Constructor
         Pessoa(string no, int id){
@@ -38,7 +38,7 @@ void printVector(std::vector<Pessoa> &var){
 
 int main(int argc, char** argv){
     std::vector<Pessoa> Pessoas; // Vector de Pessoas
-    
+
     Pessoas.push_back(Pessoa("Joao", 25));
     Pessoas.push_back(Pessoa("Maria", 32));
     Pessoas.push_back(Pessoa("Carla", 4));

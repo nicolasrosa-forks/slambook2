@@ -25,7 +25,7 @@ typedef vector<uint32_t> DescType;  // Descriptor Type
  * @param img Input Image
  * @param keypoints Detected FAST Keypoints
  * @param descriptors Descriptors
- * 
+ *
  * NOTE: If a keypoint goes outside the image boundary (8 pixels), descriptors will not be computed and will be left as empty.
  */
 void ComputeORB(const Mat &img, vector<KeyPoint> &keypoints, vector<DescType> &descriptors);
@@ -58,13 +58,13 @@ int main(int argc, char **argv) {
     Timer t1 = chrono::steady_clock::now();
     FAST(image1, keypoints1, 40);
     FAST(image1, keypoints2, 40);
-    
+
     /* Step 2: Calculate BRIEF descriptors based on the position of Oriented FAST keypoints */
     Timer t2 = chrono::steady_clock::now();
     ComputeORB(image1, keypoints1, descriptors1);
-    ComputeORB(image2, keypoints2, descriptors2);     
+    ComputeORB(image2, keypoints2, descriptors2);
     Timer t3 = chrono::steady_clock::now();
-    
+
     printTimeElapsed("ORB Features Extraction: ", t1, t3);
     printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
     printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);

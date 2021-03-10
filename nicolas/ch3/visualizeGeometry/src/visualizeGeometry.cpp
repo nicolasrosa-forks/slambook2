@@ -27,14 +27,14 @@ struct RotationMatrix{
 // Overload operator <<
 ostream &operator<<(ostream &out, const RotationMatrix &r){
     Matrix3d matrix = r.matrix;
-    
+
     out.setf(ios::fixed);
 
     out << '=';
     out << "[" << setprecision(2) << matrix(0, 0) << "," << matrix(0, 1) << "," << matrix(0, 2) << "],"
         << "[" << matrix(1, 0) << "," << matrix(1, 1) << "," << matrix(1, 2) << "],"
         << "[" << matrix(2, 0) << "," << matrix(2, 1) << "," << matrix(2, 2) << "]";
-    
+
     return out;
 }
 
@@ -87,9 +87,9 @@ istream &operator>>(istream &in, const QuaternionDraw quat) {
 /* ================================================================= */
 int main(int argc, char** argv){
     pangolin::CreateWindowAndBind("Visualize Geometry", 1000, 600);  // Initialize OpenGL window
-    
+
     glEnable(GL_DEPTH_TEST);                            // The Depth Test is a per-sample processing operation performed after the Fragment Shader (and sometimes before). https://www.khronos.org/opengl/wiki/Depth_Test
-    
+
     pangolin::OpenGlRenderState s_cam(
         pangolin::ProjectionMatrix(1000, 600, 420, 420, 500, 300, 0.1, 1000),
         pangolin::ModelViewLookAt(3, 3, 3, 0, 0, 0, pangolin::AxisY)
@@ -106,9 +106,9 @@ int main(int argc, char** argv){
     pangolin::Var<TranslationVector> translation_vector("ui.t", TranslationVector());
     pangolin::Var<TranslationVector> euler_angles("ui.rpy", TranslationVector());
     pangolin::Var<QuaternionDraw> quaternion("ui.q", QuaternionDraw());
-    
+
     pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(UI_WIDTH));
-    
+
     /* Loop */
     while (!pangolin::ShouldQuit()) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -139,27 +139,27 @@ int main(int argc, char** argv){
 
         glColor3f(1.0, 1.0, 1.0);  // White
         pangolin::glDrawColouredCube();
-        
+
         // Draw the original axis
         glLineWidth(3);
         glBegin(GL_LINES);
-        
+
         glColor3f(0.8f, 0.f, 0.f);
         glVertex3f(0, 0, 0);
         glVertex3f(10, 0, 0);
-        
+
         glColor3f(0.f, 0.8f, 0.f);
         glVertex3f(0, 0, 0);
         glVertex3f(0, 10, 0);
-        
+
         glColor3f(0.2f, 0.2f, 1.f);
         glVertex3f(0, 0, 0);
         glVertex3f(0, 0, 10);
-        
+
         glEnd();
 
         pangolin::FinishFrame();
     }
-    
+
     return 0;
 }

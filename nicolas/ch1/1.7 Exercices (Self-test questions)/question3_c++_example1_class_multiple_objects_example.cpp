@@ -26,7 +26,7 @@ int main(int argc, char** argv){
     // Print attributes values
     cout << carObj1.brand << " " << carObj1.model << " " << carObj1.year << endl;
     cout << carObj2.brand << " " << carObj2.model << " " << carObj2.year << endl;
-    
+
     cout << "Done." << endl;
 
     return 0;

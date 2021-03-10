@@ -33,7 +33,7 @@ int main(int argc,char** argv){
 
     print("[Option 2]: QR Decomposition");
     printMatrix<MatrixXd>("x: ", x);
-    
+
     // Option 3: Cholesky Decomposition
     x = A.ldlt().solve(b);
 

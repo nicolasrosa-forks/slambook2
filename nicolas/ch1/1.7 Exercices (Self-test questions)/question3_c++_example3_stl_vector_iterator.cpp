@@ -26,7 +26,7 @@ void isEmpty(std::vector<int> &var){
 int main(int argc, char** argv){
     // Cria um vetor de inteiros vazio
     std::vector<int> meuVetor;
-    
+
     isEmpty(meuVetor);
 
     // Inclue no fim do vetor um elemento

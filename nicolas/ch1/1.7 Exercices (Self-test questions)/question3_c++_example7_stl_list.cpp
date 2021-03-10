@@ -47,12 +47,12 @@ int main(int argc, char** argv){
     // Para usar find, informe  o ponto inicial e final de procura, mais o elemento
     // este método STL devolve um iterador (ponteiro) para o objeto.
     k = find(minhaLista.begin(), minhaLista.end(), 27.26);
-    
+
     if(*k == 27.26)
         cout << "Elemento 27.26 encontrado!!!" << endl;
     else
         cout << "Não existe o elemento procurado!!!" << endl;
-    
+
     cout << endl;
 
     // Limpa toda a lista

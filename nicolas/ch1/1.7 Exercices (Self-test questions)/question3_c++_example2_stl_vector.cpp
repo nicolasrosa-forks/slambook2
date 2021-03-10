@@ -7,7 +7,7 @@ using namespace std;
 void printVector(std::vector<int> &var){
     for (int i=0; i<var.size(); i++)
         cout << "Imprimindo vetor: " << var[i] << endl;
-    
+
     cout << endl;
 }
 
@@ -38,7 +38,7 @@ int main(int argc, char** argv){
 
     // Retira o último elemento
     meuVetor.pop_back();
-    
+
     // Printa conteúdo do vetor, imprimirá 2 valores {7, 11}
     printVector(meuVetor);
 

@@ -10,7 +10,7 @@ void printDeque(std::deque<int> &var){
 
     for(it = var.begin(); it != var.end(); it++)
         cout << *it << " " ;
-    
+
     cout << endl;
 }
 
@@ -26,13 +26,13 @@ int main(int argc, char** argv){
 
     printDeque(myDeque);
 
-    // Insert 10 at 
+    // Insert 10 at
     std::deque<int>::iterator it = myDeque.begin(); //it @ idx=0
     ++it; //it @ idx=1
 
     it = myDeque.insert(it, 10); //"it" now points to the newly inserted 10
     printDeque(myDeque);
-   
+
     // Insert 2x the value 20 in the pointed position by it
     myDeque.insert(it, 2, 20);  // Cannot return a valid value to "it"!
     printDeque(myDeque);

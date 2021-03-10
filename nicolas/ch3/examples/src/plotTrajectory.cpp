@@ -55,7 +55,7 @@ TrajectoryType ReadTrajectory(const string &path){
     }else{
         cout << "Read '" << path << "' was successful." << endl;
     }
-    
+
     while(!fin.eof()){
         double time, tx, ty, tz, qx, qy, qz, qw;
         fin >> time >> tx >> ty >> tz >> qx >> qy >> qz >> qw;
@@ -106,17 +106,17 @@ void DrawTrajectory(const TrajectoryType &poses){
 
             // Draw coordinate axes vertexes
             glBegin(GL_LINES);
-            
+
             // X-Axis (Red)
-            glColor3f(1.0, 0.0, 0.0);           
+            glColor3f(1.0, 0.0, 0.0);
             glVertex3d (Ow[0], Ow[1], Ow[2]);
             glVertex3d (Xw[0], Ow[1], Ow[2]);
-            
+
             // Y-Axis (Green)
             glColor3f(0.0, 1.0, 0.0);
             glVertex3d (Ow[0], Ow[1], Ow[2]);
             glVertex3d (Yw[0], Yw[1], Yw[2]);
-            
+
             // Z-Axis (Blue)
             glColor3f(0.0, 0.0, 1.0);
             glVertex3d (Ow[0], Ow[1], Ow[2]);
@@ -129,7 +129,7 @@ void DrawTrajectory(const TrajectoryType &poses){
         for(size_t i=0; i < poses.size()-1; i++){
             // Get two consecutive poses
             auto p1 = poses[i], p2 = poses[i+1];  // Placeholder type specifiers. https://en.cppreference.com/w/cpp/language/auto
-            
+
             // Draw links vertexes
             glBegin(GL_LINES);
             glColor3f(0.0, 0.0, 0.0);

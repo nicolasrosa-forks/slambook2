@@ -18,7 +18,7 @@ int main(int argc,char** argv){
     printMatrix<Matrix3d>("I: ", I);
 
     printMatrix<MatrixXd>("M(0:2, 0:2): ", M.block<3,3>(0,0));
-    
+
     I = M.block<3,3>(0,0);
 
     printMatrix<Matrix3d>("I': ", I);
