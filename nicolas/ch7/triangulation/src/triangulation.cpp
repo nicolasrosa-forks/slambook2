@@ -45,12 +45,11 @@ void pose_estimation_2d2d(
     const vector<DMatch> &matches,
     Mat &R, Mat &t);
 
-void triangulation(
+void triangulation2(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
-    const Mat &K, const Mat &R, const Mat &t,
-    const vector<Point3d> &points);
-
+    const Mat &R, const Mat &t,
+    vector<Point3d> &points);
 
 // For drawing
 inline cv::Scalar get_color(float depth){
@@ -65,7 +64,7 @@ inline cv::Scalar get_color(float depth){
 Mat vee2hat(const Mat var);
 
 // Pixel coordinates to camera normalized coordinates
-Point2d pixel2cam(const Point2d &p, const Mat &K);
+Point2f pixel2cam(const Point2d &p, const Mat &K);
 
 /* ====== */
 /*  Main  */
@@ -98,11 +97,35 @@ int main(int argc, char **argv) {
 
     //--- Step 7.1: Triangulation
     vector<Point3d> points;
-    triangulation(keypoints1, keypoints2, goodMatches, K, R, t, points);
+    // triangulation(keypoints1, keypoints2, goodMatches, R, t, points);
+    triangulation2(keypoints1, keypoints2, goodMatches, R, t, points);
+
+    cout << "points[0]: " << points[0].x << " " << points[0].y << " " << points[0].z << endl << endl;
 
     //--- Step 7.2: Verify the reprojection relationship between the triangulation points and the feature points.
     Mat image1_plot = image1.clone();
     Mat image2_plot = image2.clone();
+
+    for(int i=0; i < goodMatches.size(); i++){
+        // First Picture
+        Point2f pt1_cam = pixel2cam(keypoints1[goodMatches[i].queryIdx].pt, K);  // p1->x1
+        float depth1 = points[i].z;
+        
+        circle(image1_plot, keypoints1[goodMatches[i].queryIdx].pt, 2, get_color(depth1), 2);
+        
+        // Second Picture
+        Mat pt2_trans = R*((Mat) points[i])+t;  // p2->x2
+        float depth2 = pt2_trans.at<double>(2, 0);
+        
+        circle(image2_plot, keypoints2[goodMatches[i].trainIdx].pt, 2, get_color(depth2), 2);
+
+        cout << "depth1: " << depth1 << "\tdepth2: " << depth2 << endl;
+
+
+//        Mat pts2_trans = R* ((Mat) points[i])
+        
+
+    }
 
     // TODO: Terminar
 
@@ -212,6 +235,7 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     vector<Point2f> points1, points2;
 
     for (int i=0; i < (int) matches.size(); i++){
+        // Convert pixel coordinates to camera normalized coordinates
         cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
         points1.push_back(keypoints1[matches[i].queryIdx].pt);
         points2.push_back(keypoints2[matches[i].trainIdx].pt);
@@ -256,19 +280,46 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     printMatrix("t:\n", t);
 }
 
-void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &K, const Mat &R, const Mat &t, const vector<Point3d> &points){
+void triangulation2(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &points){
     Mat T1 = (Mat_<float>(3, 4) <<
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0);
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0);
 
     Mat T2 = (Mat_<float>(3, 4) <<
-    R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
-    R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
-    R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(1, 2), t.at<double>(2, 0));
-
+        R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), t.at<double>(0, 0),
+        R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), t.at<double>(1, 0),
+        R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), t.at<double>(2, 0));
+    
     printMatrix("T1:\n", T1);
     printMatrix("T2:\n", T2);
+
+    //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
+    vector<Point2f> points1, points2;
+
+    for(DMatch m : matches){  // For each matched pair (p1, p2)_n, do...
+        // Convert pixel coordinates to camera normalized coordinates
+        points1.push_back(pixel2cam(keypoints1[m.queryIdx].pt, K));
+        points2.push_back(pixel2cam(keypoints2[m.trainIdx].pt, K));
+    }
+
+    // FIXME: This part says that returns the "World" 3D Points Coordinate. In my understanding, the term "World" should correspond to the Pw. However, since T1 is identity, I believe it's just the 3D Coordinate of a point P described on the Camera 1 frame, and T2 correspondes only to the transformation from Camera {1} to Camera {2}, since the estimated (R, t) are (R21, t21), not the (Rcw, tcw). 
+    //--- Get World 3D Points Coordinates (in Homogeneous Coordinates)
+    Mat pts_4d;
+    triangulatePoints(T1, T2, points1, points2, pts_4d);  // Returns 4xN array of reconstructed points in homogeneous coordinates. These points are returned in the world's coordinate system.
+
+    //--- Convert to non-homogeneous coordinates
+    for (int i=0; i<pts_4d.cols; i++) {
+        Mat x = pts_4d.col(i);
+        x /= x.at<float>(3, 0);  // Normalization, Pw = [Xw, Yw, Zw, 1]
+        Point3d p(
+            x.at<float>(0, 0),  // Xw
+            x.at<float>(1, 0),  // Yw
+            x.at<float>(2, 0)   // Zw
+        );
+        points.push_back(p);
+    }
+
 
 }
 
@@ -290,8 +341,8 @@ Mat vee2hat(const Mat var){
  * @param K Intrinsic Parameters Matrix
  * @return Point2d in Normalized Coordinates, x=(x,y)
  */
-Point2d pixel2cam(const Point2d &p, const Mat &K) {
-  return Point2d
+Point2f pixel2cam(const Point2d &p, const Mat &K) {
+  return Point2f
     (
       (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
       (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
