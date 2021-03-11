@@ -91,8 +91,8 @@ int main(int argc, char **argv) {
 
     for(DMatch m : goodMatches){  // For each matched pair (p1, p2)_n, do...
         // Pixel Coordinates to Normalized Coordinates, (p1, p2)_n to (x1, x2)_n
-        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // x1, n-th Feature Keypoint in Image 1
-        Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // x2, n-th Feature Keypoint in Image 2
+        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
 
         // Convert to Homogeneous Coordinates
         Mat xh1 = (Mat_<double>(3,1) << x1.x, x1.y, 1);
@@ -108,10 +108,9 @@ int main(int argc, char **argv) {
             flag = "Failed!";
 
         printf("x2^T*E*x1 = % 01.19f\t%s\n", res, flag.c_str());
-
     }
 
-    cout << "\nFinal Result: " << counter << "/" << goodMatches.size() << " Features Pairs respected the Epipolar Constraint!"<< endl;
+    cout << "\nFinal Result: " << counter << "/" << goodMatches.size() << " Features Pairs respected the Epipolar Constraint!"<< endl << endl;
 
     /* --------- */
     /*  Results  */
@@ -181,6 +180,8 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 
     // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
     // But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
+//    vector<DMatch> goodMatches;
+
     Timer t6 = chrono::steady_clock::now();
     for (int i=0; i<descriptors1.rows; i++){
         // cout << matches[i].distance << endl;
@@ -218,13 +219,13 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 
 void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
-    vector<Point2f> points1, points2;
+    vector<Point2f> points1, points2;  // (x1, x2)_n
 
-    for (int i=0; i < (int) matches.size(); i++){
+    for (int i=0; i < (int) matches.size(); i++){  // For each matched pair (p1, p2)_n, do...
         // Convert pixel coordinates to camera normalized coordinates
         cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
-        points1.push_back(keypoints1[matches[i].queryIdx].pt);
-        points2.push_back(keypoints2[matches[i].trainIdx].pt);
+        points1.push_back(keypoints1[matches[i].queryIdx].pt);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        points2.push_back(keypoints2[matches[i].trainIdx].pt);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
     }
 
     cout << endl;
