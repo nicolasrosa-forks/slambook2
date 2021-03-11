@@ -27,10 +27,10 @@ string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/
 
 double matches_lower_bound = 30.0;
 
-// Camera Internal parameters, TUM Freiburg2
+// Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
-Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates, TUM Dataset calibration value
-double focal_length = 521.0;            // Camera focal length, TUM dataset calibration value.
+Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates
+double focal_length = 521.0;            // Camera focal length
 
 /* ================= */
 /*  Functions Scope  */
@@ -126,6 +126,9 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+/* ======================= */
+/*  Functions Declaration  */
+/* ======================= */
 void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches){
     //--- Initialization
     Mat descriptors1, descriptors2;
