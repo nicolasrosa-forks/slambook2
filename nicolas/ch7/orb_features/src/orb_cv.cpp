@@ -1,4 +1,8 @@
-/* Libraries */
+/* =========== */
+/*  Libraries  */
+/* =========== */
+
+/* System Libraries */
 #include <iostream>
 #include <chrono>
 
@@ -47,19 +51,12 @@ int main(int argc, char **argv) {
     Timer t1 = chrono::steady_clock::now();
     detector->detect(image1, keypoints1);
     detector->detect(image2, keypoints2);
+    Timer t2 = chrono::steady_clock::now();
 
     //--- Step 2: Calculate the BRIEF descriptors based on the position of Oriented FAST keypoints
-    Timer t2 = chrono::steady_clock::now();
     descriptor->compute(image1, keypoints1, descriptors1);
     descriptor->compute(image2, keypoints2, descriptors2);
     Timer t3 = chrono::steady_clock::now();
-
-    printTimeElapsed("ORB Features Extraction: ", t1, t3);
-    printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
-    printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
-
-    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
-    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
     //cout << descriptors1 << endl;
     //cout << descriptors2 << endl;
@@ -71,16 +68,12 @@ int main(int argc, char **argv) {
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
 
-    t1 = chrono::steady_clock::now();
+    Timer t4 = chrono::steady_clock::now();
     matcher->match(descriptors1, descriptors2, matches);
-    t2 = chrono::steady_clock::now();
-
-    printTimeElapsed("ORB Features Matching: ", t1, t2);
-
-    cout << "-- Number of matches: " << matches.size() << endl;
+    Timer t5 = chrono::steady_clock::now();
 
     //--- Step 4: Select correct matching (filtering)
-    // Calculate the minimum and maximum distances
+    // Calculate the min & max distances
 
     /* Parameters: __first – Start of range.
     /*             __last – End of range.
@@ -94,24 +87,19 @@ int main(int argc, char **argv) {
     double min_dist = min_max.first->distance;
     double max_dist = min_max.second->distance;
 
-    cout << "-- Min dist: " << min_dist << endl;
-    cout << "-- Max dist: " << max_dist << endl << endl;
 
     // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
     // But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
     vector<DMatch> goodMatches;
 
-    t1 = chrono::steady_clock::now();
+    Timer t6 = chrono::steady_clock::now();
     for (int i=0; i<descriptors1.rows; i++){
         // cout << matches[i].distance << endl;
         if (matches[i].distance <= max(2*min_dist, matches_lower_bound)){
             goodMatches.push_back(matches[i]);
         }
     }
-    t2 = chrono::steady_clock::now();
-
-    printTimeElapsed("ORB Features Filtering: ", t1, t2);
-    cout << "-- Number of good matches: " << goodMatches.size() << endl;
+    Timer t7 = chrono::steady_clock::now();
 
     //--- Step 5: Visualize the Matching result
     Mat image_matches;
@@ -120,10 +108,22 @@ int main(int argc, char **argv) {
     drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
 
-    /* --------- */
-    /*  Results  */
-    /* --------- */
-    // Display
+    /* Results */
+    printTimeElapsed("ORB Features Extraction: ", t1, t3);
+    printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
+    printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
+    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
+    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
+
+    printTimeElapsed("ORB Features Matching: ", t4, t5);
+    cout << "-- Number of matches: " << matches.size() << endl;
+    cout << "-- Min dist: " << min_dist << endl;
+    cout << "-- Max dist: " << max_dist << endl << endl;
+
+    printTimeElapsed("ORB Features Filtering: ", t6, t7);
+    cout << "-- Number of good matches: " << goodMatches.size() << endl;
+
+    /* Display */
     imshow("image1", image1);
     imshow("image2", image2);
     imshow("outImage1", outImage1);

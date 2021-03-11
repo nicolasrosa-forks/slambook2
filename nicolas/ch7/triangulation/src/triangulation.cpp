@@ -45,6 +45,11 @@ void pose_estimation_2d2d(
     const vector<DMatch> &matches,
     Mat &R, Mat &t);
 
+Mat vee2hat(const Mat var);
+
+// Pixel coordinates to camera normalized coordinates
+Point2f pixel2cam(const Point2d &p, const Mat &K);
+
 void triangulation(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
@@ -53,11 +58,6 @@ void triangulation(
 
 // For drawing
 inline cv::Scalar get_color(float depth);
-
-Mat vee2hat(const Mat var);
-
-// Pixel coordinates to camera normalized coordinates
-Point2f pixel2cam(const Point2d &p, const Mat &K);
 
 /* ====== */
 /*  Main  */
@@ -88,6 +88,9 @@ int main(int argc, char **argv) {
     Mat R, t;
     pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);
 
+    /* --------------- */
+    /*  Triangulation  */
+    /* --------------- */
     //--- Step 7.1: Triangulation
     vector<Point3d> points;
     // triangulation(keypoints1, keypoints2, goodMatches, R, t, points);
@@ -185,7 +188,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     // Calculate the min & max distances
     double min_dist = 10000, max_dist = 0;
 
-    // Find the mininum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
+    // Find the minimum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
     for (int i = 0; i < descriptors1.rows; i++){
         double dist = matches[i].distance;
         if(dist < min_dist) min_dist = dist;
@@ -199,17 +202,16 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
         // cout << matches[i].distance << endl;
         if (matches[i].distance <= max(2*min_dist, matches_lower_bound)){
             goodMatches.push_back(matches[i]);
-            // cout << matches[i].distance << endl;
         }
     }
     Timer t7 = chrono::steady_clock::now();
 
     //--- Step 5: Visualize the Matching result
+//    Mat image_matches;
     Mat image_goodMatches;
 
+//    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
-
-    imshow("image_goodMatches", image_goodMatches);
 
     /* Results */
     printTimeElapsed("ORB Features Extraction: ", t1, t3);
@@ -226,6 +228,8 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     printTimeElapsed("ORB Features Filtering: ", t6, t7);
     cout << "-- Number of good matches: " << goodMatches.size() << endl;
 
+    /* Display */
+    imshow("image_goodMatches", image_goodMatches);
 }
 
 void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
@@ -278,6 +282,32 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     printMatrix("t:\n", t);
 }
 
+Mat vee2hat(const Mat var){
+    Mat var_hat = (Mat_<double>(3,3) <<
+                         0.0, -var.at<double>(2,0),  var.at<double>(1,0),
+         var.at<double>(2,0),                  0.0, -var.at<double>(0,0),
+        -var.at<double>(1,0),  var.at<double>(0,0),                 0.0);  // Inline Initializer
+
+    //printMatrix("var_hat:", var_hat);
+
+    return var_hat;
+}
+
+/**
+ * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
+ *
+ * @param p Point2d in Pixel Coordinates, p=(u,v)
+ * @param K Intrinsic Parameters Matrix
+ * @return Point2d in Normalized Coordinates, x=(x,y)
+ */
+Point2f pixel2cam(const Point2d &p, const Mat &K) {
+  return Point2f
+    (
+      (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
+      (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
+    );
+}
+
 void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &points){
     Mat T1 = (Mat_<float>(3, 4) <<
         1, 0, 0, 0,
@@ -317,32 +347,6 @@ void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &k
         );
         points.push_back(p);
     }
-}
-
-Mat vee2hat(const Mat var){
-    Mat var_hat = (Mat_<double>(3,3) <<
-                         0.0, -var.at<double>(2,0),  var.at<double>(1,0),
-         var.at<double>(2,0),                  0.0, -var.at<double>(0,0),
-        -var.at<double>(1,0),  var.at<double>(0,0),                 0.0);  // Inline Initializer
-
-    //printMatrix("var_hat:", var_hat);
-
-    return var_hat;
-}
-
-/**
- * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
- *
- * @param p Point2d in Pixel Coordinates, p=(u,v)
- * @param K Intrinsic Parameters Matrix
- * @return Point2d in Normalized Coordinates, x=(x,y)
- */
-Point2f pixel2cam(const Point2d &p, const Mat &K) {
-  return Point2f
-    (
-      (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
-      (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
-    );
 }
 
 inline cv::Scalar get_color(float depth){
