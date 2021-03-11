@@ -76,10 +76,11 @@ int main(int argc, char **argv){
     // 4. Display
     cv::imshow("image (distorted)", image);
     cv::imshow("image (undistorted)", image_undistorted);
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     cv::waitKey(0);
 
     cv::destroyAllWindows();
 
-    cout << "\nDone." << endl;
+    cout << "Done." << endl;
     return 0;
 }

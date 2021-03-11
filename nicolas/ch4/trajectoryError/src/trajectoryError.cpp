@@ -114,7 +114,7 @@ int main(int argc, char **argv){
     cout << "Relative Pose Error Error (RPE_trans): " << rpe_trans << endl << endl;  //TODO: Is this result correct? Implementation was supervised by Nuno
 
     // 4. Display the trajectories in a 3D Window.
-    cout << "Press 'ESC' to exit the program" << endl;
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     DrawTrajectory(groundtruth, estimated);
 
     cout << "Done." << endl;

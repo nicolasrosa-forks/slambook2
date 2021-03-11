@@ -136,9 +136,10 @@ int main(int argc, char *argv[])
 
 	}
 
+    std::cout << "\nPress 'ESC' to exit the program..." << std::endl;
 	cv::waitKey(0);
 
-	std::cout << "\n Done." << std::endl;
+	std::cout << "Done." << std::endl;
 
 	return 0;
 }

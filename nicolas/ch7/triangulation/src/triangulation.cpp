@@ -45,21 +45,14 @@ void pose_estimation_2d2d(
     const vector<DMatch> &matches,
     Mat &R, Mat &t);
 
-void triangulation2(
+void triangulation(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
     const Mat &R, const Mat &t,
     vector<Point3d> &points);
 
 // For drawing
-inline cv::Scalar get_color(float depth){
-    float up_th = 50.0, low_th = 10.0, th_range = up_th-low_th;
-
-    if (depth > up_th)  depth = up_th;
-    if (depth < low_th) depth = low_th;
-
-    return cv::Scalar(255*depth/th_range, 0, 255*(1-depth/th_range));
-}
+inline cv::Scalar get_color(float depth);
 
 Mat vee2hat(const Mat var);
 
@@ -98,7 +91,7 @@ int main(int argc, char **argv) {
     //--- Step 7.1: Triangulation
     vector<Point3d> points;
     // triangulation(keypoints1, keypoints2, goodMatches, R, t, points);
-    triangulation2(keypoints1, keypoints2, goodMatches, R, t, points);
+    triangulation(keypoints1, keypoints2, goodMatches, R, t, points);
 
     cout << "points[0]: " << points[0].x << " " << points[0].y << " " << points[0].z << endl << endl;
 
@@ -106,28 +99,30 @@ int main(int argc, char **argv) {
     Mat image1_plot = image1.clone();
     Mat image2_plot = image2.clone();
 
+    // float min=10000, max=0;
     for(int i=0; i < goodMatches.size(); i++){
         // First Picture
         Point2f pt1_cam = pixel2cam(keypoints1[goodMatches[i].queryIdx].pt, K);  // p1->x1
         float depth1 = points[i].z;
-        
         circle(image1_plot, keypoints1[goodMatches[i].queryIdx].pt, 2, get_color(depth1), 2);
         
+        // if(depth1 > max){
+        //     max = depth1;
+        // }
+
+        //  if(depth1 < min){
+        //     min = depth1;
+        // }
+
+        // cout << "min: " << min << "\tmax: " << max << endl;
+
         // Second Picture
         Mat pt2_trans = R*((Mat) points[i])+t;  // p2->x2
         float depth2 = pt2_trans.at<double>(2, 0);
-        
         circle(image2_plot, keypoints2[goodMatches[i].trainIdx].pt, 2, get_color(depth2), 2);
 
         cout << "depth1: " << depth1 << "\tdepth2: " << depth2 << endl;
-
-
-//        Mat pts2_trans = R* ((Mat) points[i])
-        
-
     }
-
-    // TODO: Terminar
 
     /* --------- */
     /*  Results  */
@@ -135,9 +130,12 @@ int main(int argc, char **argv) {
     /* Display Images */
     imshow("image1", image1);
     imshow("image2", image2);
+    imshow("image1 (Triangulation)", image1_plot);
+    imshow("image2 (Triangulation)", image2_plot);
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
-    cout << "\nDone." << endl;
+    cout << "Done." << endl;
 
     return 0;
 }
@@ -280,7 +278,7 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     printMatrix("t:\n", t);
 }
 
-void triangulation2(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &points){
+void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &points){
     Mat T1 = (Mat_<float>(3, 4) <<
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -319,8 +317,6 @@ void triangulation2(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &
         );
         points.push_back(p);
     }
-
-
 }
 
 Mat vee2hat(const Mat var){
@@ -347,4 +343,15 @@ Point2f pixel2cam(const Point2d &p, const Mat &K) {
       (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
       (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
     );
+}
+
+inline cv::Scalar get_color(float depth){
+    float up_th = 15.0627, low_th = 7.231;    // min: 7.231, max: 15.0627
+    float th_range = up_th-low_th;
+
+    if (depth > up_th)  depth = up_th;
+    if (depth < low_th) depth = low_th;
+
+    float color = 255*(up_th-depth)/th_range;
+    return cv::Scalar(color, color, color);
 }

@@ -130,12 +130,13 @@ int main(int argc, char **argv) {
     imshow("outImage2", outImage2);
     imshow("image_matches", image_matches);
     imshow("image_goodMatches", image_goodMatches);
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
     // Save
     imwrite("../../orb_features/src/results_orb_cv_goodMatches.png", image_goodMatches);
 
-    cout << "\nDone." << endl;
+    cout << "Done." << endl;
 
     return 0;
 }

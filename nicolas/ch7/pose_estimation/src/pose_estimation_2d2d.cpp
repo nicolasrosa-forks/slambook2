@@ -47,7 +47,8 @@ void pose_estimation_2d2d(
 
 Mat vee2hat(const Mat var);
 
-Point2d pixel2cam(const Point2d &p, const Mat &K);
+// Pixel coordinates to camera normalized coordinates
+Point2f pixel2cam(const Point2d &p, const Mat &K);
 
 /* ====== */
 /*  Main  */
@@ -90,8 +91,8 @@ int main(int argc, char **argv) {
 
     for(DMatch m : goodMatches){  // For each matched pair (p1, p2)_n, do...
         // Pixel Coordinates to Normalized Coordinates, (p1, p2)_n to (x1, x2)_n
-        Point2d x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // x1, n-th Feature Keypoint in Image 1
-        Point2d x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // x2, n-th Feature Keypoint in Image 2
+        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // x1, n-th Feature Keypoint in Image 1
+        Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // x2, n-th Feature Keypoint in Image 2
 
         // Convert to Homogeneous Coordinates
         Mat xh1 = (Mat_<double>(3,1) << x1.x, x1.y, 1);
@@ -118,9 +119,10 @@ int main(int argc, char **argv) {
     /* Display Images */
     imshow("image1", image1);
     imshow("image2", image2);
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
-    cout << "\nDone." << endl;
+    cout << "Done." << endl;
 
     return 0;
 }
@@ -218,6 +220,7 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     vector<Point2f> points1, points2;
 
     for (int i=0; i < (int) matches.size(); i++){
+        // Convert pixel coordinates to camera normalized coordinates
         cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
         points1.push_back(keypoints1[matches[i].queryIdx].pt);
         points2.push_back(keypoints2[matches[i].trainIdx].pt);
@@ -263,9 +266,10 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
 }
 
 Mat vee2hat(const Mat var){
-    Mat var_hat = (Mat_<double>(3,3) << 0.0, -var.at<double>(2,0), var.at<double>(1,0),
-        var.at<double>(2,0), 0.0, -var.at<double>(0,0),
-        -var.at<double>(1,0), var.at<double>(0,0), 0.0);  // Inline Initializer
+    Mat var_hat = (Mat_<double>(3,3) <<
+                         0.0, -var.at<double>(2,0),  var.at<double>(1,0),
+         var.at<double>(2,0),                  0.0, -var.at<double>(0,0),
+        -var.at<double>(1,0),  var.at<double>(0,0),                 0.0);  // Inline Initializer
 
     //printMatrix("var_hat:", var_hat);
 
@@ -279,8 +283,8 @@ Mat vee2hat(const Mat var){
  * @param K Intrinsic Parameters Matrix
  * @return Point2d in Normalized Coordinates, x=(x,y)
  */
-Point2d pixel2cam(const Point2d &p, const Mat &K) {
-  return Point2d
+Point2f pixel2cam(const Point2d &p, const Mat &K) {
+  return Point2f
     (
       (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
       (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy

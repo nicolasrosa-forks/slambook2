@@ -110,7 +110,7 @@ int main(int argc, char **argv){
 
     // 5. Display Point Cloud (Pangolin)
     cout << "[stereoVision] Initializing Pangolin's Point Cloud Viewer..." << endl;
-    cout << "Press 'ESC' to exit the program" << endl;
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     showPointCloud(pointcloud);
 
     cv::destroyAllWindows();
