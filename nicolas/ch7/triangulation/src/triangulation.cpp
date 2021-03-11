@@ -165,8 +165,8 @@ int main(int argc, char **argv) {
 
         /*--- Projection of the 3D Point on Image Plane 2 */
         // Describes 3D Point P in the {cam2} frame.
-        Mat pt2_trans = R*((Mat) points_3d[i])+t;  // T(R21, t21), {cam1}->{cam2} transformation! Since `points_3d` are described in {cam1}
-        
+        // NOTE: Since `points_3d` are described in {cam1} (because T1w is identity), we don't need to apply the T1w transformation here.
+        Mat pt2_trans = R*((Mat) points_3d[i])+t;  // T(R21, t21), {cam1}->{cam2} transformation! 
         float depth2 = pt2_trans.at<double>(2, 0);
         
         circle(image2_triangulation, keypoints2[goodMatches[i].trainIdx].pt, 2, get_color(depth2), 2);    // Paint p2 according to the depth value from camera 2.
