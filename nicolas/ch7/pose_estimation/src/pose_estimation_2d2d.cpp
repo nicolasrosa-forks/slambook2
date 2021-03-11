@@ -172,7 +172,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     // Calculate the min & max distances
     double min_dist = 10000, max_dist = 0;
 
-    // Find the mininum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
+    // Find the minimum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
     for (int i = 0; i < descriptors1.rows; i++){
         double dist = matches[i].distance;
         if(dist < min_dist) min_dist = dist;
@@ -186,17 +186,16 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
         // cout << matches[i].distance << endl;
         if (matches[i].distance <= max(2*min_dist, matches_lower_bound)){
             goodMatches.push_back(matches[i]);
-            // cout << matches[i].distance << endl;
         }
     }
     Timer t7 = chrono::steady_clock::now();
 
     //--- Step 5: Visualize the Matching result
+//    Mat image_matches;
     Mat image_goodMatches;
 
+//    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
-
-    imshow("image_goodMatches", image_goodMatches);
 
     /* Results */
     printTimeElapsed("ORB Features Extraction: ", t1, t3);
@@ -213,6 +212,8 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     printTimeElapsed("ORB Features Filtering: ", t6, t7);
     cout << "-- Number of good matches: " << goodMatches.size() << endl;
 
+    /* Display */
+    imshow("image_goodMatches", image_goodMatches);
 }
 
 void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
