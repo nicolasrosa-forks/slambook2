@@ -15,6 +15,8 @@
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"
+// #include "../../include/find_features_matches.h"
+// #include "../../include/pose_estimation_2d2d.h"
 
 using namespace std;
 using namespace cv;
@@ -38,12 +40,12 @@ double focal_length = 521.0;            // Camera focal length
 void find_features_matches(
     const Mat &image1, const Mat &image2,
     vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2,
-    vector<DMatch> &goodMatches);
+    vector<DMatch> &goodMatches, bool verbose);
 
 void pose_estimation_2d2d(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
-    Mat &R, Mat &t);
+    Mat &R, Mat &t, Mat &K);
 
 Mat vee2hat(const Mat var);
 
@@ -78,7 +80,7 @@ int main(int argc, char **argv) {
     /* ---------------------------------- */
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
-    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches);
+    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, true);
     cout << "In total, we get " << goodMatches.size() << " set of feature points." << endl << endl;
 
     /* ----------------------- */
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
     /* ----------------------- */
     //--- Step 6.1: Estimate the motion (R, t) between the two images
     Mat R, t;
-    pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);
+    pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t, K);
 
     //--- Step 6.2: Verify E = t^*R*scale
     Mat t_hat = vee2hat(t);
@@ -193,17 +195,17 @@ int main(int argc, char **argv) {
 /* ======================= */
 /*  Functions Declaration  */
 /* ======================= */
-void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches){
+void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches, bool verbose){
     //--- Initialization
     Mat descriptors1, descriptors2;
 
     #ifdef OPENCV3
-        cout << "'OpenCV3' selected." << endl << endl;
+//        cout << "'OpenCV3' selected." << endl << endl;
         Ptr<FeatureDetector> detector = ORB::create();
         Ptr<DescriptorExtractor> descriptor = ORB::create();
         Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
     #else
-        cout << "'OpenCV2' selected." << endl << endl;
+//        cout << "'OpenCV2' selected." << endl << endl;
         Ptr<FeatureDetector> detector = FeatureDetector::create ("ORB" );
         Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB" );
         BFMatcher matcher(NORM_HAMMING);
@@ -266,25 +268,29 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
 
     /* Results */
-    printTimeElapsed("ORB Features Extraction: ", t1, t3);
-    printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
-    printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
-    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
-    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
+    if(verbose){
+        printTimeElapsed("ORB Features Extraction: ", t1, t3);
+        printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
+        printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
+        cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
+        cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
-    printTimeElapsed("ORB Features Matching: ", t4, t5);
-    cout << "-- Number of matches: " << matches.size() << endl;
-    cout << "-- Min dist: " << min_dist << endl;
-    cout << "-- Max dist: " << max_dist << endl << endl;
+        printTimeElapsed("ORB Features Matching: ", t4, t5);
+        cout << "-- Number of matches: " << matches.size() << endl;
+        cout << "-- Min dist: " << min_dist << endl;
+        cout << "-- Max dist: " << max_dist << endl << endl;
 
-    printTimeElapsed("ORB Features Filtering: ", t6, t7);
-    cout << "-- Number of good matches: " << goodMatches.size() << endl;
+        printTimeElapsed("ORB Features Filtering: ", t6, t7);
+        cout << "-- Number of good matches: " << goodMatches.size() << endl;
+    }
 
     /* Display */
+//    imshow("outImage1", outImage1);
+//    imshow("outImage2", outImage2);
     imshow("image_goodMatches", image_goodMatches);
 }
 
-void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t){
+void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t, Mat &K){
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
     vector<Point2f> points1, points2;  // (x1, x2)_n
 
