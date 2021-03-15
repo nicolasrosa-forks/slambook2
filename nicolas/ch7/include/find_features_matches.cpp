@@ -6,9 +6,6 @@
 /* System Libraries */
 #include <iostream>
 #include <chrono>
-#include <dirent.h>
-#include <string>
-#include <system_error>
 
 /* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
