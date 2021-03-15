@@ -4,9 +4,9 @@
 
 #include "libUtils.cpp"
 
-/* ================== */
-/*  Functions Scopes  */
-/* ================== */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 void print(char text[]);
 
 void printVec(const char text[], const std::vector<double> &vec);
@@ -27,5 +27,7 @@ void printImageInfo(const cv::Mat &image);
 void printMatrix(const char text[], cv::Mat var);
 
 void printMatrix(const char text[], cv::MatExpr var);
+
+void printTimeElapsed(const char text[], Timer t1, Timer t2);
 
 #endif
