@@ -25,7 +25,7 @@ void print(const char text[]){
     cout << text << endl;
 }
 
-void print(std::string text){
+void print(const std::string &text){
     cout << text << endl;
 }
 
@@ -36,7 +36,7 @@ void print(double var){
 template <typename TTypeVector>
 void printVec(const char text[], const TTypeVector &vec){
   cout << text << "[";
-  for(int i; i < vec.size(); i++){
+  for(int i=0; i < vec.size(); i++){
     if(i != vec.size()-1){
       cout << vec.at(i) << ", ";
     }else{

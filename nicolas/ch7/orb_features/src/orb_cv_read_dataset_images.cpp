@@ -35,7 +35,7 @@ Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 /* ===================== */
 /*  Function Prototypes  */
 /* ===================== */
-std::vector<std::string> get_filepaths_in_path(const string path){
+std::vector<std::string> get_filepaths_in_path(const string &path){
     std::vector<std::string> filepaths;
 
     DIR *dir = opendir(path.c_str());
