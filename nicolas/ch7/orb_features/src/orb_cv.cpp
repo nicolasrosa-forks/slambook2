@@ -1,11 +1,11 @@
 /* =========== */
 /*  Libraries  */
 /* =========== */
-
 /* System Libraries */
 #include <iostream>
 #include <chrono>
 
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -22,6 +22,7 @@ using namespace cv;
 string image1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1.png";
 string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2.png";
 
+int orb_nfeatures = 500;
 double matches_lower_bound = 30.0;
 
 /* ====== */
@@ -43,8 +44,8 @@ int main(int argc, char **argv) {
     /* ---------------------------------- */
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
-    Ptr<FeatureDetector> detector = ORB::create();
-    Ptr<DescriptorExtractor> descriptor = ORB::create();
+    Ptr<FeatureDetector> detector = ORB::create(orb_nfeatures);
+    Ptr<DescriptorExtractor> descriptor = ORB::create(orb_nfeatures);
     Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
 
     //--- Step 1: Detect the position of the Oriented FAST keypoints (Corner Points)

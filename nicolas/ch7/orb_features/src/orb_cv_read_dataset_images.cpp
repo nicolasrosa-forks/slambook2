@@ -10,6 +10,7 @@
 #include <string>
 #include <system_error>
 
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -18,16 +19,15 @@
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"
-#include "../include/find_features_matches.h"
-#include "../include/pose_estimation_2d2d.h"
+#include "../../include/find_features_matches.h"
+#include "../../include/pose_estimation_2d2d.h"
 
 using namespace std;
 using namespace cv;
 
 /* Global Variables */
-// int orb_nfeatures = 100; //FIXME: uncomment
-// double matches_lower_bound = 30.0;  //FIXME: uncomment
 string data_root = "/media/nicolas/nicolas_seagate/datasets/tum_rgbd/handheld_slam/rgbd_dataset_freiburg2_desk/rgb/";
+int orb_nfeatures = 100;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -103,8 +103,8 @@ int main(int argc, char **argv) {
     Mat image1, image2;
     vector<KeyPoint> keypoints1, keypoints2;
     vector<DMatch> goodMatches;
-    
-    // First two frames initialization
+
+    // First frame initialization
     image1 = imread(image_filepaths[0], CV_LOAD_IMAGE_COLOR);
 
     // Variables for FPS Calculation
@@ -120,7 +120,6 @@ int main(int argc, char **argv) {
         /*  read  */
         /* ------ */
         // Capture frame-by-frame
-        // cap >> image2;
         image2 = imread(image_filepaths[i+1], CV_LOAD_IMAGE_COLOR);  // image_filepaths[i+1]
 
         // If the frame is empty, break immediately
@@ -130,7 +129,7 @@ int main(int argc, char **argv) {
         /* ---------------------------------- */
         /*  Features Extraction and Matching  */
         /* ---------------------------------- */
-        find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, false);
+        find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
 
         /* ----------------------- */
         /*  Pose Estimation 2D-2D  */
@@ -167,9 +166,6 @@ int main(int argc, char **argv) {
         i++;
     }
  
-    // When everything done, release the video capture object
-    // cap.release();
-
     // Closes all the frames
     destroyAllWindows();
 

@@ -1,8 +1,13 @@
-/* Libraries */
-#include <opencv2/opencv.hpp>
+/* =========== */
+/*  Libraries  */
+/* =========== */
+/* System Libraries */
 #include <string>
 #include <nmmintrin.h>
 #include <chrono>
+
+/* OpenCV Libraries */
+#include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
 #include "../../include/libUtils.h"
@@ -17,9 +22,9 @@ string image2_filepath = "../../orb_features/src/2.png";
 // In this example, we use a 256-bit Binary Description, which corresponds to 8 32-bit unsigned int data (8x32=256 bits)
 typedef vector<uint32_t> DescType;  // Descriptor Type
 
-/* ================= */
-/*  Functions Scope  */
-/* ================= */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 /**
  * @brief Compute descriptor of the ORB keypoints
  * @param img Input Image
@@ -104,9 +109,10 @@ int main(int argc, char **argv) {
     imshow("outImage1", outImage1);
     imshow("outImage2", outImage2);
     imshow("image_matches", image_matches);
+    cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
-    cout << "\nDone." << endl;
+    cout << "Done." << endl;
 
     return 0;
 }
@@ -415,12 +421,12 @@ void ComputeORB(const Mat &img, vector<KeyPoint> &keypoints, vector<DescType> &d
                 Point2f qq = Point2f(cos_theta*q.x - sin_theta*q.y, sin_theta*q.x + cos_theta*q.y) + kp.pt;
 
                 // TODO: Debug
-                cout << "pp: "<< pp.y << " " << pp.x << " " << endl;
-                cout << img.at<uchar>(pp.y, pp.x) << endl << endl;
-                
-                cout << "qq: " << qq.y << " " << qq.x << " " << endl;
-                cout << img.at<uchar>(qq.y, qq.x) << endl; // FIXME: ORB_Pattern causes negative qq.y coordinate, which causes segfault when trying to access the image.
-                
+                // cout << "pp: "<< pp.y << " " << pp.x << " " << endl;
+                // cout << img.at<uchar>(pp.y, pp.x) << endl << endl;
+
+                // cout << "qq: " << qq.y << " " << qq.x << " " << endl;
+                // cout << img.at<uchar>(qq.y, qq.x) << endl; // FIXME: ORB_Pattern causes negative qq.y coordinate, which causes segfault when trying to access the image.
+
                 //if(img.at<uchar>(pp.y, pp.x) < img.at<uchar>(qq.y, qq.x)){
                 //    d |= 1 << k;
                 // }
@@ -434,6 +440,7 @@ void ComputeORB(const Mat &img, vector<KeyPoint> &keypoints, vector<DescType> &d
     cout << "bad/total: " << bad_points << "/" << keypoints.size() << endl;
 }
 
+// Brute-Force Matching
 void BFMatcher_custom(const vector<DescType> &desc1, const vector<DescType> &desc2, vector<DMatch> &matches){
     const int d_max = 40;
 
