@@ -1,3 +1,6 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 /* System Libraries */
 #include <iostream>
 #include <cmath>
@@ -31,4 +34,6 @@
 /* Custom Libraries */
 #include "../../include/libUtils.h"
 
-/* Function Scopes */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */

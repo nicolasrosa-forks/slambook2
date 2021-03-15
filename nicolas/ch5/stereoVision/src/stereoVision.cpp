@@ -1,4 +1,4 @@
-/* Libraries */
+/* Custom Libraries */
 #include "../include/stereoVision.h"
 
 using namespace std;

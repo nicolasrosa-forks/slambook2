@@ -1,3 +1,6 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 /* System Libraries */
 #include <iostream>
 #include <vector>
@@ -18,9 +21,10 @@
 using namespace std;
 using namespace Eigen;
 
-/* Functions Scope */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 typedef vector<Isometry3d, Eigen::aligned_allocator<Isometry3d>> TrajectoryType;
-
 
 TrajectoryType ReadTrajectory(const string &path);
 void DrawTrajectory(const TrajectoryType &poses);

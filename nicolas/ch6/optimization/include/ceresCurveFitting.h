@@ -1,3 +1,6 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -19,4 +22,6 @@
 /* Custom Libraries */
 #include "../../include/libUtils.h"
 
-/* Function Scopes */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */

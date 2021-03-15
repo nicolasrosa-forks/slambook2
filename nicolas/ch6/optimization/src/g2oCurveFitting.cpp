@@ -1,4 +1,4 @@
-/* Libraries */
+/* Custom Libraries */
 #include "../include/g2oCurveFitting.h"
 
 using namespace std;

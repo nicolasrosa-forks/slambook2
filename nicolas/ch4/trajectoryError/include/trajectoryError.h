@@ -1,3 +1,6 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 /* System Libraries */
 #include <iostream>
 #include <fstream>
@@ -18,7 +21,9 @@
 /* Custom Libraries */
 #include "../../include/libUtils.h"
 
-/* Function Scopes */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 typedef vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
 typedef vector<double, Eigen::aligned_allocator<double>> TimeStamp;
 

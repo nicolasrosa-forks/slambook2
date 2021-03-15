@@ -1,4 +1,4 @@
-/* Libraries */
+/* Custom Libraries */
 #include "../include/gaussNewton.h"
 
 using namespace std;

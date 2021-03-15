@@ -1,4 +1,4 @@
-/* Libraries */
+/* Custom Libraries */
 #include "../include/imageBasics.h"
 
 using namespace std;

@@ -1,3 +1,6 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -17,6 +20,8 @@
 /* Custom Libraries */
 #include "../../include/libUtils.h"
 
-/* Function Scopes */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 typedef vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> PointCloud;
 void showPointCloud(const PointCloud &pointcloud);

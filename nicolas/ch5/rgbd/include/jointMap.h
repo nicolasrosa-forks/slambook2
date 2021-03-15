@@ -1,3 +1,6 @@
+/* =========== */
+/*  Libraries  */
+/* =========== */
 /* System Libraries */
 #include <iostream>
 #include <fstream>
@@ -26,7 +29,9 @@
 /* Custom Libraries */
 #include "../../include/libUtils.h"
 
-/* Function Scopes */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 typedef vector<double, Eigen::aligned_allocator<double>> TimeStamp;
 typedef vector<Sophus::SE3d, Eigen::aligned_allocator<Sophus::SE3d>> TrajectoryType;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;  // Since Eigen doesn't have Vector6d, we need to create it.

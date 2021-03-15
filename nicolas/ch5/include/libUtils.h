@@ -4,9 +4,9 @@
 
 #include "libUtils.cpp"
 
-/* ================== */
-/*  Functions Scopes  */
-/* ================== */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 void print(char text[]);
 
 template <typename TTypeMat>

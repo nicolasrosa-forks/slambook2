@@ -4,9 +4,9 @@
 
 #include "libUtils.cpp"
 
-/* ================== */
-/*  Functions Scopes  */
-/* ================== */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 void print(char text[]);
 
 void printVec(const char text[], const std::vector<double> &vec);

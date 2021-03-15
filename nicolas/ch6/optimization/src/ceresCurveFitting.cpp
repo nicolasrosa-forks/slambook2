@@ -1,4 +1,4 @@
-/* Libraries */
+/* Custom Libraries */
 #include "../include/ceresCurveFitting.h"
 
 using namespace std;
