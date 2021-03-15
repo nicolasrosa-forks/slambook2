@@ -10,13 +10,14 @@
 #include <string>
 #include <system_error>
 
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/opencv.hpp>
 
-/* Custom Libraries */
+/* Custom Libraries */ //FIXME:
 // #include "../include/libUtils.h"
 #include "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/include/libUtils.h"
 
@@ -26,12 +27,8 @@ using namespace cv;
 /* ==================== */
 /*  OpenCV's Functions  */
 /* ==================== */
-// int orb_nfeatures = 100; //FIXME: move to main
-// double matches_lower_bound = 30.0;  //FIXME: move to main
-
 void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t, Mat &K){
     // Intrinsics Parameters
-    // Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
     Point2d principal_point(K.at<double>(0, 2), K.at<double>(1,2)); // Camera Optical center coordinates
     double focal_length = K.at<double>(1,1);                        // Camera focal length
 

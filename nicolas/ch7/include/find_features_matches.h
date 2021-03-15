@@ -11,6 +11,7 @@ void find_features_matches(
     const Mat &image1, const Mat &image2,
     vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2,
     vector<DMatch> &goodMatches,
+    int orb_nfeatures,
     bool verbose);
 
 #endif

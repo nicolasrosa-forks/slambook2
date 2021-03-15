@@ -10,6 +10,7 @@
 #include <string>
 #include <system_error>
 
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -25,20 +26,19 @@ using namespace cv;
 /* ==================== */
 /*  OpenCV's Functions  */
 /* ==================== */
-int orb_nfeatures = 100; //FIXME: move to main
-double matches_lower_bound = 30.0;  //FIXME: move to main
+double matches_lower_bound = 30.0;
 
-void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches, bool verbose){
+void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches, int orb_nfeatures, bool verbose){
     //--- Initialization
     Mat descriptors1, descriptors2;
 
     #ifdef OPENCV3
-        // cout << "'OpenCV3' selected." << endl << endl;
+//        cout << "'OpenCV3' selected." << endl << endl;
         Ptr<FeatureDetector> detector = ORB::create(orb_nfeatures);
         Ptr<DescriptorExtractor> descriptor = ORB::create(orb_nfeatures);
         Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
     #else
-        // cout << "'OpenCV2' selected." << endl << endl;
+//        cout << "'OpenCV2' selected." << endl << endl;
         Ptr<FeatureDetector> detector = FeatureDetector::create ("ORB" );
         Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB" );
         BFMatcher matcher(NORM_HAMMING);
@@ -58,9 +58,10 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     //cout << descriptors1 << endl;
     //cout << descriptors2 << endl;
 
-    Mat outImage1, outImage2;
-    drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-    drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+    // FIXME: The following Lines are changing the results?!?
+    //Mat outImage1, outImage2;
+    //drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+    //drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
@@ -118,7 +119,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     }
 
     /* Display */
-    imshow("outImage1", outImage1);
-    imshow("outImage2", outImage2);
+//    imshow("outImage1", outImage1);
+//    imshow("outImage2", outImage2);
     imshow("image_goodMatches", image_goodMatches);
 }
