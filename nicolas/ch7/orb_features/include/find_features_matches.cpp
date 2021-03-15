@@ -18,7 +18,6 @@
 
 /* Custom Libraries */
 // #include "../include/libUtils.h"
-#include "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/include/libUtils.h"
 
 using namespace std;
 using namespace cv;
@@ -28,13 +27,6 @@ using namespace cv;
 /* ==================== */
 int orb_nfeatures = 100; //FIXME: move to main
 double matches_lower_bound = 30.0;  //FIXME: move to main
-
-
-typedef chrono::steady_clock::time_point Timer;  // FIXME: Remover, importar da libUtils.h
-void printTimeElapsed(const char text[], Timer t1, Timer t2){ // FIXME: Remover, importar da libUtils.h
-    chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    cout << text << time_elapsed.count() << " s" << endl << endl;
-}
 
 void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches, bool verbose){
     //--- Initialization

@@ -1,5 +1,5 @@
-#ifndef LIBUTILS_H_
-#define LIBUTILS_H_
+#ifndef find_features_matches_H_
+#define find_features_matches_H_
 // The above macro definition is to prevent redefinition errors caused by repeated references to this header file
 
 #include "find_features_matches.cpp"
