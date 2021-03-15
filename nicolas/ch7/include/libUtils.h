@@ -30,4 +30,7 @@ void printMatrix(const char text[], cv::MatExpr var);
 
 void printTimeElapsed(const char text[], Timer t1, Timer t2);
 
+// Pixel coordinates to camera normalized coordinates
+Point2f pixel2cam(const Point2d &p, const Mat &K);
+
 #endif

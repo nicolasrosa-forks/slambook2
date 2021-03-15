@@ -9,6 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 using namespace std;
+using namespace cv;
 
 /* Chrono */
 typedef chrono::steady_clock::time_point Timer;
@@ -135,4 +136,19 @@ void printMatrix(const char text[], cv::Mat var){
 
 void printMatrix(const char text[], cv::MatExpr var){
     cout << text << var << "\n(" << var.size().height << ", " << var.size().width << ")" << endl << endl;
+}
+
+/**
+ * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
+ *
+ * @param p Point2d in Pixel Coordinates, p=(u,v)
+ * @param K Intrinsic Parameters Matrix
+ * @return Point2d in Normalized Coordinates, x=(x,y)
+ */
+Point2f pixel2cam(const Point2d &p, const Mat &K) {
+  return Point2f
+    (
+      (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
+      (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
+    );
 }
