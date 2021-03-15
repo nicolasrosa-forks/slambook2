@@ -8,7 +8,10 @@ using namespace std;
 void printList(std::list<double> &var){
     std::list<double>::iterator it; //Cria um iterador de float
 
-    for(it=var.begin();it != var.end(); it++)
+    // Prefix ++/-- operators should be preferred for non-primitive types. 
+    // Pre-increment/decrement can be more efficient than post-increment/decrement. 
+    // Post-increment/decrement usually involves keeping a copy of the previous value around and adds a little extra code.
+    for(it=var.begin();it != var.end(); ++it)
         cout << "Imprimindo a lista: " << *it << endl;
 
     cout << endl;
