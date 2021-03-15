@@ -23,9 +23,9 @@ using namespace cv;
 string image1_filepath = "../../orb_features/src/1.png";
 string image2_filepath = "../../orb_features/src/2.png";
 
-/* ================= */
-/*  Functions Scope  */
-/* ================= */
+/* ===================== */
+/*  Function Prototypes  */
+/* ===================== */
 
 /* ====== */
 /*  Main  */
