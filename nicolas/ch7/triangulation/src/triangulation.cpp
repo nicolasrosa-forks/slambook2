@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chrono>
 
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -291,6 +292,11 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 }
 
 void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, Mat &R, Mat &t, Mat &K){
+    // Intrinsics Parameters
+    // Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
+    Point2d principal_point(K.at<double>(0, 2), K.at<double>(1,2)); // Camera Optical center coordinates
+    double focal_length = K.at<double>(1,1);                        // Camera focal length
+
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
     vector<Point2f> points1, points2;  // (x1, x2)_n
 
