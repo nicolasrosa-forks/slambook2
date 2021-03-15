@@ -28,3 +28,15 @@ target_link_libraries(orb_cv ${OpenCV_LIBS})
 # ========== #
 add_executable(orb_self src/orb_self.cpp)
 target_link_libraries(orb_self ${OpenCV_LIBS})
+
+# ============== #
+#  orb_cv_video  #
+# ============== #
+add_executable(orb_cv_video src/orb_cv_video.cpp)
+target_link_libraries(orb_cv_video ${OpenCV_LIBS})
+
+# =================== #
+#  orb_cv_read_images #
+# =================== #
+add_executable(orb_cv_read_images src/orb_cv_read_images.cpp)
+target_link_libraries(orb_cv_read_images ${OpenCV_LIBS})

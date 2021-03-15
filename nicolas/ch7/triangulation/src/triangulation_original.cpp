@@ -4,8 +4,10 @@
 using namespace std;
 using namespace cv;
 
-string image1_filepath = "../../orb_features/src/1.png";
-string image2_filepath = "../../orb_features/src/2.png";
+// string image1_filepath = "../../orb_features/src/1.png";
+// string image2_filepath = "../../orb_features/src/2.png";
+string image1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1.png";
+string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2.png";
 
 void find_feature_matches(
   const Mat &img_1, const Mat &img_2,

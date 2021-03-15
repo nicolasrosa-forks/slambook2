@@ -85,16 +85,15 @@ int main(int argc, char **argv) {
     int tick = 0;
 
     while(1){
+        /* ------ */
+        /*  read  */
+        /* ------ */
         // Capture frame-by-frame
         cap >> image2;
  
         // If the frame is empty, break immediately
-        if (image1.empty())
+        if (image1.empty() && image2.empty())
           break;
-
-        // Display the resulting frame
-        // imshow( "Frame1", image1);
-        // imshow( "Frame2", image2);
 
         /* ---------------------------------- */
         /*  Features Extraction and Matching  */
@@ -107,13 +106,18 @@ int main(int argc, char **argv) {
         //--- Step 6.1: Estimate the motion (R, t) between the two images
         Mat R, t;
         // pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);  # FIXME: Different Camera, Different K!
+        
+        /* ------- */
+        /*  Other */
+        /* ------- */
+        // Display
+        // imshow( "Frame1", image1);
+        // imshow( "Frame2", image2);
 
-        // Save last frame
-        image1 = image2.clone();
-
-        // Free
-        goodMatches.clear();
-
+        // Next Iteration Prep
+        image1 = image2.clone();  // Save last frame
+        goodMatches.clear();  // Free vectors
+        
         // FPS Calculation
         frameCounter++;
         std::time_t timeNow = std::time(0) - timeBegin;
@@ -124,8 +128,8 @@ int main(int argc, char **argv) {
             frameCounter = 0;
         }
 
-        // Press  ESC on keyboard to exit
-        char c=(char)waitKey(25);
+        // Press 'ESC' on keyboard to exit.
+        char c = (char) waitKey(25);
         if(c==27) break;
     }
  
