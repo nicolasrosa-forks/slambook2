@@ -19,7 +19,7 @@
 
 /* Custom Libraries */ //FIXME:
 // #include "../include/libUtils.h"
-#include "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/include/libUtils.h"
+#include "../../common/libUtils.h"
 
 using namespace std;
 using namespace cv;

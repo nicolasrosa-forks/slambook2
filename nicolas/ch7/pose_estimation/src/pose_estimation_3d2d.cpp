@@ -14,7 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../include/libUtils.h"
+#include "../../../common/libUtils.h"
 
 using namespace std;
 using namespace cv;

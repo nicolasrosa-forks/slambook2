@@ -11,7 +11,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 /* Custom Libraries */
-#include "../../include/libUtils.h"
+#include "../../../common/libUtils.h"
 
 using namespace std;
 using namespace cv;
