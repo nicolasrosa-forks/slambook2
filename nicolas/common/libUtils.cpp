@@ -11,16 +11,7 @@
 using namespace std;
 using namespace cv;
 
-/* Chrono */
-typedef chrono::steady_clock::time_point Timer;
-void printTimeElapsed(const char text[], Timer t1, Timer t2){
-    chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    cout << text << time_elapsed.count() << " s" << endl;
-}
-
-/* ======================== */
-/*  Eigen/Sophus' Functions  */
-/* ======================== */
+/* Basic */
 void print(const char text[]){
     cout << text << endl;
 }
@@ -46,6 +37,16 @@ void printVec(const char text[], const TTypeVector &vec){
   cout << "]" << endl << endl;
 }
 
+/* Chrono */
+typedef chrono::steady_clock::time_point Timer;
+void printTimeElapsed(const char text[], Timer t1, Timer t2){
+    chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+    cout << text << time_elapsed.count() << " s" << endl;
+}
+
+/* ========================== */
+/*  Eigen3/Sophus' Functions  */
+/* ========================== */
 template <typename TTypeMat>
 void printMatrix(const char text[], TTypeMat mat){
     cout << text << endl;

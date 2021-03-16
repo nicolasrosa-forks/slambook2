@@ -7,10 +7,19 @@
 /* ===================== */
 /*  Function Prototypes  */
 /* ===================== */
+/* Basic */
 void print(char text[]);
+
+void print(const std::string &text);
+
+void print(double var);
 
 void printVec(const char text[], const std::vector<double> &vec);
 
+/* Chrono */
+void printTimeElapsed(const char text[], Timer t1, Timer t2);
+
+/* Eigen3/Sophus */
 template <typename TTypeMat>
 void printMatrix(const char text[], TTypeMat mat);
 
@@ -20,15 +29,16 @@ void printVector(const char text[], TTypeVec vec);
 template <typename TTypeQuat>
 void printQuaternion(const char text[], TTypeQuat quat);
 
+/* OpenCV */
 int checkImage(const cv::Mat &image);
+
+string type2str(int type);
 
 void printImageInfo(const cv::Mat &image);
 
 void printMatrix(const char text[], cv::Mat var);
 
 void printMatrix(const char text[], cv::MatExpr var);
-
-void printTimeElapsed(const char text[], Timer t1, Timer t2);
 
 // Pixel coordinates to camera normalized coordinates
 Point2f pixel2cam(const Point2d &p, const Mat &K);
