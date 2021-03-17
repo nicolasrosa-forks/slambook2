@@ -1,8 +1,6 @@
 /* =========== */
 /*  Libraries  */
 /* =========== */
-#define OPENCV3  // If not defined, OpenCV2
-
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -17,8 +15,7 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/opencv.hpp>
 
-/* Custom Libraries */ //FIXME:
-// #include "../include/libUtils.h"
+/* Custom Libraries */
 #include "../../common/libUtils.h"
 
 using namespace std;

@@ -96,9 +96,9 @@ int main(int argc, char **argv) {
         /* ---------------------------------- */
         find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
 
-        /* ----------------------- */
-        /*  Pose Estimation 2D-2D  */
-        /* ----------------------- */
+        /* ------------------------------------------- */
+        /*  Pose Estimation 2D-2D  (Epipolar Geometry) */
+        /* ------------------------------------------- */
         //--- Step 6.1: Estimate the motion (R, t) between the two images
         Mat R, t;
         // pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);  # FIXME: Different Camera, Different K!

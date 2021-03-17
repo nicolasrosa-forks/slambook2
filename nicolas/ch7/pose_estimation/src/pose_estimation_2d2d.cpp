@@ -60,9 +60,10 @@ int main(int argc, char **argv) {
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
     cout << "In total, we get " << goodMatches.size() << " set of feature points." << endl << endl;
 
-    /* ----------------------- */
-    /*  Pose Estimation 2D-2D  */
-    /* ----------------------- */
+    /* ------------------------------------------- */
+    /*  Pose Estimation 2D-2D  (Epipolar Geometry) */
+    /* ------------------------------------------- */
+    // Also known as Initialization Process for Monocular SLAM
     //--- Step 6.1: Estimate the motion (R, t) between the two images
     Mat R, t;
     pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t, K);
@@ -104,8 +105,8 @@ int main(int argc, char **argv) {
     /*  Results  */
     /* --------  */
     /* Display Images */
-    imshow("image1", image1);
-    imshow("image2", image2);
+    // imshow("image1", image1);
+    // imshow("image2", image2);
     cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
