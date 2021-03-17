@@ -15,7 +15,7 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-// #include "../include/libUtils.h"
+#include "../../common/libUtils.h"
 
 using namespace std;
 using namespace cv;
@@ -56,9 +56,9 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     //cout << descriptors2 << endl;
 
     // FIXME: The following Lines are changing the results?!?
-    //Mat outImage1, outImage2;
-    //drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-    //drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+    Mat outImage1, outImage2;
+    drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+    drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
@@ -116,7 +116,7 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     }
 
     /* Display */
-//    imshow("outImage1", outImage1);
-//    imshow("outImage2", outImage2);
+    imshow("outImage1", outImage1);
+    imshow("outImage2", outImage2);
     imshow("image_goodMatches", image_goodMatches);
 }
