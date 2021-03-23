@@ -62,11 +62,11 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     Timer t5 = chrono::steady_clock::now();
 
     /* Results */
-    printTimeElapsed("Pose estimation 2D-2D: ", t1, t5);
-    printTimeElapsed(" | Fundamental Matrix Calculation: ", t1, t2);
-    printTimeElapsed(" |   Essential Matrix Calculation: ", t2, t3);
-    printTimeElapsed(" |  Homography Matrix Calculation: ", t3, t4);
-    printTimeElapsed(" |             Pose Recover(R, t): ", t4, t5);
+    printElapsedTime("Pose estimation 2D-2D: ", t1, t5);
+    printElapsedTime(" | Fundamental Matrix Calculation: ", t1, t2);
+    printElapsedTime(" |   Essential Matrix Calculation: ", t2, t3);
+    printElapsedTime(" |  Homography Matrix Calculation: ", t3, t4);
+    printElapsedTime(" |             Pose Recover(R, t): ", t4, t5);
     cout << endl;
 
     printMatrix("K:\n", K);

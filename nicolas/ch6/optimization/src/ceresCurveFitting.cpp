@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
     ceres::Solve(options, &problem, &summary);
     Timer t2 = chrono::steady_clock::now();
 
-    printTimeElapsed("Solver time: ", t1, t2);
+    printElapsedTime("Solver time: ", t1, t2);
 
     // Computes the RMSE
     double rmse = RMSE(abc_e, abc_r);

@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
     optimizer.optimize(10);  // Number of optimization steps
     Timer t2 = chrono::steady_clock::now();
 
-    printTimeElapsed("Solver time: ", t1, t2);
+    printElapsedTime("Solver time: ", t1, t2);
 
     // Computes the RMSE
     Vector3d abc_r = {ar, br,cr};

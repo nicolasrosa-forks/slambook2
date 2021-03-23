@@ -100,18 +100,18 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
 
     /* Results */
     if(verbose){
-        printTimeElapsed("ORB Features Extraction: ", t1, t3);
-        printTimeElapsed(" | Oriented FAST Keypoints detection: ", t1, t2);
-        printTimeElapsed(" | BRIEF descriptors calculation: ", t2, t3);
+        printElapsedTime("ORB Features Extraction: ", t1, t3);
+        printElapsedTime(" | Oriented FAST Keypoints detection: ", t1, t2);
+        printElapsedTime(" | BRIEF descriptors calculation: ", t2, t3);
         cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
         cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
-        printTimeElapsed("ORB Features Matching: ", t4, t5);
+        printElapsedTime("ORB Features Matching: ", t4, t5);
         cout << "-- Number of matches: " << matches.size() << endl;
         cout << "-- Min dist: " << min_dist << endl;
         cout << "-- Max dist: " << max_dist << endl << endl;
 
-        printTimeElapsed("ORB Features Filtering: ", t6, t7);
+        printElapsedTime("ORB Features Filtering: ", t6, t7);
         cout << "-- Number of good matches: " << goodMatches.size() << endl;
     }
 
