@@ -17,6 +17,11 @@
 using namespace std;
 using namespace cv;
 
+string image1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1.png";
+string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2.png";
+string depth1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1_depth.png";
+string depth2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2_depth.png";
+
 void find_feature_matches(
   const Mat &img_1, const Mat &img_2,
   std::vector<KeyPoint> &keypoints_1,
@@ -46,22 +51,24 @@ void bundleAdjustmentGaussNewton(
 );
 
 int main(int argc, char **argv) {
-  if (argc != 5) {
-    cout << "usage: pose_estimation_3d2d img1 img2 depth1 depth2" << endl;
-    return 1;
-  }
+//   if (argc != 5) {
+//     cout << "usage: pose_estimation_3d2d img1 img2 depth1 depth2" << endl;
+//     return 1;
+//   }
+  
+
   //--- read image
-  Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-  Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
+  Mat img_1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
+  Mat img_2 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
   assert(img_1.data && img_2.data && "Can not load images!");
 
   vector<KeyPoint> keypoints_1, keypoints_2;
   vector<DMatch> matches;
   find_feature_matches(img_1, img_2, keypoints_1, keypoints_2, matches);
-  cout << "A total of found" << matches.size() << "group matching points" << endl;
+  cout << "A total of found: " << matches.size() << " group matching points" << endl;
 
   // Create 3D points
-  Mat d1 = imread(argv[3], CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
+  Mat d1 = imread(depth1_filepath, CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
   Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
   vector<Point3f> pts_3d;
   vector<Point2f> pts_2d;
