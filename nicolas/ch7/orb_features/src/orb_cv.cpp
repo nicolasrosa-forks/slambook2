@@ -17,10 +17,8 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-// string image1_filepath = "../../orb_features/src/1.png";
-// string image2_filepath = "../../orb_features/src/2.png";
-string image1_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/1.png";
-string image2_filepath = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch7/orb_features/src/2.png";
+string image1_filepath = "../../orb_features/src/1.png";
+string image2_filepath = "../../orb_features/src/2.png";
 
 int orb_nfeatures = 500;
 double matches_lower_bound = 30.0;
