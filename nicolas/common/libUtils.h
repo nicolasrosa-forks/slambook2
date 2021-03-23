@@ -17,7 +17,7 @@ void print(double var);
 void printVec(const char text[], const std::vector<double> &vec);
 
 /* Chrono */
-void printTimeElapsed(const char text[], Timer t1, Timer t2);
+void printElapsedTime(const char text[], Timer t1, Timer t2);
 
 /* Eigen3/Sophus */
 template <typename TTypeMat>
