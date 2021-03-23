@@ -12,8 +12,8 @@ set(CMAKE_BUILD_TYPE "Release")
 include_directories("/usr/include/eigen3")
 
 # OpenCV
-# find_package(OpenCV REQUIRED)
-# include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Ceres
 find_package(Ceres REQUIRED)
@@ -27,16 +27,16 @@ include_directories(${G2O_INCLUDE_DIRS})
 #  gaussNewton  #
 # ============= #
 add_executable(gaussNewton src/gaussNewton.cpp)
-target_link_libraries(gaussNewton)
+target_link_libraries(gaussNewton ${OpenCV_LIBS})
 
 # =================== #
 #  ceresCurveFitting  #
 # =================== #
 add_executable(ceresCurveFitting src/ceresCurveFitting.cpp)
-target_link_libraries(ceresCurveFitting ${CERES_LIBRARIES})
+target_link_libraries(ceresCurveFitting ${OpenCV_LIBS} ${CERES_LIBRARIES})
 
 # ================= #
 #  g2oCurveFitting  #
 # ================= #
 add_executable(g2oCurveFitting src/g2oCurveFitting.cpp)
-target_link_libraries(g2oCurveFitting ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY})
+target_link_libraries(g2oCurveFitting ${OpenCV_LIBS} ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY})
