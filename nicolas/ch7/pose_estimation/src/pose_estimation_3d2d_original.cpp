@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     pts_2d.push_back(keypoints_2[m.trainIdx].pt);
   }
 
-  cout << "3d-2d pairs: "<< pts_3d.size() << endl;
+  cout << "3d-2d pairs: " << pts_3d.size() << endl;
 
   chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
   Mat r, t;
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
   VecVector3d pts_3d_eigen;
   VecVector2d pts_2d_eigen;
-  for (size_t i = 0; i <pts_3d.size(); ++i) {
+  for (size_t i = 0; i < pts_3d.size(); ++i) {
     pts_3d_eigen.push_back(Eigen::Vector3d(pts_3d[i].x, pts_3d[i].y, pts_3d[i].z));
     pts_2d_eigen.push_back(Eigen::Vector2d(pts_2d[i].x, pts_2d[i].y));
   }
@@ -101,16 +101,16 @@ int main(int argc, char **argv) {
   t1 = chrono::steady_clock::now();
   bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K, pose_gn);
   t2 = chrono::steady_clock::now();
-  time_used = chrono::duration_cast<chrono::duration<double>>(t2-t1);
-  cout << "solve pnp by gauss newton cost time: "<< time_used.count() <<" seconds." << endl;
+  time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+  cout << "solve pnp by gauss newton cost time: " << time_used.count() << " seconds." << endl;
 
   cout << "calling bundle adjustment by g2o" << endl;
   Sophus::SE3d pose_g2o;
   t1 = chrono::steady_clock::now();
   bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K, pose_g2o);
   t2 = chrono::steady_clock::now();
-  time_used = chrono::duration_cast<chrono::duration<double>>(t2-t1);
-  cout << "solve pnp by g2o cost time: "<< time_used.count() <<" seconds." << endl;
+  time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+  cout << "solve pnp by g2o cost time: " << time_used.count() << " seconds." << endl;
   return 0;
 }
 
@@ -124,8 +124,8 @@ void find_feature_matches(const Mat &img_1, const Mat &img_2,
   Ptr<FeatureDetector> detector = ORB::create();
   Ptr<DescriptorExtractor> descriptor = ORB::create();
   // use this if you are in OpenCV2
-  // Ptr<FeatureDetector> detector = FeatureDetector::create ("ORB" );
-  // Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB" );
+  // Ptr<FeatureDetector> detector = FeatureDetector::create ("ORB");
+  // Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB");
   Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
   //--- Step 1: Detect the position of the Oriented FAST corner point
   detector->detect(img_1, keypoints_1);
@@ -137,24 +137,24 @@ void find_feature_matches(const Mat &img_1, const Mat &img_2,
 
   //--- Step 3: Match the BRIEF descriptors in the two images, using Hamming distance
   vector<DMatch> match;
-  // BFMatcher matcher (NORM_HAMMING );
+  // BFMatcher matcher ( NORM_HAMMING );
   matcher->match(descriptors_1, descriptors_2, match);
 
   //--- The fourth step: matching points to filter
   double min_dist = 10000, max_dist = 0;
 
   //Find the minimum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
-  for (int i = 0; i <descriptors_1.rows; i++) {
+  for (int i = 0; i < descriptors_1.rows; i++) {
     double dist = match[i].distance;
-    if (dist <min_dist) min_dist = dist;
-    if (dist> max_dist) max_dist = dist;
+    if (dist < min_dist) min_dist = dist;
+    if (dist > max_dist) max_dist = dist;
   }
 
-  printf("-- Max dist: %f \n", max_dist);
-  printf("-- Min dist: %f \n", min_dist);
+  printf("-- Max dist : %f \n", max_dist);
+  printf("-- Min dist : %f \n", min_dist);
 
   //When the distance between the descriptors is greater than twice the minimum distance, it is considered that the matching is wrong. But sometimes the minimum distance will be very small, set an empirical value of 30 as the lower limit.
-  for (int i = 0; i <descriptors_1.rows; i++) {
+  for (int i = 0; i < descriptors_1.rows; i++) {
     if (match[i].distance <= max(2 * min_dist, 30.0)) {
       matches.push_back(match[i]);
     }
@@ -164,8 +164,8 @@ void find_feature_matches(const Mat &img_1, const Mat &img_2,
 Point2d pixel2cam(const Point2d &p, const Mat &K) {
   return Point2d
     (
-      (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),
-      (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)
+      (p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),
+      (p.y - K.at<double>(1, 2)) / K.at<double>(1, 1)
     );
 }
 
@@ -182,19 +182,19 @@ void bundleAdjustmentGaussNewton(
   double cx = K.at<double>(0, 2);
   double cy = K.at<double>(1, 2);
 
-  for (int iter = 0; iter <iterations; iter++) {
+  for (int iter = 0; iter < iterations; iter++) {
     Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
     Vector6d b = Vector6d::Zero();
 
     cost = 0;
     // compute cost
-    for (int i = 0; i <points_3d.size(); i++) {
+    for (int i = 0; i < points_3d.size(); i++) {
       Eigen::Vector3d pc = pose * points_3d[i];
       double inv_z = 1.0 / pc[2];
       double inv_z2 = inv_z * inv_z;
       Eigen::Vector2d proj(fx * pc[0] / pc[2] + cx, fy * pc[1] / pc[2] + cy);
 
-      Eigen::Vector2d e = points_2d[i]-proj;
+      Eigen::Vector2d e = points_2d[i] - proj;
 
       cost += e.squaredNorm();
       Eigen::Matrix<double, 2, 6> J;
@@ -202,7 +202,7 @@ void bundleAdjustmentGaussNewton(
         0,
         fx * pc[0] * inv_z2,
         fx * pc[0] * pc[1] * inv_z2,
-        -fx-fx * pc[0] * pc[0] * inv_z2,
+        -fx - fx * pc[0] * pc[0] * inv_z2,
         fx * pc[1] * inv_z,
         0,
         -fy * inv_z,
@@ -223,9 +223,9 @@ void bundleAdjustmentGaussNewton(
       break;
     }
 
-    if (iter> 0 && cost >= lastCost) {
+    if (iter > 0 && cost >= lastCost) {
       // cost increase, update is not good
-      cout << "cost: "<< cost << ", last cost:" << lastCost << endl;
+      cout << "cost: " << cost << ", last cost: " << lastCost << endl;
       break;
     }
 
@@ -233,8 +233,8 @@ void bundleAdjustmentGaussNewton(
     pose = Sophus::SE3d::exp(dx) * pose;
     lastCost = cost;
 
-    cout << "iteration "<< iter <<" cost=" << std::setprecision(12) << cost << endl;
-    if (dx.norm() <1e-6) {
+    cout << "iteration " << iter << " cost=" << std::setprecision(12) << cost << endl;
+    if (dx.norm() < 1e-6) {
       // converge
       break;
     }
@@ -244,7 +244,7 @@ void bundleAdjustmentGaussNewton(
 }
 
 /// vertex and edges used in g2o ba
-class VertexPose: public g2o::BaseVertex<6, Sophus::SE3d> {
+class VertexPose : public g2o::BaseVertex<6, Sophus::SE3d> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
@@ -264,18 +264,18 @@ public:
   virtual bool write(ostream &out) const override {}
 };
 
-class EdgeProjection: public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose> {
+class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-  EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d ​​&K): _pos3d(pos), _K(K) {}
+  EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d &K) : _pos3d(pos), _K(K) {}
 
   virtual void computeError() override {
     const VertexPose *v = static_cast<VertexPose *> (_vertices[0]);
     Sophus::SE3d T = v->estimate();
     Eigen::Vector3d pos_pixel = _K * (T * _pos3d);
     pos_pixel /= pos_pixel[2];
-    _error = _measurement-pos_pixel.head<2>();
+    _error = _measurement - pos_pixel.head<2>();
   }
 
   virtual void linearizeOplus() override {
@@ -291,7 +291,7 @@ public:
     double Z = pos_cam[2];
     double Z2 = Z * Z;
     _jacobianOplusXi
-      << -fx / Z, 0, fx * X / Z2, fx * X * Y / Z2, -fx-fx * X * X / Z2, fx * Y / Z,
+      << -fx / Z, 0, fx * X / Z2, fx * X * Y / Z2, -fx - fx * X * X / Z2, fx * Y / Z,
       0, -fy / Z, fy * Y / (Z * Z), fy + fy * Y * Y / Z2, -fy * X * Y / Z2, -fy * X / Z;
   }
 
@@ -311,8 +311,8 @@ void bundleAdjustmentG2O(
   Sophus::SE3d &pose) {
 
   // Build graph optimization, first set g2o
-  typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType; // pose is 6, landmark is 3
-  typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // Linear solver type
+  typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;  // pose is 6, landmark is 3
+  typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // 线性求解器类型
   // Gradient descent method, you can choose from GN, LM, DogLeg
   auto solver = new g2o::OptimizationAlgorithmGaussNewton(
     g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
@@ -335,7 +335,7 @@ void bundleAdjustmentG2O(
 
   // edges
   int index = 1;
-  for (size_t i = 0; i <points_2d.size(); ++i) {
+  for (size_t i = 0; i < points_2d.size(); ++i) {
     auto p2d = points_2d[i];
     auto p3d = points_3d[i];
     EdgeProjection *edge = new EdgeProjection(p3d, K_eigen);
@@ -352,8 +352,8 @@ void bundleAdjustmentG2O(
   optimizer.initializeOptimization();
   optimizer.optimize(10);
   chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
-  chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2-t1);
-  cout << "optimization costs time: "<< time_used.count() <<" seconds." << endl;
+  chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+  cout << "optimization costs time: " << time_used.count() << " seconds." << endl;
   cout << "pose estimated by g2o =\n" << vertex_pose->estimate().matrix() << endl;
   pose = vertex_pose->estimate();
 }
