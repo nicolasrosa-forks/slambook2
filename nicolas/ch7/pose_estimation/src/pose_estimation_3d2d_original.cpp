@@ -56,10 +56,9 @@ int main(int argc, char **argv) {
 //     return 1;
 //   }
   
-
   //--- read image
   Mat img_1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
-  Mat img_2 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
+  Mat img_2 = imread(image2_filepath, CV_LOAD_IMAGE_COLOR);
   assert(img_1.data && img_2.data && "Can not load images!");
 
   vector<KeyPoint> keypoints_1, keypoints_2;
