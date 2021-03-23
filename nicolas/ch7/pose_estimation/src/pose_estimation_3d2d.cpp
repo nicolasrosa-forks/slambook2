@@ -32,6 +32,7 @@
 #include "../../../common/libUtils.h"
 #include "../../include/find_features_matches.h"
 // #include "../../include/pose_estimation_2d2d.h"
+#include "../../include/bundleAdjustment.h"
 
 using namespace std;
 using namespace cv;
@@ -112,10 +113,10 @@ int main(int argc, char **argv) {
     /* ----------------------- */
     /*  Pose Estimation 3D-2D  */
     /* ----------------------- */
-    /* Create 3D-2D pairs */
+    //--- Step 1: Create 3D-2D pairs
     Timer t1 = chrono::steady_clock::now();
-    vector<Point3f> pts_3d;
-    vector<Point2f> pts_2d;
+    vector<Point3f> pts_3d;  // (P)_n
+    vector<Point2f> pts_2d;  // (p2)_n
 
     for(DMatch m : goodMatches){  // Loop through feature matches
         // Gets the depth value of the feature point p1_i
@@ -129,14 +130,13 @@ int main(int argc, char **argv) {
         float dd = d / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
-        // x = [X/Z, Y/Z]
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
 
-        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // P = [X, Y, Z]^T // FIXME: In {world} frame or in {camera} frame?
-        pts_2d.push_back(keypoints2[m.trainIdx].pt);          // (p2)_n
+        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // P = [X, Y, Z]^T = [x.Z, y.Z, Z]^T, x = [x, y] = [X/Z, Y/Z]  //FIXME: In {world} frame or in {camera} frame?
+        pts_2d.push_back(keypoints2[m.trainIdx].pt);          // p2 = [u, v]^T
     }
     
-    /* Perspective-n-Point (PnP) */
+    //--- Step 2: Perspective-n-Point (PnP)
     Timer t2 = chrono::steady_clock::now();
     Mat r, R, t;  // Rotation Vector, Rotation Matrix, Translation Vector
     
@@ -167,27 +167,51 @@ int main(int argc, char **argv) {
     cv::Rodrigues(r, R);  // Converts the rotation vector r to a rotation matrix R using the Rodrigues formula.
     Timer t3 = chrono::steady_clock::now();
 
-    /* Bundle Adjustment */
-    // In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares
-    // optimization problem to adjust the estimated values (bundle adjustment).
-    
-    Timer t4 = chrono::steady_clock::now();
+    //--- Step 3: Bundle Adjustment (BA)
+    /* In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares
+       optimization problem to adjust the estimated values (bundle adjustment). */
+    VecVector3d pts_3d_eigen;
+    VecVector2d pts_2d_eigen;
 
+    // Copy data from OpenCV's vector to Eigen's Vector.
+    for(size_t i = 0; i<pts_3d.size(); i++){
+        pts_3d_eigen.push_back(Eigen::Vector3d(pts_3d[i].x, pts_3d[i].y, pts_3d[i].z));  //FIXME: Change for float?
+        pts_2d_eigen.push_back(Eigen::Vector2d(pts_2d[i].x, pts_2d[i].y));  //FIXME: Change for float?
+    }
+    
+    // printVector<Eigen::Vector3d>("pts_3d_eigen[0]:", pts_3d_eigen[0]);
+    // printVector<Eigen::Vector2d>("pts_2d_eigen[0]:", pts_2d_eigen[0]);
+
+    //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
+    Sophus::SE3d pose_gn;
+    Timer t4 = chrono::steady_clock::now();
+    // bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K, pose_gn);
+    bundleAdjustmentGaussNewton();  //TODO
+    Timer t5 = chrono::steady_clock::now();
+    
+    //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
+    Sophus::SE3d pose_g2o;
+    Timer t6 = chrono::steady_clock::now();
+    bundleAdjustmentG2O();  //TODO
+    Timer t7 = chrono::steady_clock::now();
+    
     /* --------- */
     /*  Results  */
     /* --------  */
     printElapsedTime("Pose estimation 3D-2d: ", t1, t3);
     printElapsedTime(" | Create 3D-2D Pairs: ", t1, t2);
     printElapsedTime(" | Perspective-n-Point (solvePnP): ", t2, t3);
-    printElapsedTime(" | Bundle Adjustment: ", t3, t4);
+    printElapsedTime(" | Bundle Adjustment (GN): ", t4, t5);
+    printElapsedTime(" | Bundle Adjustment (g2o): ", t6, t7);  //TODO
+    
     // NOTE: Observe that not all the 79 feature matches have valid depth values. 4 3D-2D pairs were discarded.
     cout << "\n-- Number of 3D-2D pairs: " << pts_3d.size() << endl;
     cout << "-- PnP Method selected: " << pnp_methods_enum2str[pnp_method_selected-1] << endl;
     cout << endl;
 
-    printMatrix("r:\n", r);  // FIXME: rcw?
-    printMatrix("R:\n", R);  // FIXME: Rcw?
-    printMatrix("t:\n", t);  // FIXME: Tcw?
+    printMatrix("r:\n", r);  //FIXME: rcw?
+    printMatrix("R:\n", R);  //FIXME: Rcw?
+    printMatrix("t:\n", t);  //FIXME: Tcw?
 
     /* Display Images */
     // imshow("image1", image1);
@@ -201,7 +225,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-/* ======================= */
-/*  Functions Declaration  */
-/* ======================= */
