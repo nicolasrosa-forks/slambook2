@@ -1,8 +1,6 @@
 /* =========== */
 /*  Libraries  */
 /* =========== */
-#define OPENCV3  // If not defined, OpenCV2
-
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -48,12 +46,7 @@ int orb_nfeatures = 500;
 // Choose the PnP Method:
 // 1: Iterative (LM), 2: EPnP, 3: P3P
 const char* pnp_methods_enum2str[] = {"Iterative", "EPnP", "P3P"};
-int pnp_method_selected = 3;
-
-// BA by g2o
-// The memory is aligned as for dynamically aligned matrix/array types such as MatrixXd
-typedef vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> VecVector2d;
-typedef vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> VecVector3d;
+int pnp_method_selected = 1;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -76,7 +69,6 @@ TTypeVec slicing(TTypeVec &arr, int begin_idx, int end_idx){
     // Return the final sliced vector
     return result;
 }
-
 
 /* ====== */
 /*  Main  */
@@ -108,7 +100,6 @@ int main(int argc, char **argv) {
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
-    cout << "\nIn total, we get " << goodMatches.size() << " pairs of feature points." << endl << endl;
 
     /* ----------------------- */
     /*  Pose Estimation 3D-2D  */
@@ -132,7 +123,9 @@ int main(int argc, char **argv) {
         // Calculates the 3D Points
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
 
-        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // P = [X, Y, Z]^T = [x.Z, y.Z, Z]^T, x = [x, y] = [X/Z, Y/Z]  //FIXME: In {world} frame or in {camera} frame?
+        //FIXME: The 3D Point P is described in {world} frame or in {camera} frame? I believe its in the {camera} frame because
+        // the authors said its possible to compare the resulting R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
+        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // P = [X, Y, Z]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
         pts_2d.push_back(keypoints2[m.trainIdx].pt);          // p2 = [u, v]^T
     }
     
@@ -140,17 +133,35 @@ int main(int argc, char **argv) {
     Timer t2 = chrono::steady_clock::now();
     Mat r, R, t;  // Rotation Vector, Rotation Matrix, Translation Vector
     
-    // Calls OpenCV's PnP to solve, choose Iterative (LM), EPnP, P3P, DLS (broken), UPnP (broken), and other methods.
+    // P3P Variables
     vector<Point3f> pts_3d_3;
     vector<Point2f> pts_2d_3;
 
+    // Calls OpenCV's PnP to solve, choose Iterative (LM), EPnP, P3P, DLS (broken), UPnP (broken), and other methods.
+    /** @brief Finds an object pose from 3D-2D point correspondences using the RANSAC scheme.
+    @param objectPoints Array of object points in the object coordinate space, Nx3 1-channel or
+    1xN/Nx1 3-channel, where N is the number of points. vector\<Point3d\> can be also passed here.
+    @param imagePoints Array of corresponding image points, Nx2 1-channel or 1xN/Nx1 2-channel,
+    where N is the number of points. vector\<Point2d\> can be also passed here.
+    @param cameraMatrix Input camera intrinsic matrix \f$\cameramatrix{A}\f$ .
+    @param distCoeffs Input vector of distortion coefficients
+    \f$\distcoeffs\f$. If the vector is NULL/empty, the zero distortion coefficients are
+    assumed.
+    @param rvec Output rotation vector (see @ref Rodrigues) that, together with tvec, brings points from
+    the model coordinate system to the camera coordinate system.
+    @param tvec Output translation vector.
+    **/
+
+    // NOTE: Since we used the normalized coordinates of the Image 1, x1, to obtain the 3D Points P, and used the feature
+    // points on the Image 2. So, the 3D Points are described in the {camera1} frame, and the R, t returned by th solvePnP
+    // describes the T21(R21, t21), {camera1}-to-{camera2} Transform. That's why we can compare with the R,t from the Pose
+    // Estimation 2D-2D.
     switch(pnp_method_selected){
         case 1:  // Option 1: Iterative method is based on a Levenberg-Marquardt optimization
             cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_ITERATIVE);
             break;
         case 2:  // Option 2: EPnP
             cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_EPNP);  
-
             break;
         case 3:  //Option 3: P3P
             // P3P needs 4 3D-2D pairs: 3 pairs of 3D-2D matching points and 1 verification pair for removing solution ambiguity.
@@ -158,7 +169,7 @@ int main(int argc, char **argv) {
             pts_2d_3 = slicing<vector<Point2f>>(pts_2d, 0, 3);
             // printVec("pts_3d_3:\n", pts_3d_3);
             // printVec("pts_2d_3:\n", pts_2d_3);
-            cv::solvePnP(pts_3d_3, pts_2d_3, K, Mat(), r, t, false, SOLVEPNP_P3P);  //
+            cv::solvePnP(pts_3d_3, pts_2d_3, K, Mat(), r, t, false, SOLVEPNP_P3P);
             break;
         default:
             break;
@@ -185,14 +196,13 @@ int main(int argc, char **argv) {
     //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
     Sophus::SE3d pose_gn;
     Timer t4 = chrono::steady_clock::now();
-    // bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K, pose_gn);
-    bundleAdjustmentGaussNewton();  //TODO
+    bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K, pose_gn);  //TODO: Terminar
     Timer t5 = chrono::steady_clock::now();
     
     //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
     Sophus::SE3d pose_g2o;
     Timer t6 = chrono::steady_clock::now();
-    bundleAdjustmentG2O();  //TODO
+    bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K, pose_g2o);  //TODO: Terminar
     Timer t7 = chrono::steady_clock::now();
     
     /* --------- */
@@ -202,16 +212,16 @@ int main(int argc, char **argv) {
     printElapsedTime(" | Create 3D-2D Pairs: ", t1, t2);
     printElapsedTime(" | Perspective-n-Point (solvePnP): ", t2, t3);
     printElapsedTime(" | Bundle Adjustment (GN): ", t4, t5);
-    printElapsedTime(" | Bundle Adjustment (g2o): ", t6, t7);  //TODO
+    printElapsedTime(" | Bundle Adjustment (g2o): ", t6, t7);
     
     // NOTE: Observe that not all the 79 feature matches have valid depth values. 4 3D-2D pairs were discarded.
     cout << "\n-- Number of 3D-2D pairs: " << pts_3d.size() << endl;
     cout << "-- PnP Method selected: " << pnp_methods_enum2str[pnp_method_selected-1] << endl;
     cout << endl;
 
-    printMatrix("r:\n", r);  //FIXME: rcw?
-    printMatrix("R:\n", R);  //FIXME: Rcw?
-    printMatrix("t:\n", t);  //FIXME: Tcw?
+    printMatrix("r:\n", r);  //FIXME: r21 or r21 or rcw? I believe it's r21
+    printMatrix("R:\n", R);  //FIXME: R21 or R1w or Rcw? I believe it's R21
+    printMatrix("t:\n", t);  //FIXME: t21 or t1w or tcw? I believe it's t21
 
     /* Display Images */
     // imshow("image1", image1);
@@ -225,3 +235,44 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
+/* Readers can compare R, t solved in the previous 2D-2D case to see the difference.
+It can be seen that when 3D information is involved, the estimated R is almost the
+same, while the t is quite different. */
+
+/* ==================================== */
+/*  Results from Pose Estimation 2D-2D  */
+/* ==================================== */
+// R:
+// [0.9969387384754708, -0.05155574188737422, 0.05878058527591362;
+// 0.05000441581290405, 0.998368531736214, 0.02756507279306545;
+// -0.06010582439453526, -0.02454140006844053, 0.9978902793175882]
+// (3, 3)
+
+// t:
+// [-0.9350802885437915;
+// -0.03514646275858852;
+// 0.3526890700495534]
+// (3, 1)
+
+/* ==================================== */
+/*  Results from Pose Estimation 3D-2D  */
+/* ==================================== */
+// It should be more accurate than the previous one, since utilized the depth information.
+// R:
+// [0.9979059096319058, -0.05091940167648939, 0.03988746738797636;
+//  0.04981866392256838, 0.9983623160259321, 0.02812092929309315;
+//  -0.04125404521606011, -0.02607490119339458, 0.9988083916753333]
+// (3, 3)
+
+// t:
+// [-0.1267821338701787;
+//  -0.008439477707051628;
+//  0.0603493450570466]
+// (3, 1)
+
+// Pose (T*) by GN:
+//    0.997939   -0.049654    0.040644   -0.127957
+//   0.0485163    0.998415   0.0285163 -0.00918841
+//  -0.0419955  -0.0264857    0.998767    0.060236
+//           0           0           0           1

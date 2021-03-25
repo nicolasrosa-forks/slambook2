@@ -48,17 +48,16 @@ int main(int argc, char **argv) {
     int iterations = 100;               // Number of iterations
     double cost = 0.0, lastCost = 0.0;  // The cost of current iteration and the cost of the previous one
 
+    /* Iteration Loop */
     print("Summary: ");
     Timer t1 = chrono::steady_clock::now();
-    // Iteration Loop
     for(int iter=0; iter < iterations; iter++){
-        cout << iter << endl;
-
         Matrix3d H = Matrix3d::Zero();     // Hessian, H(x) = J(x)'*Ω*J(x) in Gauss-Newton
-        Vector3d g = Vector3d::Zero();     // Bias, g(x) = -J(x).f(x)
+        Vector3d b = Vector3d::Zero();     // Bias, g(x) = -J(x).f(x)
+        
         cost = 0.0;                        // Reset
 
-        // Data Loop
+        /* Data Loop, Compute Cost */
         for(int i=0; i<N; i++){
             double xi = x_data[i], yi_r = y_data[i];  // the i-th data point
 
@@ -73,37 +72,41 @@ int main(int argc, char **argv) {
             J[1] = -xi*yi_e;     // de(x)/db
             J[2] = -yi_e;        // de(x)/dc
 
+            /* ------ Hessian and Bias ----- */
             // The Slambook2 doesn't have the Gauss-Newton equation considering the information matrix (inverse of covariance)
-            // The following equations are from Wangxin's Blog
-            // http://wangxinliu.com/slam/optimization/research&study/g2o-3/
+            // The following equations are from Wangxin's Blog, http://wangxinliu.com/slam/optimization/research&study/g2o-3/
             H +=  inv_sigma * inv_sigma * J * J.transpose();  // Hessian, H(x) = J(x)'*Ω*J(x)
-            g += -inv_sigma * inv_sigma * J * ei;             // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
+            b += -inv_sigma * inv_sigma * J * ei;             // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
 
             // Least-Squares Cost (Objective Function)
             cost += ei * ei;  // The actual error function being minimized by solving the proposed linear system is min_x(sum_i ||ei(x)||^2).
         }
 
+        /* ----- Solve ----- */
         // Solve the Linear System Ax=b, H(x)*∆x = g(x)
-        Vector3d dx = H.ldlt().solve(g);
+        Vector3d dx = H.ldlt().solve(b);
 
+        // Check Solution
         if(isnan(dx[0])){
             cout << "Result is nan!" << endl;
             break;
         }
 
-        // Stopping Criteria
-        if(iter > 0 && cost >= lastCost){
+        /* Stopping Criteria */
+        if (dx.norm() < 1e-6 || (iter > 0 && cost >= lastCost)){
+            // If the cost increased, the update was not good.
             cout << "cost: " << cost << " >= lastCost: " << lastCost << ", break." << endl;
             break;
         }
 
-        // Update, x_k+1 = x_k + ∆x_k
+        /* Update */
+        // x_k+1 = x_k + ∆x_k
         ae += dx[0];
         be += dx[1];
         ce += dx[2];
 
         lastCost = cost;
-        cout << "total cost: " << cost << ", \t\tupdate: " << dx.transpose() << "\t\testimated params: " << ae << "," << be << "," << ce << endl;
+        cout << "it: " << iter << ",\tcost: " << cost << ",\tupdate: " << dx.transpose() << "\t\testimated params: " << ae << "," << be << "," << ce << endl;
     }
     Timer t2 = chrono::steady_clock::now();
 
