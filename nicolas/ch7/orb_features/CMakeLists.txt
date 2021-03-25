@@ -34,9 +34,3 @@ target_link_libraries(orb_self ${OpenCV_LIBS})
 # ============== #
 add_executable(orb_cv_video src/orb_cv_video.cpp)
 target_link_libraries(orb_cv_video ${OpenCV_LIBS})
-
-# =================== #
-#  orb_cv_read_images #
-# =================== #
-add_executable(orb_cv_read_dataset_images src/orb_cv_read_dataset_images.cpp)
-target_link_libraries(orb_cv_read_dataset_images ${OpenCV_LIBS})

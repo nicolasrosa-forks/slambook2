@@ -26,6 +26,9 @@ include_directories(
 add_executable(pose_estimation_2d2d src/pose_estimation_2d2d.cpp)
 target_link_libraries(pose_estimation_2d2d ${OpenCV_LIBS})
 
+add_executable(pose_estimation_2d2d_tum src/pose_estimation_2d2d_tum.cpp)
+target_link_libraries(pose_estimation_2d2d_tum ${OpenCV_LIBS})
+
 # ====================== #
 #  pose_estimation_3d2d  #
 # ====================== #
