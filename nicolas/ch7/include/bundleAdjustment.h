@@ -7,8 +7,8 @@
 /* ===================== */
 /*  Function Prototypes  */
 /* ===================== */
-void bundleAdjustmentGaussNewton();
+void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose);
 
-void bundleAdjustmentG2O();
+void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose);
 
 #endif
