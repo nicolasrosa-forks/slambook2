@@ -55,16 +55,11 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     //cout << descriptors1 << endl;
     //cout << descriptors2 << endl;
 
-    // FIXME: The following Lines are changing the results?!?
-    Mat outImage1, outImage2;
-    drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-    drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
 
     Timer t4 = chrono::steady_clock::now();
-    matcher->match(descriptors1, descriptors2, matches);
+    matcher->match(descriptors1, descriptors2, matches);  // TODO: Ver como rodar aquele algoritmo de matching FLANN (Parece ser melhor quando tem-se muitos pontos)
     Timer t5 = chrono::steady_clock::now();
 
     //--- Step 4: Select correct matching (filtering)
@@ -92,10 +87,14 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     Timer t7 = chrono::steady_clock::now();
 
     //--- Step 5: Visualize the Matching result
-//    Mat image_matches;
+    Mat outImage1, outImage2;
+    Mat image_matches;
     Mat image_goodMatches;
 
-//    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
+    drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+    drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+
+    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
 
     /* Results */
@@ -118,5 +117,6 @@ void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint
     /* Display */
     imshow("outImage1", outImage1);
     imshow("outImage2", outImage2);
+    imshow("image_matches", image_matches);
     imshow("image_goodMatches", image_goodMatches);
 }
