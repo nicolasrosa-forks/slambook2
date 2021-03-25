@@ -1,8 +1,6 @@
 /* =========== */
 /*  Libraries  */
 /* =========== */
-#define OPENCV3  // If not defined, OpenCV2
-
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -68,7 +66,6 @@ int main(int argc, char **argv) {
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
-    cout << "\nIn total, we get " << goodMatches.size() << " pairs of feature points." << endl << endl;
 
     /* ------------------------------------------- */
     /*  Pose Estimation 2D-2D  (Epipolar Geometry) */

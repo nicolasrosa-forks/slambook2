@@ -1,8 +1,6 @@
 /* =========== */
 /*  Libraries  */
 /* =========== */
-#define OPENCV3  // If not defined, OpenCV2
-
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -23,7 +21,7 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-int orb_nfeatures = 100;
+int orb_nfeatures = 500;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence // FIXME: I don't have the K for the current video! So I can't calculate the pose estimation!
 // Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -120,7 +118,7 @@ int main(int argc, char **argv) {
 
         if (timeNow - tick >= 1){
             tick++;
-            cout << "Frames per second: " << frameCounter << endl;
+            cout << "FPS: " << frameCounter << endl;
             frameCounter = 0;
         }
 

@@ -1,8 +1,6 @@
 /* =========== */
 /*  Libraries  */
 /* =========== */
-#define OPENCV3  // If not defined, OpenCV2
-
 /* System Libraries */
 #include <iostream>
 #include <chrono>
@@ -155,7 +153,7 @@ int main(int argc, char **argv) {
 
         if (timeNow - tick >= 1){
             tick++;
-            cout << "Frames per second: " << frameCounter << endl;
+            cout << "FPS: " << frameCounter << endl;
             frameCounter = 0;
         }
 
