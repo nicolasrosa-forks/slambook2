@@ -36,7 +36,7 @@ inline cv::Scalar get_color(float depth) {
 }
 
 // Pixel coordinates to camera normalized coordinates
-Point2f pixel2cam(const Point2d &p, const Mat &K);
+Point2f pixel2cam(const Point2f &p, const Mat &K);
 
 int main(int argc, char **argv) {
   // if (argc != 3) {
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     // first picture
     float depth1 = points[i].z;
     cout << "depth: "<< depth1 << endl;
-    Point2d pt1_cam = pixel2cam(keypoints_1[matches[i].queryIdx].pt, K);
+    Point2f pt1_cam = pixel2cam(keypoints_1[matches[i].queryIdx].pt, K);
     cv::circle(img1_plot, keypoints_1[matches[i].queryIdx].pt, 2, get_color(depth1), 2);
 
     // second picture
@@ -200,7 +200,7 @@ void triangulation(
   }
 }
 
-Point2f pixel2cam(const Point2d &p, const Mat &K) {
+Point2f pixel2cam(const Point2f &p, const Mat &K) {
   return Point2f
     (
       (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),

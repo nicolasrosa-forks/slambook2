@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
         float dd = d / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
-        Point2d x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
 
         //FIXME: The 3D Point P is described in {world} frame or in {camera} frame? I believe its in the {camera} frame because
         // the authors said its possible to compare the resulting R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
@@ -197,16 +197,23 @@ int main(int argc, char **argv) {
     // printVector<Eigen::Vector3d>("pts_3d_eigen[0]:", pts_3d_eigen[0]);
     // printVector<Eigen::Vector2d>("pts_2d_eigen[0]:", pts_2d_eigen[0]);
 
+    // K
+    Eigen::Matrix3d K_eigen;
+    K_eigen <<
+        K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
+        K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
+        K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
+
     //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
     Sophus::SE3d pose_gn;
     Timer t4 = chrono::steady_clock::now();
-    bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K, pose_gn);  //TODO: Terminar
+    bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_gn);  //TODO: Terminar
     Timer t5 = chrono::steady_clock::now();
     
     //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
     Sophus::SE3d pose_g2o;
     Timer t6 = chrono::steady_clock::now();
-    bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K, pose_g2o);  //TODO: Terminar
+    bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_g2o);  //TODO: Terminar
     Timer t7 = chrono::steady_clock::now();
     
     /* --------- */
@@ -245,14 +252,14 @@ same, while the t is quite different. */
 /* ==================================== */
 // R:
 // [0.9969387384754708, -0.05155574188737422, 0.05878058527591362;
-// 0.05000441581290405, 0.998368531736214, 0.02756507279306545;
-// -0.06010582439453526, -0.02454140006844053, 0.9978902793175882]
+//  0.05000441581290405, 0.998368531736214, 0.02756507279306545;
+//  -0.06010582439453526, -0.02454140006844053, 0.9978902793175882]
 // (3, 3)
 
 // t:
 // [-0.9350802885437915;
-// -0.03514646275858852;
-// 0.3526890700495534]
+//  -0.03514646275858852;
+//  0.3526890700495534]
 // (3, 1)
 
 /* ==================================== */
@@ -260,7 +267,7 @@ same, while the t is quite different. */
 /* ==================================== */
 // It should be more accurate than the previous one, since utilized the depth information.
 
-// PnP
+// Pose (T*) by PnP:
 // R:
 // [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
 //  0.04981866254254162, 0.9983623157438141, 0.02812094175381183;
@@ -288,7 +295,7 @@ same, while the t is quite different. */
 /* =============== */ 
 /*  Original Code  */
 /* =============== */ 
-// PnP
+// Pose(T*) by PnP:
 // R=
 // [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
 //  0.04981866254254162, 0.9983623157438141, 0.02812094175381183;

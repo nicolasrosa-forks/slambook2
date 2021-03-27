@@ -142,11 +142,11 @@ void printMatrix(const char text[], cv::MatExpr var){
 /**
  * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
  *
- * @param p Point2d in Pixel Coordinates, p=(u,v)
+ * @param p Point2f in Pixel Coordinates, p=(u,v)
  * @param K Intrinsic Parameters Matrix
- * @return Point2d in Normalized Coordinates, x=(x,y)
+ * @return Point2f in Normalized Coordinates, x=(x,y)
  */
-Point2f pixel2cam(const Point2d &p, const Mat &K) {
+Point2f pixel2cam(const Point2f &p, const Mat &K) {
   return Point2f
     (
       (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx

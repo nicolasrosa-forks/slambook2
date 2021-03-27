@@ -29,7 +29,7 @@ void find_feature_matches(
   std::vector<DMatch> &matches);
 
 // Pixel coordinates to camera normalized coordinates
-Point2d pixel2cam(const Point2d &p, const Mat &K);
+Point2f pixel2cam(const Point2f &p, const Mat &K);
 
 // BA by g2o
 typedef vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> VecVector2d;
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     if (d == 0) // bad depth
       continue;
     float dd = d / 5000.0;
-    Point2d p1 = pixel2cam(keypoints_1[m.queryIdx].pt, K);
+    Point2f p1 = pixel2cam(keypoints_1[m.queryIdx].pt, K);
     pts_3d.push_back(Point3f(p1.x * dd, p1.y * dd, dd));
     pts_2d.push_back(keypoints_2[m.trainIdx].pt);
   }
@@ -167,8 +167,8 @@ void find_feature_matches(const Mat &img_1, const Mat &img_2,
   }
 }
 
-Point2d pixel2cam(const Point2d &p, const Mat &K) {
-  return Point2d
+Point2f pixel2cam(const Point2f &p, const Mat &K) {
+  return Point2f
     (
       (p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),
       (p.y - K.at<double>(1, 2)) / K.at<double>(1, 1)
