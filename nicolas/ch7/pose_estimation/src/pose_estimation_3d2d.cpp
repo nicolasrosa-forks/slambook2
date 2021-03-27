@@ -121,12 +121,12 @@ int main(int argc, char **argv) {
         float dd = d / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
-        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        Point2d x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
 
         //FIXME: The 3D Point P is described in {world} frame or in {camera} frame? I believe its in the {camera} frame because
         // the authors said its possible to compare the resulting R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
-        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // P = [X, Y, Z]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
-        pts_2d.push_back(keypoints2[m.trainIdx].pt);          // p2 = [u, v]^T
+        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
+        pts_2d.push_back(keypoints2[m.trainIdx].pt);          // {p2 = [u2, v2]^T}_n
     }
     
     //--- Step 2: Perspective-n-Point (PnP)
@@ -178,6 +178,10 @@ int main(int argc, char **argv) {
     cv::Rodrigues(r, R);  // Converts the rotation vector r to a rotation matrix R using the Rodrigues formula.
     Timer t3 = chrono::steady_clock::now();
 
+    printMatrix("r:\n", r);  //FIXME: r21 or r21 or rcw? I believe it's r21
+    printMatrix("R:\n", R);  //FIXME: R21 or R1w or Rcw? I believe it's R21
+    printMatrix("t:\n", t);  //FIXME: t21 or t1w or tcw? I believe it's t21
+
     //--- Step 3: Bundle Adjustment (BA)
     /* In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares
        optimization problem to adjust the estimated values (bundle adjustment). */
@@ -219,10 +223,6 @@ int main(int argc, char **argv) {
     cout << "-- PnP Method selected: " << pnp_methods_enum2str[pnp_method_selected-1] << endl;
     cout << endl;
 
-    printMatrix("r:\n", r);  //FIXME: r21 or r21 or rcw? I believe it's r21
-    printMatrix("R:\n", R);  //FIXME: R21 or R1w or Rcw? I believe it's R21
-    printMatrix("t:\n", t);  //FIXME: t21 or t1w or tcw? I believe it's t21
-
     /* Display Images */
     // imshow("image1", image1);
     // imshow("image2", image2);
@@ -259,20 +259,53 @@ same, while the t is quite different. */
 /*  Results from Pose Estimation 3D-2D  */
 /* ==================================== */
 // It should be more accurate than the previous one, since utilized the depth information.
+
+// PnP
 // R:
-// [0.9979059096319058, -0.05091940167648939, 0.03988746738797636;
-//  0.04981866392256838, 0.9983623160259321, 0.02812092929309315;
-//  -0.04125404521606011, -0.02607490119339458, 0.9988083916753333]
+// [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
+//  0.04981866254254162, 0.9983623157438141, 0.02812094175381183;
+//  -0.04125404886071624, -0.02607491352889362, 0.9988083912027663]
 // (3, 3)
 
 // t:
-// [-0.1267821338701787;
-//  -0.008439477707051628;
-//  0.0603493450570466]
+// [-0.1267821389556797;
+//  -0.008439496817594663;
+//  0.06034935748886035]
 // (3, 1)
 
 // Pose (T*) by GN:
-//    0.997939   -0.049654    0.040644   -0.127957
-//   0.0485163    0.998415   0.0285163 -0.00918841
-//  -0.0419955  -0.0264857    0.998767    0.060236
+//    0.997906  -0.0509194   0.0398875   -0.126782
+//   0.0498187    0.998362    0.028121 -0.00843953
+//  -0.0412541  -0.0260749    0.998808   0.0603494
 //           0           0           0           1
+
+// Pose (T*) by g2o:
+//     0.99790590955  -0.0509194008911   0.0398874704367   -0.126782138956
+//   0.0498186625425    0.998362315744   0.0281209417542 -0.00843949681823
+//  -0.0412540488609  -0.0260749135293    0.998808391203   0.0603493574888
+//                 0                 0                 0                 1
+
+/* =============== */ 
+/*  Original Code  */
+/* =============== */ 
+// PnP
+// R=
+// [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
+//  0.04981866254254162, 0.9983623157438141, 0.02812094175381183;
+//  -0.04125404886071624, -0.02607491352889362, 0.9988083912027663]
+// t=
+// [-0.1267821389556797;
+//  -0.008439496817594663;
+//  0.06034935748886035]
+
+// pose by g-n: 
+//    0.997905909549  -0.0509194008562   0.0398874705187   -0.126782139096
+//    0.049818662505    0.998362315745   0.0281209417649 -0.00843949683874
+//  -0.0412540489424  -0.0260749135374    0.998808391199   0.0603493575229
+//                 0                 0                 0                 1
+
+// pose estimated by g2o =
+//     0.99790590955  -0.0509194008911   0.0398874704367   -0.126782138956
+//   0.0498186625425    0.998362315744   0.0281209417542 -0.00843949681823
+//  -0.0412540488609  -0.0260749135293    0.998808391203   0.0603493574888
+//                 0                 0                 0                 1
