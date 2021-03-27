@@ -121,7 +121,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
         /* Stopping Criteria */
         // If converged or the cost increased, the update was not good, then break.
         if (iter > 0 && cost >= lastCost){
-            cout << "\ncost: " << std::setprecision(12) << cost << " >= lastCost: " << lastCost << ", break!" << endl;
+            cout << "\ncost: " << cost << " >= lastCost: " << lastCost << ", break!" << endl;
             break;
         }
 
@@ -130,11 +130,11 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
         pose = Sophus::SE3d::exp(dx) * pose;  // T* = exp(δξ).T
         lastCost = cost;
         
-        cout << "it: " << iter << ",\tcost: " << cost << ",\tupdate: " << dx.transpose() << endl;
+        cout << "it: " << iter << ",\tcost: " << std::setprecision(12) << cost << ",\tupdate: " << dx.transpose() << endl;
         if (dx.norm() < 1e-6){
             //converge
             break;
-    }
+        }
     }
     Timer t2 = chrono::steady_clock::now();
 
@@ -143,9 +143,185 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
     cout << "\nPose (T*) by GN:\n" << pose.matrix() << endl << endl;
 }
 
-void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose){
-    cout << "| ------------------------ |" << endl;
-    cout << "|  Bundle Adjustment (g2o) |" << endl;
-    cout << "| ------------------------ |" << endl;
+/* ------------ */
+/*  PoseVertex  */
+/* ------------ */
+/* Description: The vertex of the 6D Pose
+/* Template parameters: optimized variable dimensions and data types
+*/
+class PoseVertex : public g2o::BaseVertex<6, Sophus::SE3d>{    // Inheritance of the class "g2o::BaseVertex"
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
+    // Reset
+    virtual void setToOriginImpl() override {
+        _estimate = Sophus::SE3d();
+    }
+
+    // Update, Left Multiplication on SE3
+    virtual void oplusImpl(const double *update) override {
+        // Conversion to Eigen data type
+        // Vector6d dx = Vector6d(update);  // δξ
+        Eigen::Matrix<double, 6, 1> dx;
+        dx << update[0], update[1], update[2], update[3], update[4], update[5];
+        
+        // Left multiply T by a disturbance quantity exp(δξ)
+        _estimate = Sophus::SE3d::exp(dx)*_estimate;  // T* = exp(δξ).T
+    }
+
+    // Save and read: leave blank
+    virtual bool read(istream &in) {return 0;}
+
+    virtual bool write(ostream &out) const {return 0;}
+};
+
+/* ------------------ */
+/*  ReprojectionEdge  */
+/* ------------------ */
+/* Description: Reprojection Error (2D) model, e = p2 - p2^ = [e_u, e_v]
+/* Template parameters: measurement dimension, measurement type, connection vertex type
+*/
+class ProjectionEdge : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, PoseVertex> {
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+    // Constructor
+    // 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x".
+    // 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
+    // 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
+    ProjectionEdge(const Eigen::Vector3d &P1, const Eigen::Matrix3d &K) : _P1(P1), _K(K) {}
+
+    // Calculate the reprojection error
+    virtual void computeError() override {
+        // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
+        const PoseVertex *v = static_cast<PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
+
+        // Describe the 3D Space Point P in the {camera2} frame
+        Eigen::Vector3d p2_proj = _K*(T*_P1);  // s2.p2^ = K.(T*.P1) = K.P2 = [s2.u2, s2.v2, s2]^T
+        p2_proj /= p2_proj[2];                    //    p2^ = [u2, v2, 1]^T
+        
+        // Calculate the residual
+        // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
+        _error = _measurement - p2_proj.head<2>();  // e = p2-p2^ = [eu, ev]^T
+    }
+
+    // Calculate the Jacobian matrix
+    /**
+     * Linearizes the oplus operator in the vertex, and stores  the result in temporary variables _jacobianOplusXi and _jacobianOplusXj
+     */
+    virtual void linearizeOplus() override{
+        // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
+        const PoseVertex *v = static_cast<PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
+        
+        // Describe the 3D Space Point P in the {camera2} frame
+        Eigen::Vector3d P2 = T*_P1;  // P2 = T*.P1 = [X, Y, Z]^T
+        
+        /* ----- Compute Jacobian Matrix ----- */
+        // The jacobian matrix indicates how the error varies according to the increment δξ, ∂e/∂δξ
+        // TODO: The following variables are static values, they can be removed from the loop
+        double fx = _K(0,0);
+        double fy = _K(1,1);
+        double cx = _K(0,2);
+        double cy = _K(1,2);
+
+        double X = P2[0];        
+        double Y = P2[1];
+        double Z = P2[2];
+        
+        double X2 = X*X;
+        double Y2 = Y*Y;
+        double Z2 = Z*Z;
+        
+        // TODO: this has the same calculation as in the bundle adjustment, create a function
+        _jacobianOplusXi << -fx/Z,     0, fx*X/Z2,   fx*X*Y/Z2, -fx-fx*X2/Z2,  fx*Y/Z,
+                                0, -fy/Z, fy*Y/Z2, fy+fy*Y2/Z2,   -fy*X*Y/Z2, -fy*X/Z;
+    }
+
+    virtual bool read(istream &in) override {return 0;}
+
+    virtual bool write(ostream &out) const override {return 0;}
+
+private:
+    Eigen::Vector3d _P1;
+    Eigen::Matrix3d _K;
+};
+
+void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose){
+    cout << "| ------------------------- |" << endl;
+    cout << "|  Bundle Adjustment (g2o)  |" << endl;
+    cout << "| ------------------------- |" << endl;
+
+    /* ----- Build Graph for Optimization ----- */
+    // First, let's set g2o
+    typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;  // Pose is 6D, Landmark is 3D (3D Points)
+    typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Solver type: Linear
+
+    // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
+    g2o::OptimizationAlgorithmWithHessian *solver;
+
+    // auto solver = new g2o::OptimizationAlgorithmGaussNewton(
+        // g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+
+    switch (optimization_algorithm_selected){
+        case 1:  // Option 1: Gauss-Newton method
+            solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
+            break;
+        case 2:  // Option 2: Levenberg-Marquardt method
+            // solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));  //FIXME
+            break;
+        case 3:  //Option 3: Powell's Dog Leg Method
+            // solver = new g2o::OptimizationAlgorithmDogleg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));  //FIXME
+            break;
+        default:
+            break;
+    }
+
+    cout << "Optimization Algorithm selected: " << optimization_algorithm_selected << endl;
+
+    // Configure the optimizer
+    g2o::SparseOptimizer optimizer;  // Graph Model
+    optimizer.setAlgorithm(solver);  // Set the solver
+    optimizer.setVerbose(true);      // Turn on debugging output
+
+    // Add vertices to the graph
+    PoseVertex *poseVertex = new PoseVertex();  // Camera Pose Vertex
+    poseVertex->setId(0);                       //! Sets the id of the node in the graph, be sure that the graph keeps consistent after changing the id
+    poseVertex->setEstimate(Sophus::SE3d());    //! Sets the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
+    optimizer.addVertex(poseVertex);
+
+    // K
+    Eigen::Matrix3d K_eigen;
+    K_eigen <<
+        K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
+        K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
+        K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
+
+    // Add edges to the graph
+    int index = 1;
+    for(size_t i=0; i<points_2d.size(); ++i){
+        auto P1_3d = points_3d[i];  // P1_i
+        auto p2_2d = points_2d[i];  // p2_i
+
+        ProjectionEdge *projEdge = new ProjectionEdge(P1_3d, K_eigen);  // Creates the i-th edge
+        projEdge->setId(index);                                         // Specifies the edge ID
+        projEdge->setVertex(0, poseVertex);                             // Connects edge to the vertex (Node, 0)
+        projEdge->setMeasurement(p2_2d);                                // Observed value
+        projEdge->setInformation(Eigen::Matrix2d::Identity());          // Information matrix: the inverse of the covariance matrix
+        optimizer.addEdge(projEdge);
+        index++;
+    }
+    
+    /* ----- Solve (Perform optimization) ----- */
+    print("Summary: ");
+    Timer t1 = chrono::steady_clock::now();
+    optimizer.initializeOptimization();
+    optimizer.optimize(10);  // Number of optimization steps
+    Timer t2 = chrono::steady_clock::now();
+
+    printElapsedTime("Solver time: ", t1, t2);
+    
+    pose = poseVertex->estimate();
+    cout << "\nPose (T*) by g2o:\n" << pose.matrix() << endl << endl;
 }
