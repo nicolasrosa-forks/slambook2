@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
             b += -inv_sigma * inv_sigma * J * ei;             // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
 
             // Least-Squares Cost (Objective Function)
-            cost += ei * ei;  // The actual error function being minimized by solving the proposed linear system is min_x(sum_i ||ei(x)||^2).
+            // This is the actual error function being minimized by solving the proposed linear system: min_x(sum_i ||ei(x)||^2).
+            cost += ei * ei;  // Summation of the squared residuals.
         }
 
         /* ----- Solve ----- */

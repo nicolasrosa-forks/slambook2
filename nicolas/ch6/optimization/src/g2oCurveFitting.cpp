@@ -76,15 +76,15 @@ public:
     }
 
     // Save and read: leave blank
-    virtual bool read(istream &in) {}
+    virtual bool read(istream &in) {return 0;}
 
-    virtual bool write(ostream &out) const {}
+    virtual bool write(ostream &out) const {return 0;}
 };
 
 /* ------------------ */
 /*  CurveFittingEdge  */
 /* ------------------ */
-/* Description: Error model
+/* Description: Curve Error model
 /* Template parameters: measurement dimension, measurement type, connection vertex type
 */
 class CurveFittingEdge : public g2o::BaseUnaryEdge<1, double, CurveFittingVertex> {  // Inheritance of the class "g2o::BaseUnaryEdge"
@@ -97,26 +97,25 @@ public:
     // 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
     CurveFittingEdge(double x) : BaseUnaryEdge(), _x(x) {}
 
-    // Calculate the curve model error
+    // Calculate the curve error model
     virtual void computeError() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
         const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        const Vector3d abc = v->estimate();
+        const Vector3d abc = v->estimate();                                                   // Get estimated value, abc*
 
-        // Calculation of residuals
+        // Calculate the residual
         // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
         _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0));  // e(x) = y_r - y_e =  y_r - exp(a.x^2+b.x+c).
     }
 
     // Calculate the Jacobian matrix
     /**
-     * Linearizes the oplus operator in the vertex, and stores
-     * the result in temporary variables _jacobianOplusXi and _jacobianOplusXj
+     * Linearizes the oplus operator in the vertex, and stores the result in temporary variables _jacobianOplusXi and _jacobianOplusXj
      */
     virtual void linearizeOplus() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "abc".
-        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        const Vector3d abc = v->estimate();
+        const CurveFittingVertex *v = static_cast<const CurveFittingVertex *>(_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        const Vector3d abc = v->estimate();                                                   // Get estimated value, abc*
 
         double y = exp(abc[0]*_x*_x + abc[1]*_x + abc[2]);  // Y_estimated
 
@@ -127,9 +126,9 @@ public:
     }
 
     // Save and read: leave blank
-    virtual bool read(istream &in) {}
+    virtual bool read(istream &in) {return 0;}
 
-    virtual bool write(ostream &out) const {}
+    virtual bool write(ostream &out) const {return 0;}
 
 public:
     double _x;  // x value, y value (_measurement)
@@ -174,8 +173,7 @@ int main(int argc, char **argv) {
     printVec("x_data: ", x_data);
     printVec("y_data: ", y_data);
 
-    /* ----- Graph Optimization ----- */
-    // Build graph optimization
+    /* ----- Build Graph for Optimization ----- */
     // The described problem is just a Curve Fitting problem, but we're using the classes types used in a Pose/Landmark Estimation problem.
     typedef g2o::BlockSolver<g2o::BlockSolverTraits<3, 1>> BlockSolverType;            // The optimization variable dimension of each error term is 3, and the error value dimension is 1. template <int _PoseDim, int _LandmarkDim>
     typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Linear Solver type
@@ -206,8 +204,8 @@ int main(int argc, char **argv) {
 
     // Add vertices to the graph
     CurveFittingVertex *v = new CurveFittingVertex();
-    v->setEstimate(Vector3d(ae, be, ce));  //! set the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
-    v->setId(0);                                  //! sets the id of the node in the graph be sure that the graph keeps consistent after changing the id
+    v->setId(0);                           //! Sets the id of the node in the graph, be sure that the graph keeps consistent after changing the id
+    v->setEstimate(Vector3d(ae, be, ce));  //! Sets the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
     optimizer.addVertex(v);
 
     // Add edges to the graph

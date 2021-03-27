@@ -68,7 +68,7 @@ int main(int argc, char **argv){
                 // point = [X, Y, Z]'
                 Vector3d point(0,0,0);                        // P
 
-                // 2. Pixel, Puv=[u,v]' -> Normalized, Pc=[X/Z, Y/Z, 1]'
+                // 2. Pixel, p=Puv=[u,v]' -> Normalized, x=Pc=[X/Z, Y/Z, 1]'
                 double x = (u - cx)/fx;                       // x = X/Z
                 double y = (v - cy)/fy;                       // y = Y/Z
                 double Z = double(d) / depthScale;            // Z of P (Depth)

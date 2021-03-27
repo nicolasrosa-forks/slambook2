@@ -318,7 +318,7 @@ void bundleAdjustmentG2O(
 
   // Build graph optimization, first set g2o
   typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;  // pose is 6, landmark is 3
-  typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // 线性求解器类型
+  typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Linear solver type
   // Gradient descent method, you can choose from GN, LM, DogLeg
   auto solver = new g2o::OptimizationAlgorithmGaussNewton(
     g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
@@ -335,7 +335,7 @@ void bundleAdjustmentG2O(
   // K
   Eigen::Matrix3d K_eigen;
   K_eigen <<
-          K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
+    K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
     K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
     K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
 

@@ -82,7 +82,7 @@ int main(int argc, char **argv){
             Vector4d point(0, 0, 0, left.at<uchar>(v, u)/255.0);  // Normalizes the Pixel Intensities for displaying in Pangolin's Point Cloud Viewer.
 
 
-            // 2. Pixel, Puv=[u,v]' -> Normalized, Pc=[X/Z, Y/Z, 1]'
+            // 2. Pixel, p=Puv=[u,v]' -> Normalized, x=Pc=[X/Z, Y/Z, 1]'
             double x = (u - cx)/fx;                       // x = X/Z
             double y = (v - cy)/fy;                       // y = Y/Z
             double Z = fx*b/d;                            // Z of P (Depth)
