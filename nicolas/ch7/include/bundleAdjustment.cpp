@@ -45,7 +45,28 @@ int optimization_algorithm_selected = 1;
 /* =========== */
 /*  Functions  */
 /* =========== */
-void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose){
+Eigen::Matrix<double, 2, 6> calculateJacobian(const Eigen::Vector3d &P2, const Eigen::Matrix3d &K){
+    double fx = K(0,0);
+    double fy = K(1,1);
+    double cx = K(0,2);
+    double cy = K(1,2);
+
+    double X = P2[0];        
+    double Y = P2[1];
+    double Z = P2[2];
+        
+    double X2 = X*X;
+    double Y2 = Y*Y;
+    double Z2 = Z*Z;
+        
+    Eigen::Matrix<double, 2, 6> J;
+    J << -fx/Z,     0, fx*X/Z2,   fx*X*Y/Z2, -fx-fx*X2/Z2,  fx*Y/Z,
+              0, -fy/Z, fy*Y/Z2, fy+fy*Y2/Z2,   -fy*X*Y/Z2, -fy*X/Z;
+
+    return J;
+}
+
+void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d &points_2d, const Eigen::Matrix3d &K, Sophus::SE3d &pose){
     cout << "| ----------------------- |" << endl;
     cout << "|  Bundle Adjustment (GN) |" << endl;
     cout << "| ----------------------- |" << endl;
@@ -53,10 +74,10 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
     /* Initialization */
     const int iterations = 10;
     double cost = 0.0, lastCost = 0.0;
-    double fx = K.at<double>(0, 0);
-    double fy = K.at<double>(1, 1);
-    double cx = K.at<double>(0, 2);
-    double cy = K.at<double>(1, 2);
+    double fx = K(0, 0);
+    double fy = K(1, 1);
+    double cx = K(0, 2);
+    double cy = K(1, 2);
 
     /* Iteration Loop */
     print("Summary: ");
@@ -81,23 +102,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
 
             /* ----- Compute Jacobian Matrix ----- */
             // The jacobian matrix indicates how the error varies according to the increment δξ, ∂e/∂δξ
-            double inv_Z = 1.0 / P2[2];   // 1/Z
-            double inv_Z2 = inv_Z * inv_Z; // 1/(Z^2)
-
-            Eigen::Matrix<double, 2, 6> J;
-            J << -fx * inv_Z, 
-                0,
-                fx * P2[0] * inv_Z2,
-                fx * P2[0] * P2[1] * inv_Z2,
-                -fx - fx * P2[0] * P2[0] * inv_Z2,
-                fx * P2[1] * inv_Z,
-                0,
-                -fy * inv_Z,
-                fy * P2[1] * inv_Z2,
-                fy + fy * P2[1] * P2[1] * inv_Z2,
-                -fy * P2[0] * P2[1] * inv_Z2,
-                -fy * P2[0] * inv_Z;
-
+            Eigen::Matrix<double, 2, 6> J = calculateJacobian(P2, K);
 
             /* ------ Hessian and Bias ----- */
             H +=  J.transpose() * J;  // Hessian, H(x) = J(x)'*Ω*J(x)
@@ -220,23 +225,7 @@ public:
         
         /* ----- Compute Jacobian Matrix ----- */
         // The jacobian matrix indicates how the error varies according to the increment δξ, ∂e/∂δξ
-        // TODO: The following variables are static values, they can be removed from the loop
-        double fx = _K(0,0);
-        double fy = _K(1,1);
-        double cx = _K(0,2);
-        double cy = _K(1,2);
-
-        double X = P2[0];        
-        double Y = P2[1];
-        double Z = P2[2];
-        
-        double X2 = X*X;
-        double Y2 = Y*Y;
-        double Z2 = Z*Z;
-        
-        // TODO: this has the same calculation as in the bundle adjustment, create a function
-        _jacobianOplusXi << -fx/Z,     0, fx*X/Z2,   fx*X*Y/Z2, -fx-fx*X2/Z2,  fx*Y/Z,
-                                0, -fy/Z, fy*Y/Z2, fy+fy*Y2/Z2,   -fy*X*Y/Z2, -fy*X/Z;
+        _jacobianOplusXi << calculateJacobian(P2, _K);
     }
 
     virtual bool read(istream &in) override {return 0;}
@@ -248,7 +237,7 @@ private:
     Eigen::Matrix3d _K;
 };
 
-void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Mat &K, Sophus::SE3d &pose){
+void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Eigen::Matrix3d &K, Sophus::SE3d &pose){
     cout << "| ------------------------- |" << endl;
     cout << "|  Bundle Adjustment (g2o)  |" << endl;
     cout << "| ------------------------- |" << endl;
@@ -291,20 +280,13 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
     poseVertex->setEstimate(Sophus::SE3d());    //! Sets the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
     optimizer.addVertex(poseVertex);
 
-    // K
-    Eigen::Matrix3d K_eigen;
-    K_eigen <<
-        K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
-        K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
-        K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
-
     // Add edges to the graph
     int index = 1;
     for(size_t i=0; i<points_2d.size(); ++i){
         auto P1_3d = points_3d[i];  // P1_i
         auto p2_2d = points_2d[i];  // p2_i
 
-        ProjectionEdge *projEdge = new ProjectionEdge(P1_3d, K_eigen);  // Creates the i-th edge
+        ProjectionEdge *projEdge = new ProjectionEdge(P1_3d, K);  // Creates the i-th edge
         projEdge->setId(index);                                         // Specifies the edge ID
         projEdge->setVertex(0, poseVertex);                             // Connects edge to the vertex (Node, 0)
         projEdge->setMeasurement(p2_2d);                                // Observed value
