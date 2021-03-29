@@ -15,18 +15,12 @@
 /* Custom Libraries */
 #include "../../../common/libUtils.h"
 #include "../../include/find_features_matches.h"
-// #include "../../include/pose_estimation_2d2d.h" //FIXME: You CAN'T use this function without the correct K matrix!
 
 using namespace std;
 using namespace cv;
 
 /* Global Variables */
 int orb_nfeatures = 500;
-
-// Camera Internal parameters, TUM Dataset Freiburg2 sequence // FIXME: I don't have the K for the current video! So I can't calculate the pose estimation!
-// Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
-// Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates
-// double focal_length = 521.0;            // Camera focal length
 
 /* ===================== */
 /*  Function Prototypes  */
@@ -89,25 +83,16 @@ int main(int argc, char **argv) {
         if (image1.empty() && image2.empty())
           break;
 
-        /* ---------------------------------- */
-        /*  Features Extraction and Matching  */
-        /* ---------------------------------- */
+        /* ----- Features Extraction and Matching ----- */
         find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
 
-        /* ------------------------------------------- */
-        /*  Pose Estimation 2D-2D  (Epipolar Geometry) */
-        /* ------------------------------------------- */
-        //--- Step 6.1: Estimate the motion (R, t) between the two images
-        Mat R, t;
-        // pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t);  # FIXME: Different Camera, Different K!
-        
-        /* ------- */
-        /*  Other */
-        /* ------- */
+
+        /* ----- Results ----- */
         // Display
         // imshow( "Frame1", image1);
         // imshow( "Frame2", image2);
 
+        /* ----- End Iteration ----- */
         // Next Iteration Prep
         image1 = image2.clone();  // Save last frame
         goodMatches.clear();  // Free vectors

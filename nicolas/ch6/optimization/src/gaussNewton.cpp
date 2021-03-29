@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
             J[1] = -xi*yi_e;     // de(x)/db
             J[2] = -yi_e;        // de(x)/dc
 
-            /* ------ Hessian and Bias ----- */
+            /* ----- Hessian and Bias ----- */
             // The Slambook2 doesn't have the Gauss-Newton equation considering the information matrix (inverse of covariance)
             // The following equations are from Wangxin's Blog, http://wangxinliu.com/slam/optimization/research&study/g2o-3/
             H +=  inv_sigma * inv_sigma * J * J.transpose();  // Hessian, H(x) = J(x)'*Ω*J(x)

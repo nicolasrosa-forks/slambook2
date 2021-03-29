@@ -91,10 +91,11 @@ class CurveFittingEdge : public g2o::BaseUnaryEdge<1, double, CurveFittingVertex
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    // Constructor
-    // 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x".
-    // 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
-    // 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
+    /** Constructor
+     * 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x". Construct a new Projection Edge object
+     * 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
+     * 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
+     */
     CurveFittingEdge(double x) : BaseUnaryEdge(), _x(x) {}
 
     // Calculate the curve error model
@@ -108,8 +109,7 @@ public:
         _error(0, 0) = _measurement - exp(abc(0, 0)*_x*_x + abc(1, 0)*_x + abc(2, 0));  // e(x) = y_r - y_e =  y_r - exp(a.x^2+b.x+c).
     }
 
-    // Calculate the Jacobian matrix
-    /**
+    /** Calculate the Jacobian matrix
      * Linearizes the oplus operator in the vertex, and stores the result in temporary variables _jacobianOplusXi and _jacobianOplusXj
      */
     virtual void linearizeOplus() override {
@@ -181,6 +181,8 @@ int main(int argc, char **argv) {
     // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
     g2o::OptimizationAlgorithmWithHessian *solver;
 
+    cout << "Graph Optimization Algorithm selected: " << optimization_methods_enum2str[optimization_method_selected-1] << endl << endl;
+
     switch (optimization_method_selected){
         case 1:  // Option 1: Gauss-Newton method
             solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
@@ -195,11 +197,9 @@ int main(int argc, char **argv) {
             break;
     }
 
-    cout << "Graph Optimization Algorithm selected: " << optimization_methods_enum2str[optimization_method_selected-1] << endl << endl;
-
     // Configure the optimizer
     g2o::SparseOptimizer optimizer;  // Graph model
-    optimizer.setAlgorithm(solver);  // Set the solver
+    optimizer.setAlgorithm(solver);  // Set up the solver
     optimizer.setVerbose(true);      // Turn on debugging output
 
     // Add vertices to the graph

@@ -4,7 +4,10 @@
 #include <vector>
 #include <chrono>
 
-/* OpenCV Library */
+/* Eigen3 Libraries */
+#include <eigen3/Eigen/Core>
+
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -159,12 +162,27 @@ void printMatrix(const char text[], cv::MatExpr var){
  *
  * @param p Point2f in Pixel Coordinates, p=(u,v)
  * @param K Intrinsic Parameters Matrix
- * @return Point2f in Normalized Coordinates, x=(x,y)
+ * @return Point2f in Normalized Coordinates, x=(x,y)=(X/Z, Y/Z)
  */
 Point2f pixel2cam(const Point2f &p, const Mat &K) {
   return Point2f
     (
-      (p.x-K.at<double>(0, 2)) / K.at<double>(0, 0),  // x = (u-cx)/fx
-      (p.y-K.at<double>(1, 2)) / K.at<double>(1, 1)   // y = (v-cy)/fy
+        (p.x - K.at<double>(0, 2))/K.at<double>(0, 0),  // x = (u-cx)/fx
+        (p.y - K.at<double>(1, 2))/K.at<double>(1, 1)   // y = (v-cy)/fy
+    );
+}
+
+/**
+ * @brief Convert Normalized Coordinates to Pixel Coordinates (Image Plane, f=1)
+ *
+ * @param x Point2f in Normalized Coordinates, x=(x,y)=(X/Z, Y/Z)
+ * @param K Intrinsic Parameters Matrix
+ * @return Point2f in Pixel Coordinates Coordinates, p=(u,v)
+ */
+Eigen::Vector2d cam2pixel(const Eigen::Vector3d &P, const Eigen::Matrix3d &K) {
+  return Eigen::Vector2d
+    (
+        K(0, 0)*P[0]/P[2] + K(0, 2),  // u = fx*x + cx
+        K(1, 1)*P[1]/P[2] + K(1, 2)   // v = fy*y + cy
     );
 }

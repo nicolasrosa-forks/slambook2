@@ -111,8 +111,9 @@ int main(int argc, char **argv) {
         // Calculates the 3D Points
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
 
-        //FIXME: The 3D Point P is described in {world} frame or in {camera1} frame? I believe its in the {camera1} frame because
-        // the authors said its possible to compare the resulting R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
+        // The 3D Point P is described in {world} frame or in {camera1} frame? 
+        // @nick I believe its in the {camera1} frame because the authors said its possible to compare the resulting 
+        // R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
         pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
         pts_2d.push_back(keypoints2[m.trainIdx].pt);          // {p2 = [u2, v2]^T}_n
     }
@@ -166,9 +167,9 @@ int main(int argc, char **argv) {
     cv::Rodrigues(r, R);  // Converts the rotation vector r to a rotation matrix R using the Rodrigues formula.
     Timer t5 = chrono::steady_clock::now();
 
-    printMatrix("r:\n", r);  //FIXME: r21 or r21 or rcw? I believe it's r21
-    printMatrix("R:\n", R);  //FIXME: R21 or R1w or Rcw? I believe it's R21
-    printMatrix("t:\n", t);  //FIXME: t21 or t1w or tcw? I believe it's t21
+    printMatrix("r:\n", r);  // r21?
+    printMatrix("R:\n", R);  // R21?
+    printMatrix("t:\n", t);  // t21?
 
     //--- Step 3: Bundle Adjustment (BA)
     /* In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares

@@ -43,7 +43,10 @@ void printMatrix(const char text[], cv::Mat var);
 
 void printMatrix(const char text[], cv::MatExpr var);
 
-// Pixel coordinates to camera normalized coordinates
-Point2d pixel2cam(const Point2d &p, const Mat &K);
+Point2f pixel2cam(const Point2f &p, const Mat &K);
+
+// Point2f cam2pixel(const Point2f &x, const Mat &K); // TODO
+
+Eigen::Vector2d cam2pixel(const Eigen::Vector3d &P, const Eigen::Matrix3d &K);
 
 #endif

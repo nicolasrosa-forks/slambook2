@@ -38,7 +38,7 @@ std::vector<std::string> get_filepaths_in_path(const string &path){
 
     DIR *dir = opendir(path.c_str());
     if(dir == NULL){
-        throw std::system_error(EDOM, std::generic_category(), "[SystemError] Given Directory is invalid!");  // FIXME: EDOM?
+        throw std::system_error(ENOENT, std::generic_category(), "[SystemError] Given Directory is invalid!");
     }
 
     struct dirent *entity;
@@ -124,25 +124,20 @@ int main(int argc, char **argv) {
         if (image1.empty() && image2.empty())
           break;
 
-        /* ---------------------------------- */
-        /*  Features Extraction and Matching  */
-        /* ---------------------------------- */
+        /* ----- Features Extraction and Matching ----- */
         find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
 
-        /* ------------------------------------------- */
-        /*  Pose Estimation 2D-2D  (Epipolar Geometry) */
-        /* ------------------------------------------- */
+        /* ----- Pose Estimation 2D-2D  (Epipolar Geometry) ----- */
         //--- Step 6.1: Estimate the motion (R, t) between the two images
         Mat R, t;
         pose_estimation_2d2d(keypoints1, keypoints2, goodMatches, R, t, K);
         
-        /* ------- */
-        /*  Other */
-        /* ------- */
+        /* ----- Results ----- */
         // Display
         // imshow( "Frame1", image1);
         // imshow( "Frame2", image2);
 
+        /* ----- End Iteration ----- */
         // Next Iteration Prep
         image1 = image2.clone();  // Save last frame
         goodMatches.clear();  // Free vectors
