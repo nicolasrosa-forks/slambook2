@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         }
 
         /* ----- Solve ----- */
-        // Solve the Linear System Ax=b, H(x)*∆x = g(x)
+        // Solve the Linear System A*x=b, H(x)*∆x = g(x)
         Vector3d dx = H.ldlt().solve(b);
 
         // Check Solution

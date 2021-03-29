@@ -1,3 +1,9 @@
+/* ================================ vSLAM =============================== */
+/* Measurement model:                                                     */
+/*    z_kj = h(y_j, x_k) + v_kj,  y_j = 3D Points, x_k = Camera Pose (T)  */
+/*  s*z_kj = K*T_k*y_j,  T_k*y_j = R_k*y_j+t_k                            */
+/* ====================================================================== */
+
 /* =========== */
 /*  Libraries  */
 /* =========== */
@@ -76,6 +82,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
     /* Initialization */
     const int iterations = 10;
     double cost = 0.0, lastCost = 0.0;
+    
     double fx = K(0, 0);
     double fy = K(1, 1);
     double cx = K(0, 2);
@@ -92,31 +99,34 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
 
         /* Data Loop, Compute Cost */
         for (int i = 0; i < points_3d.size(); i++){
+            /* ----- Coordinate System Transformation ----- */
             // Describe the 3D Space Point P in the {camera2} frame
-            Eigen::Vector3d P2 = pose * points_3d[i]; // P'_i = (T*P_i)1:3, P2_i = T21*P1_i
+            Eigen::Vector3d P2 = pose * points_3d[i]; // P'_i = (T*.P_i)1:3, P2_i = T21*.P1_i
 
             /* ----- Compute Reprojection Error ----- */
-            // Compute the Estimated Projection of P in Camera 2 (Pixel Coordinates)
-            Eigen::Vector2d proj(fx * P2[0] / P2[2] + cx, fy * P2[1] / P2[2] + cy); //p2^=[u2, v2]^T = [fx*X/Z+cx, fy*Y/Z+cy]^T
+            // Compute the Estimated Projection of P2 in Camera 2's Image Plane (Pixel Coordinates)
+            Eigen::Vector2d proj(fx * P2[0] / P2[2] + cx, fy * P2[1] / P2[2] + cy); // p2^=[u2, v2]^T = [fx*X/Z+cx, fy*Y/Z+cy]^T
 
             // Compute Residual
             Eigen::Vector2d e = points_2d[i] - proj; // e = p2_i - p2^_i
-
+            
+            // Compute the Least-Squares Cost 
+            // This is the actual error function being minimized (Objective Function) by solving the proposed linear 
+            // system: min_x(sum_i ||ei(x)||^2).
+            cost += e.squaredNorm();  // Summation of the squared residuals
+        
             /* ----- Compute Jacobian Matrix ----- */
             // The jacobian matrix indicates how the error varies according to the increment δξ, ∂e/∂δξ
             Eigen::Matrix<double, 2, 6> J = calculateJacobian(P2, K);
 
             /* ------ Hessian and Bias ----- */
+            // Information Matrix(Ω) wasn't informed, so consider it as identity.
             H +=  J.transpose() * J;  // Hessian, H(x) = J(x)'*Ω*J(x)
             b += -J.transpose() * e;  // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
-
-            // Least-Squares Cost (Objective Function)
-            // This is the actual error function being minimized by solving the proposed linear system: min_x(sum_i ||ei(x)||^2).
-            cost += e.squaredNorm();  // Summation of the squared residuals
         }
 
-        /* ----- Solve ----- */
-        // Solve the Linear System Ax=b, H(x)*∆x = g(x)
+        /* ----- Solve! ----- */
+        // Solve the Linear System A*x=b, H(x)*∆x = g(x)
         Vector6d dx = H.ldlt().solve(b);  // δξ (Lie Algebra)
 
         // Check Solution
@@ -126,7 +136,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
         }
 
         /* Stopping Criteria */
-        // If converged or the cost increased, the update was not good, then break.
+        // If the cost increased, the update was not good, then break.
         if (iter > 0 && cost >= lastCost){
             cout << "\ncost: " << cost << " >= lastCost: " << lastCost << ", break!" << endl;
             break;
@@ -138,8 +148,8 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
         lastCost = cost;
         
         cout << "it: " << iter << ",\tcost: " << std::setprecision(12) << cost << ",\tupdate: " << dx.transpose() << endl;
-        if (dx.norm() < 1e-6){
-            //converge
+        
+        if (dx.norm() < 1e-6){  // Method converged!
             break;
         }
     }
@@ -251,9 +261,6 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
 
     // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
     g2o::OptimizationAlgorithmWithHessian *solver;
-
-    // auto solver = new g2o::OptimizationAlgorithmGaussNewton(
-        // g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
 
     switch (optimization_method_selected){
         case 1:  // Option 1: Gauss-Newton method
