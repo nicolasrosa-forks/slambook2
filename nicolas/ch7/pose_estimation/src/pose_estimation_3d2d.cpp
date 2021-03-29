@@ -53,21 +53,7 @@ Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 /* ===================== */
 /*  Function Prototypes  */
 /* ===================== */
-template <typename TTypeVec>
-TTypeVec slicing(TTypeVec &arr, int begin_idx, int end_idx){
-    // Starting and Ending iterators
-    auto start = arr.begin() + begin_idx;
-    auto end = arr.begin() + end_idx + 1;
 
-    // To store the sliced vector
-    TTypeVec result(end_idx - begin_idx + 1);
-  
-    // Copy vector using copy function()
-    copy(start, end, result.begin());
-  
-    // Return the final sliced vector
-    return result;
-}
 
 /* ====== */
 /*  Main  */
@@ -91,23 +77,26 @@ int main(int argc, char **argv) {
     Mat depth1_uint8 = imread(depth1_filepath, CV_LOAD_IMAGE_GRAYSCALE);  
     Mat depth2_uint8 = imread(depth2_filepath, CV_LOAD_IMAGE_GRAYSCALE);
 
+    /* ---------------------------------- */
+    /*  Features Extraction and Matching  */
+    /* ---------------------------------- */
     /* Initialization */
     vector<KeyPoint> keypoints1, keypoints2;
     vector<DMatch> goodMatches;
 
-    /* ---------------------------------- */
-    /*  Features Extraction and Matching  */
-    /* ---------------------------------- */
+    //--- Step 0: Features Calculation
+    Timer t1 = chrono::steady_clock::now();
     find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
+    Timer t2 = chrono::steady_clock::now();
 
     /* ----------------------- */
     /*  Pose Estimation 3D-2D  */
     /* ----------------------- */
     //--- Step 1: Create 3D-2D pairs
-    Timer t1 = chrono::steady_clock::now();
     vector<Point3f> pts_3d;  // (P1)_n
     vector<Point2f> pts_2d;  // (p2)_n
 
+    Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
         // Gets the depth value of the feature point p1_i
         ushort d = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
@@ -129,7 +118,6 @@ int main(int argc, char **argv) {
     }
     
     //--- Step 2: Perspective-n-Point (PnP)
-    Timer t2 = chrono::steady_clock::now();
     Mat r, R, t;  // Rotation Vector, Rotation Matrix, Translation Vector
     
     // P3P Variables
@@ -155,6 +143,7 @@ int main(int argc, char **argv) {
     // points on the Image 2. So, the 3D Points are described in the {camera1} frame, and the R, t returned by th solvePnP
     // describes the T21(R21, t21), {camera1}-to-{camera2} Transform. That's why we can compare with the R,t from the Pose
     // Estimation 2D-2D.
+    Timer t4 = chrono::steady_clock::now();
     switch(pnp_method_selected){
         case 1:  // Option 1: Iterative method is based on a Levenberg-Marquardt optimization
             cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_ITERATIVE);
@@ -175,7 +164,7 @@ int main(int argc, char **argv) {
     }
 
     cv::Rodrigues(r, R);  // Converts the rotation vector r to a rotation matrix R using the Rodrigues formula.
-    Timer t3 = chrono::steady_clock::now();
+    Timer t5 = chrono::steady_clock::now();
 
     printMatrix("r:\n", r);  //FIXME: r21 or r21 or rcw? I believe it's r21
     printMatrix("R:\n", R);  //FIXME: R21 or R1w or Rcw? I believe it's R21
@@ -205,25 +194,26 @@ int main(int argc, char **argv) {
 
     //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
     Sophus::SE3d pose_gn;
-    Timer t4 = chrono::steady_clock::now();
+    Timer t6 = chrono::steady_clock::now();
     bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_gn);
-    Timer t5 = chrono::steady_clock::now();
+    Timer t7 = chrono::steady_clock::now();
     
     //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
     Sophus::SE3d pose_g2o;
-    Timer t6 = chrono::steady_clock::now();
+    Timer t8 = chrono::steady_clock::now();
     bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_g2o);
-    Timer t7 = chrono::steady_clock::now();
+    Timer t9 = chrono::steady_clock::now();
     
     /* --------- */
     /*  Results  */
     /* --------  */
     cout << "-------------------------------------------------" << endl;
-    printElapsedTime("Pose estimation 3D-2d: ", t1, t3);
-    printElapsedTime(" | Create 3D-2D Pairs: ", t1, t2);
-    printElapsedTime(" | Perspective-n-Point (solvePnP): ", t2, t3);
-    printElapsedTime(" | Bundle Adjustment (GN): ", t4, t5);
-    printElapsedTime(" | Bundle Adjustment (g2o): ", t6, t7);
+    printElapsedTime("Pose estimation 3D-2d: ", t1, t9);
+    printElapsedTime(" | Features Calculation: ", t1, t2);
+    printElapsedTime(" | Create 3D-2D Pairs: ", t3, t4);
+    printElapsedTime(" | Perspective-n-Point (solvePnP): ", t4, t5);
+    printElapsedTime(" | Bundle Adjustment (GN): ", t6, t7);
+    printElapsedTime(" | Bundle Adjustment (g2o): ", t8, t9);
     
     // NOTE: Observe that not all the 79 feature matches have valid depth values. 4 3D-2D pairs were discarded.
     cout << "\n-- Number of 3D-2D pairs: " << pts_3d.size() << endl;
@@ -243,9 +233,9 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-/* Readers can compare R, t solved in the previous 2D-2D case to see the difference.
+/* "Readers can compare R, t solved in the previous 2D-2D case to see the difference.
 It can be seen that when 3D information is involved, the estimated R is almost the
-same, while the t is quite different. */
+same, while the t is quite different." */
 
 /* ==================================== */
 /*  Results from Pose Estimation 2D-2D  */
@@ -265,9 +255,10 @@ same, while the t is quite different. */
 /* ==================================== */
 /*  Results from Pose Estimation 3D-2D  */
 /* ==================================== */
-// It should be more accurate than the previous one, since utilized the depth information.
+// This following results should be more accurate than the previous one, since utilized the depth information (3D-2D).
 
-// Pose (T*) by PnP:
+/* ----- Only PnP ----- */
+// Step 2: Pose (T*) by PnP:
 // R:
 // [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
 //  0.04981866254254162, 0.9983623157438141, 0.02812094175381183;
@@ -280,22 +271,23 @@ same, while the t is quite different. */
 //  0.06034935748886035]
 // (3, 1)
 
-// Pose (T*) by GN:
+/* ----- Bundle Adjustment ("PnP" + Non-linear/Graph Optimization)
+// Step 3.1: Pose (T*) by GN:
 //    0.997906  -0.0509194   0.0398875   -0.126782
 //   0.0498187    0.998362    0.028121 -0.00843953
 //  -0.0412541  -0.0260749    0.998808   0.0603494
 //           0           0           0           1
 
-// Pose (T*) by g2o:
+// Step 3.2: Pose (T*) by g2o:
 //     0.99790590955  -0.0509194008911   0.0398874704367   -0.126782138956
 //   0.0498186625425    0.998362315744   0.0281209417542 -0.00843949681823
 //  -0.0412540488609  -0.0260749135293    0.998808391203   0.0603493574888
 //                 0                 0                 0                 1
 
-/* =============== */ 
-/*  Original Code  */
-/* =============== */ 
-// Pose(T*) by PnP:
+/* ==================================== */ 
+/*  Original Code (pixel2cam, Point2f)  */
+/* ==================================== */ 
+// PnP:
 // R=
 // [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
 //  0.04981866254254162, 0.9983623157438141, 0.02812094175381183;
@@ -315,4 +307,29 @@ same, while the t is quite different. */
 //     0.99790590955  -0.0509194008911   0.0398874704367   -0.126782138956
 //   0.0498186625425    0.998362315744   0.0281209417542 -0.00843949681823
 //  -0.0412540488609  -0.0260749135293    0.998808391203   0.0603493574888
+//                 0                 0                 0                 1
+
+/* ==================================== */ 
+/*  Original Code (pixel2cam, Point2d)  */
+/* ==================================== */ 
+// PnP:
+// R=
+// [0.9979059096319058, -0.05091940167648939, 0.03988746738797636;
+//  0.04981866392256838, 0.9983623160259321, 0.02812092929309315;
+//  -0.04125404521606011, -0.02607490119339458, 0.9988083916753333]
+// t=
+// [-0.1267821338701787;
+//  -0.008439477707051628;
+//  0.0603493450570466]
+
+// pose by g-n: 
+//     0.99790590963  -0.0509194016416   0.0398874674701    -0.12678213401
+//    0.049818663885    0.998362316027   0.0281209293043 -0.00843947772828
+//  -0.0412540452977  -0.0260749012019    0.998808391672   0.0603493450911
+//                 0                 0                 0                 1
+
+// pose estimated by g2o =
+//    0.997905909632  -0.0509194016765   0.0398874673881    -0.12678213387
+//   0.0498186639226    0.998362316026   0.0281209292935 -0.00843947770777
+//  -0.0412540452162  -0.0260749011938    0.998808391675    0.060349345057
 //                 0                 0                 0                 1
