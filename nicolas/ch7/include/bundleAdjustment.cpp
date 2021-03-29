@@ -21,6 +21,8 @@
 #include <g2o/core/block_solver.h>
 #include <g2o/core/solver.h>
 #include <g2o/core/optimization_algorithm_gauss_newton.h>
+#include <g2o/core/optimization_algorithm_levenberg.h>
+#include <g2o/core/optimization_algorithm_dogleg.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
 
 /* Sophus Libraries */
@@ -39,8 +41,8 @@ typedef vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> VecVe
 typedef vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> VecVector2d;
 
 // Choose the optimization algorithm:
-// 1: Gauss-Newton, 2: Levenberg-Marquardt, 3: Powell's Dog Leg
-int optimization_algorithm_selected = 1;
+const char* optimization_methods_enum2str[] = {"Gauss-Newton", "Levenberg-Marquardt", "Powell's Dog Leg"};
+int optimization_method_selected = 1;
 
 /* =========== */
 /*  Functions  */
@@ -61,7 +63,7 @@ Eigen::Matrix<double, 2, 6> calculateJacobian(const Eigen::Vector3d &P2, const E
         
     Eigen::Matrix<double, 2, 6> J;
     J << -fx/Z,     0, fx*X/Z2,   fx*X*Y/Z2, -fx-fx*X2/Z2,  fx*Y/Z,
-              0, -fy/Z, fy*Y/Z2, fy+fy*Y2/Z2,   -fy*X*Y/Z2, -fy*X/Z;
+             0, -fy/Z, fy*Y/Z2, fy+fy*Y2/Z2,   -fy*X*Y/Z2, -fy*X/Z;
 
     return J;
 }
@@ -253,21 +255,21 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
     // auto solver = new g2o::OptimizationAlgorithmGaussNewton(
         // g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
 
-    switch (optimization_algorithm_selected){
+    switch (optimization_method_selected){
         case 1:  // Option 1: Gauss-Newton method
             solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
             break;
         case 2:  // Option 2: Levenberg-Marquardt method
-            // solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));  //FIXME
+            solver = new g2o::OptimizationAlgorithmLevenberg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
             break;
         case 3:  //Option 3: Powell's Dog Leg Method
-            // solver = new g2o::OptimizationAlgorithmDogleg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));  //FIXME
+            solver = new g2o::OptimizationAlgorithmDogleg(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
             break;
         default:
             break;
     }
 
-    cout << "Optimization Algorithm selected: " << optimization_algorithm_selected << endl;
+    cout << "Graph Optimization Algorithm selected: " << optimization_methods_enum2str[optimization_method_selected-1] << endl << endl;
 
     // Configure the optimizer
     g2o::SparseOptimizer optimizer;  // Graph Model

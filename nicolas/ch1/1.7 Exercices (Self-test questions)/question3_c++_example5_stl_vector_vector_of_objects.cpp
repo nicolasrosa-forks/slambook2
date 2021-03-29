@@ -12,7 +12,7 @@ class Pessoa{
 
     public:
         // Constructor
-        Pessoa(string no, int id){
+        Pessoa(const string &no, int id){
             idade = id;
             nome = no;
         }

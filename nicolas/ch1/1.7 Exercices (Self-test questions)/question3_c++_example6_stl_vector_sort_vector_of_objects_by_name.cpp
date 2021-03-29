@@ -12,9 +12,9 @@ class Pessoa{
 
     public:
         // Constructor
-        Pessoa(string no, int id){
-            idade = id;
+        Pessoa(const string &no, int id){
             nome = no;
+            idade = id;
         }
         string getNome(){
             return nome;

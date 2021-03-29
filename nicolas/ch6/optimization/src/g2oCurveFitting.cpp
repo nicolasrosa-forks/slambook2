@@ -6,8 +6,8 @@ using namespace Eigen;
 
 /* Global Variables */
 // Choose the optimization algorithm:
-// 1: Gauss-Newton, 2: Levenberg-Marquardt, 3: Powell's Dog Leg
-int optimization_algorithm_selected = 1;
+const char* optimization_methods_enum2str[] = {"Gauss-Newton", "Levenberg-Marquardt", "Powell's Dog Leg"};
+int optimization_method_selected = 1;
 
 /* --------------------- */
 /*  C++ Virtual Methods  */
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
     g2o::OptimizationAlgorithmWithHessian *solver;
 
-    switch (optimization_algorithm_selected){
+    switch (optimization_method_selected){
         case 1:  // Option 1: Gauss-Newton method
             solver = new g2o::OptimizationAlgorithmGaussNewton(g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
             break;
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
             break;
     }
 
-    cout << "Optimization Algorithm selected: " << optimization_algorithm_selected << endl;
+    cout << "Graph Optimization Algorithm selected: " << optimization_methods_enum2str[optimization_method_selected-1] << endl << endl;
 
     // Configure the optimizer
     g2o::SparseOptimizer optimizer;  // Graph model
