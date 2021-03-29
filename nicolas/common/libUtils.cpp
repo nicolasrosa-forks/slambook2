@@ -24,8 +24,7 @@ void print(double var){
     cout << to_string(var) << endl;
 }
 
-template <typename TTypeVector>
-void printVec(const char text[], const TTypeVector &vec){
+void printVec(const char text[], const std::vector<double>  &vec){
   cout << text << "[";
   for(int i=0; i < vec.size(); i++){
     if(i != vec.size()-1){
@@ -35,6 +34,22 @@ void printVec(const char text[], const TTypeVector &vec){
     }
   }
   cout << "]" << endl << endl;
+}
+
+template <typename TTypeVec>
+TTypeVec slicing(TTypeVec &arr, int begin_idx, int end_idx){
+    // Starting and Ending iterators
+    auto start = arr.begin() + begin_idx;
+    auto end = arr.begin() + end_idx + 1;
+
+    // To store the sliced vector
+    TTypeVec result(end_idx - begin_idx + 1);
+  
+    // Copy vector using copy function()
+    copy(start, end, result.begin());
+  
+    // Return the final sliced vector
+    return result;
 }
 
 /* Chrono */
@@ -47,20 +62,20 @@ void printElapsedTime(const char text[], Timer t1, Timer t2){
 /* ========================== */
 /*  Eigen3/Sophus' Functions  */
 /* ========================== */
-template <typename TTypeMat>
-void printMatrix(const char text[], TTypeMat mat){
+template <typename TTypeEigenMat>
+void printMatrix(const char text[], TTypeEigenMat mat){
     cout << text << endl;
     cout << mat << "\n" << "(" << mat.rows() << ", " << mat.cols() << ")" << endl << endl;
 }
 
-template <typename TTypeVec>
-void printVector(const char text[], TTypeVec vec){
+template <typename TTypeEigenVec>
+void printVector(const char text[], TTypeEigenVec vec){
     cout << text << endl;
     cout << vec << "\n" << "(" << vec.size() << ",)" << endl << endl;
 }
 
-template <typename TTypeQuat>
-void printQuaternion(const char text[], TTypeQuat quat){
+template <typename TTypeEigenQuat>
+void printQuaternion(const char text[], TTypeEigenQuat quat){
     cout << text << quat.coeffs().transpose() << endl << endl;
 }
 

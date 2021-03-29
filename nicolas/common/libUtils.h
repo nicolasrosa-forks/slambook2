@@ -16,18 +16,21 @@ void print(double var);
 
 void printVec(const char text[], const std::vector<double> &vec);
 
+template <typename TTypeVec>
+TTypeVec slicing(TTypeVec &arr, int begin_idx, int end_idx);
+
 /* Chrono */
 void printElapsedTime(const char text[], Timer t1, Timer t2);
 
 /* Eigen3/Sophus */
-template <typename TTypeMat>
-void printMatrix(const char text[], TTypeMat mat);
+template <typename TTypeEigenMat>
+void printMatrix(const char text[], TTypeEigenMat mat);
 
-template <typename TTypeVec>
-void printVector(const char text[], TTypeVec vec);
+template <typename TTypeEigenVec>
+void printVector(const char text[], TTypeEigenVec vec);
 
-template <typename TTypeQuat>
-void printQuaternion(const char text[], TTypeQuat quat);
+template <typename TTypeEigenQuat>
+void printQuaternion(const char text[], TTypeEigenQuat quat);
 
 /* OpenCV */
 int checkImage(const cv::Mat &image);
