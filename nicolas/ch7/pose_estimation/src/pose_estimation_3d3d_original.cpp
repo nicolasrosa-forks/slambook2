@@ -25,7 +25,7 @@ void find_feature_matches(
   std::vector<KeyPoint> &keypoints_2,
   std::vector<DMatch> &matches);
 
-// 像素坐标转相机归一化坐标
+// Pixel coordinates to camera normalized coordinates
 Point2d pixel2cam(const Point2d &p, const Mat &K);
 
 void pose_estimation_3d3d(
@@ -94,18 +94,18 @@ int main(int argc, char **argv) {
     cout << "usage: pose_estimation_3d3d img1 img2 depth1 depth2" << endl;
     return 1;
   }
-  //-- 读取图像
+  //--- read image
   Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
   Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
 
   vector<KeyPoint> keypoints_1, keypoints_2;
   vector<DMatch> matches;
   find_feature_matches(img_1, img_2, keypoints_1, keypoints_2, matches);
-  cout << "一共找到了" << matches.size() << "组匹配点" << endl;
+  cout << "A total of found" << matches.size() << "group matching points" << endl;
 
-  // 建立3D点
-  Mat depth1 = imread(argv[3], CV_LOAD_IMAGE_UNCHANGED);       // 深度图为16位无符号数，单通道图像
-  Mat depth2 = imread(argv[4], CV_LOAD_IMAGE_UNCHANGED);       // 深度图为16位无符号数，单通道图像
+  // Create 3D points
+  Mat depth1 = imread(argv[3], CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
+  Mat depth2 = imread(argv[4], CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
   Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
   vector<Point3f> pts1, pts2;
 
@@ -150,32 +150,32 @@ void find_feature_matches(const Mat &img_1, const Mat &img_2,
                           std::vector<KeyPoint> &keypoints_1,
                           std::vector<KeyPoint> &keypoints_2,
                           std::vector<DMatch> &matches) {
-  //-- 初始化
+  //--- initialization
   Mat descriptors_1, descriptors_2;
   // used in OpenCV3
   Ptr<FeatureDetector> detector = ORB::create();
   Ptr<DescriptorExtractor> descriptor = ORB::create();
   // use this if you are in OpenCV2
-  // Ptr<FeatureDetector> detector = FeatureDetector::create ( "ORB" );
-  // Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ( "ORB" );
+  // Ptr<FeatureDetector> detector = FeatureDetector::create ("ORB" );
+  // Ptr<DescriptorExtractor> descriptor = DescriptorExtractor::create ("ORB" );
   Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
-  //-- 第一步:检测 Oriented FAST 角点位置
+  //--- Step 1: Detect the position of the Oriented FAST corner point
   detector->detect(img_1, keypoints_1);
   detector->detect(img_2, keypoints_2);
 
-  //-- 第二步:根据角点位置计算 BRIEF 描述子
+  //--- Step 2: Calculate the BRIEF descriptor according to the corner position
   descriptor->compute(img_1, keypoints_1, descriptors_1);
   descriptor->compute(img_2, keypoints_2, descriptors_2);
 
-  //-- 第三步:对两幅图像中的BRIEF描述子进行匹配，使用 Hamming 距离
+  //--- Step 3: Match the BRIEF descriptors in the two images, using Hamming distance
   vector<DMatch> match;
   // BFMatcher matcher ( NORM_HAMMING );
   matcher->match(descriptors_1, descriptors_2, match);
 
-  //-- 第四步:匹配点对筛选
+  //--- The fourth step: matching points to filter
   double min_dist = 10000, max_dist = 0;
 
-  //找出所有匹配之间的最小距离和最大距离, 即是最相似的和最不相似的两组点之间的距离
+  //Find the minimum and maximum distances between all matches, that is, the distance between the most similar and least similar two sets of points
   for (int i = 0; i < descriptors_1.rows; i++) {
     double dist = match[i].distance;
     if (dist < min_dist) min_dist = dist;
@@ -185,7 +185,7 @@ void find_feature_matches(const Mat &img_1, const Mat &img_2,
   printf("-- Max dist : %f \n", max_dist);
   printf("-- Min dist : %f \n", min_dist);
 
-  //当描述子之间的距离大于两倍的最小距离时,即认为匹配有误.但有时候最小距离会非常小,设置一个经验值30作为下限.
+  //When the distance between the descriptors is greater than twice the minimum distance, it is considered that the matching is wrong. But sometimes the minimum distance will be very small, set an empirical value of 30 as the lower limit.
   for (int i = 0; i < descriptors_1.rows; i++) {
     if (match[i].distance <= max(2 * min_dist, 30.0)) {
       matches.push_back(match[i]);
@@ -218,7 +218,7 @@ void pose_estimation_3d3d(const vector<Point3f> &pts1,
   }
 
   // compute q1*q2^T
-  Eigen::Matrix3d W = Eigen::Matrix3d::Zero();
+  Eigen::Matrix3d ​​W = Eigen::Matrix3d::Zero();
   for (int i = 0; i < N; i++) {
     W += Eigen::Vector3d(q1[i].x, q1[i].y, q1[i].z) * Eigen::Vector3d(q2[i].x, q2[i].y, q2[i].z).transpose();
   }
@@ -226,13 +226,13 @@ void pose_estimation_3d3d(const vector<Point3f> &pts1,
 
   // SVD on W
   Eigen::JacobiSVD<Eigen::Matrix3d> svd(W, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Eigen::Matrix3d U = svd.matrixU();
-  Eigen::Matrix3d V = svd.matrixV();
+  Eigen::Matrix3d ​​U = svd.matrixU();
+  Eigen::Matrix3d ​​V = svd.matrixV();
 
   cout << "U=" << U << endl;
   cout << "V=" << V << endl;
 
-  Eigen::Matrix3d R_ = U * (V.transpose());
+  Eigen::Matrix3d ​​R_ = U * (V.transpose());
   if (R_.determinant() < 0) {
     R_ = -R_;
   }
@@ -251,15 +251,15 @@ void bundleAdjustment(
   const vector<Point3f> &pts1,
   const vector<Point3f> &pts2,
   Mat &R, Mat &t) {
-  // 构建图优化，先设定g2o
+  // Build graph optimization, first set g2o
   typedef g2o::BlockSolverX BlockSolverType;
-  typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // 线性求解器类型
-  // 梯度下降方法，可以从GN, LM, DogLeg 中选
+  typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType; // Linear solver type
+  // Gradient descent method, you can choose from GN, LM, DogLeg
   auto solver = new g2o::OptimizationAlgorithmLevenberg(
     g2o::make_unique<BlockSolverType>(g2o::make_unique<LinearSolverType>()));
-  g2o::SparseOptimizer optimizer;     // 图模型
-  optimizer.setAlgorithm(solver);   // 设置求解器
-  optimizer.setVerbose(true);       // 打开调试输出
+  g2o::SparseOptimizer optimizer; // Graph model
+  optimizer.setAlgorithm(solver); // Set the solver
+  optimizer.setVerbose(true); // Turn on debugging output
 
   // vertex
   VertexPose *pose = new VertexPose(); // camera pose
@@ -282,14 +282,14 @@ void bundleAdjustment(
   optimizer.initializeOptimization();
   optimizer.optimize(10);
   chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
-  chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-  cout << "optimization costs time: " << time_used.count() << " seconds." << endl;
+  chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2-t1);
+  cout << "optimization costs time: " << time_used.count() <<" seconds." << endl;
 
   cout << endl << "after optimization:" << endl;
   cout << "T=\n" << pose->estimate().matrix() << endl;
 
   // convert to cv::Mat
-  Eigen::Matrix3d R_ = pose->estimate().rotationMatrix();
+  Eigen::Matrix3d ​​R_ = pose->estimate().rotationMatrix();
   Eigen::Vector3d t_ = pose->estimate().translation();
   R = (Mat_<double>(3, 3) <<
     R_(0, 0), R_(0, 1), R_(0, 2),
