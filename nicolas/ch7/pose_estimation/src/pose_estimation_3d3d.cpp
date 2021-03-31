@@ -30,7 +30,8 @@
 #include "../../../common/libUtils.h"
 #include "../../include/find_features_matches.h"
 // #include "../../include/pose_estimation_2d2d.h"
-#include "../../include/bundleAdjustment.h"
+// #include "../../include/pose_estimation_3d2d_bundleAdjustment.h"
+#include "../../include/pose_estimation_3d3d_ICP.h"
 
 using namespace std;
 using namespace cv;
@@ -74,7 +75,7 @@ int main(int argc, char **argv) {
     assert(depth1.data != nullptr && depth2.data != nullptr);
 
     // For plotting
-    Mat depth1_uint8 = imread(depth1_filepath, CV_LOAD_IMAGE_GRAYSCALE);  
+    Mat depth1_uint8 = imread(depth1_filepath, CV_LOAD_IMAGE_GRAYSCALE);
     Mat depth2_uint8 = imread(depth2_filepath, CV_LOAD_IMAGE_GRAYSCALE);
 
     /* ---------------------------------- */
@@ -90,135 +91,86 @@ int main(int argc, char **argv) {
     Timer t2 = chrono::steady_clock::now();
 
     /* ----------------------- */
-    /*  Pose Estimation 3D-2D  */
+    /*  Pose Estimation 3D-3D  */
     /* ----------------------- */
-    //--- Step 1: Create 3D-2D pairs
-    vector<Point3f> pts_3d;  // (P1)_n
-    vector<Point2f> pts_2d;  // (p2)_n
+    //--- Step 1: Create 3D-3D pairs
+    vector<Point3f> pts1_3d;  // (P1)_n
+    vector<Point3f> pts2_3d;  // (P2)_n
 
     Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
         // Gets the depth value of the feature point p1_i
-        ushort d = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
+        ushort d1 = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
+        ushort d2 = depth2.ptr<unsigned short>(int(keypoints2[m.trainIdx].pt.y))[int(keypoints2[m.trainIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
 
         // Ignores bad feature pixels
-        if(d == 0)  // Invalid depth value
+        if(d1 == 0 || d2 == 0)  // Invalid depth value
             continue;
 
         // Converts uint16 data to meters
-        float dd = d / 5000.0;  // ScalingFactor from TUM Dataset.
+        float dd1 = float(d1) / 5000.0;  // ScalingFactor from TUM Dataset.
+        float dd2 = float(d2) / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
 
-        // The 3D Point P is described in {world} frame or in {camera1} frame? 
-        // @nick I believe its in the {camera1} frame because the authors said its possible to compare the resulting 
-        // R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
-        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
-        pts_2d.push_back(keypoints2[m.trainIdx].pt);          // {p2 = [u2, v2]^T}_n
+        pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
+        pts2_3d.push_back(Point3f(x2.x * dd2, x2.y * dd2, dd2));  // {P2 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
     }
-    
-    //--- Step 2: Perspective-n-Point (PnP)
-    Mat r, R, t;  // Rotation Vector, Rotation Matrix, Translation Vector
-    
-    // P3P Variables
-    vector<Point3f> pts_3d_3;
-    vector<Point2f> pts_2d_3;
-
-    // Calls OpenCV's PnP to solve, choose Iterative (LM), EPnP, P3P, DLS (broken), UPnP (broken), and other methods.
-    /** @brief Finds an object pose from 3D-2D point correspondences using the RANSAC scheme.
-    @param objectPoints Array of object points in the object coordinate space, Nx3 1-channel or
-    1xN/Nx1 3-channel, where N is the number of points. vector\<Point3d\> can be also passed here.
-    @param imagePoints Array of corresponding image points, Nx2 1-channel or 1xN/Nx1 2-channel,
-    where N is the number of points. vector\<Point2d\> can be also passed here.
-    @param cameraMatrix Input camera intrinsic matrix \f$\cameramatrix{A}\f$ .
-    @param distCoeffs Input vector of distortion coefficients
-    \f$\distcoeffs\f$. If the vector is NULL/empty, the zero distortion coefficients are
-    assumed.
-    @param rvec Output rotation vector (see @ref Rodrigues) that, together with tvec, brings points from
-    the model coordinate system to the camera coordinate system.
-    @param tvec Output translation vector.
-    **/
-
-    // NOTE: Since we used the normalized coordinates of the Image 1, x1, to obtain the 3D Points P, and used the feature
-    // points on the Image 2. So, the 3D Points are described in the {camera1} frame, and the R, t returned by th solvePnP
-    // describes the T21(R21, t21), {camera1}-to-{camera2} Transform. That's why we can compare with the R,t from the Pose
-    // Estimation 2D-2D.
     Timer t4 = chrono::steady_clock::now();
-    switch(pnp_method_selected){
-        case 1:  // Option 1: Iterative method is based on a Levenberg-Marquardt optimization
-            cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_ITERATIVE);
-            break;
-        case 2:  // Option 2: EPnP
-            cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_EPNP);  
-            break;
-        case 3:  //Option 3: P3P
-            // P3P needs 4 3D-2D pairs: 3 pairs of 3D-2D matching points and 1 verification pair for removing solution ambiguity.
-            pts_3d_3 = slicing<vector<Point3f>>(pts_3d, 0, 3);
-            pts_2d_3 = slicing<vector<Point2f>>(pts_2d, 0, 3);
-            // printVec("pts_3d_3:\n", pts_3d_3);
-            // printVec("pts_2d_3:\n", pts_2d_3);
-            cv::solvePnP(pts_3d_3, pts_2d_3, K, Mat(), r, t, false, SOLVEPNP_P3P);
-            break;
-        default:
-            break;
-    }
-
-    cv::Rodrigues(r, R);  // Converts the rotation vector r to a rotation matrix R using the Rodrigues formula.
-    Timer t5 = chrono::steady_clock::now();
-
-    printMatrix("r:\n", r);  // r21?
-    printMatrix("R:\n", R);  // R21?
-    printMatrix("t:\n", t);  // t21?
+    
+    //--- Step 2: Iterative Closest Point (ICP)
+    Mat R, t;  // Rotation Matrix, Translation Vector
+    pose_estimation_3d3d(pts1_3d, pts2_3d, R, t);
 
     //--- Step 3: Bundle Adjustment (BA)
     /* In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares
        optimization problem to adjust the estimated values (bundle adjustment). */
-    VecVector3d pts_3d_eigen;
-    VecVector2d pts_2d_eigen;
+    // VecVector3d pts_3d_eigen;
+    // VecVector2d pts_2d_eigen;
 
-    // Copy data from OpenCV's vector to Eigen's Vector.
-    for(size_t i = 0; i<pts_3d.size(); i++){
-        pts_3d_eigen.push_back(Eigen::Vector3d(pts_3d[i].x, pts_3d[i].y, pts_3d[i].z));
-        pts_2d_eigen.push_back(Eigen::Vector2d(pts_2d[i].x, pts_2d[i].y));
-    }
+    // // Copy data from OpenCV's vector to Eigen's Vector.
+    // for(size_t i = 0; i<pts_3d.size(); i++){
+    //     pts_3d_eigen.push_back(Eigen::Vector3d(pts_3d[i].x, pts_3d[i].y, pts_3d[i].z));
+    //     pts_2d_eigen.push_back(Eigen::Vector2d(pts_2d[i].x, pts_2d[i].y));
+    // }
     
-    // printVector<Eigen::Vector3d>("pts_3d_eigen[0]:", pts_3d_eigen[0]);
-    // printVector<Eigen::Vector2d>("pts_2d_eigen[0]:", pts_2d_eigen[0]);
+    // // printVector<Eigen::Vector3d>("pts_3d_eigen[0]:", pts_3d_eigen[0]);
+    // // printVector<Eigen::Vector2d>("pts_2d_eigen[0]:", pts_2d_eigen[0]);
 
-    // K
-    Eigen::Matrix3d K_eigen;
-    K_eigen <<
-        K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
-        K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
-        K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
+    // // K
+    // Eigen::Matrix3d K_eigen;
+    // K_eigen <<
+    //     K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
+    //     K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
+    //     K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
 
-    //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
-    Sophus::SE3d pose_gn;
-    Timer t6 = chrono::steady_clock::now();
-    bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_gn);
-    Timer t7 = chrono::steady_clock::now();
+    // //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
+    // Sophus::SE3d pose_gn;
+    // Timer t6 = chrono::steady_clock::now();
+    // bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_gn);
+    // Timer t7 = chrono::steady_clock::now();
     
-    //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
-    Sophus::SE3d pose_g2o;
-    Timer t8 = chrono::steady_clock::now();
-    bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_g2o);
+    // //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
+    // Sophus::SE3d pose_g2o;
+    // Timer t8 = chrono::steady_clock::now();
+    // bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_g2o);
     Timer t9 = chrono::steady_clock::now();
     
     /* --------- */
     /*  Results  */
     /* --------  */
     cout << "-------------------------------------------------" << endl;
-    printElapsedTime("Pose estimation 3D-2d: ", t1, t9);
+    printElapsedTime("Pose estimation 3D-3D: ", t1, t9);
     printElapsedTime(" | Features Calculation: ", t1, t2);
-    printElapsedTime(" | Create 3D-2D Pairs: ", t3, t4);
-    printElapsedTime(" | Perspective-n-Point (solvePnP): ", t4, t5);
-    printElapsedTime(" | Bundle Adjustment (GN): ", t6, t7);
-    printElapsedTime(" | Bundle Adjustment (g2o): ", t8, t9);
+    printElapsedTime(" | Create 3D-3D Pairs: ", t3, t4);
+    // printElapsedTime(" | Iterative Closest Point (ICP, SVD): ", t4, t5); // TODO
+    // printElapsedTime(" | Bundle Adjustment (GN): ", t6, t7);
+    // printElapsedTime(" | Bundle Adjustment (g2o): ", t8, t9);
     
-    // NOTE: Observe that not all the 79 feature matches have valid depth values. 4 3D-2D pairs were discarded.
-    cout << "\n-- Number of 3D-2D pairs: " << pts_3d.size() << endl;
-    cout << "-- PnP Method selected: " << pnp_methods_enum2str[pnp_method_selected-1] << endl;
+    // NOTE: Observe that not all the 79 feature matches have valid depth values. 7 3D-3D pairs were discarded.
+    cout << "\n-- Number of 3D-3D pairs: " << pts1_3d.size() << endl;
     cout << "-------------------------------------------------" << endl;
 
     /* Display Images */
@@ -334,3 +286,8 @@ same, while the t is quite different." */
 //   0.0498186639226    0.998362316026   0.0281209292935 -0.00843947770777
 //  -0.0412540452162  -0.0260749011938    0.998808391675    0.060349345057
 //                 0                 0                 0                 1
+
+/* ==================================== */
+/*  Results from Pose Estimation 3D-3D  */
+/* ==================================== */
+// TODO

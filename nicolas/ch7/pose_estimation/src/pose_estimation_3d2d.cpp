@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     assert(depth1.data != nullptr && depth2.data != nullptr);
 
     // For plotting
-    Mat depth1_uint8 = imread(depth1_filepath, CV_LOAD_IMAGE_GRAYSCALE);  
+    Mat depth1_uint8 = imread(depth1_filepath, CV_LOAD_IMAGE_GRAYSCALE);
     Mat depth2_uint8 = imread(depth2_filepath, CV_LOAD_IMAGE_GRAYSCALE);
 
     /* ---------------------------------- */
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
             continue;
 
         // Converts uint16 data to meters
-        float dd1 = d1 / 5000.0;  // ScalingFactor from TUM Dataset.
+        float dd1 = float(d1) / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
@@ -117,6 +117,7 @@ int main(int argc, char **argv) {
         pts_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
         pts_2d.push_back(keypoints2[m.trainIdx].pt);          // {p2 = [u2, v2]^T}_n
     }
+    Timer t4 = chrono::steady_clock::now();
     
     //--- Step 2: Perspective-n-Point (PnP)
     Mat r, R, t;  // Rotation Vector, Rotation Matrix, Translation Vector
@@ -144,7 +145,6 @@ int main(int argc, char **argv) {
     // points on the Image 2. So, the 3D Points are described in the {camera1} frame, and the R, t returned by th solvePnP
     // describes the T21(R21, t21), {camera1}-to-{camera2} Transform. That's why we can compare with the R,t from the Pose
     // Estimation 2D-2D.
-    Timer t4 = chrono::steady_clock::now();
     switch(pnp_method_selected){
         case 1:  // Option 1: Iterative method is based on a Levenberg-Marquardt optimization
             cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_ITERATIVE);
@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
     // imshow("image1", image1);
     // imshow("image2", image2);
     imshow("depth1", depth1_uint8);
-    imshow("depth2", depth2_uint8);
+    // imshow("depth2", depth2_uint8);
     cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
