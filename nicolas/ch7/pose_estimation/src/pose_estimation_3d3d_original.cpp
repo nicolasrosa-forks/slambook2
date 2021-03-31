@@ -3,10 +3,10 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-#include <Eigen/SVD>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
+#include <eigen3/Eigen/SVD>
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/base_unary_edge.h>
 #include <g2o/core/block_solver.h>
@@ -18,6 +18,11 @@
 
 using namespace std;
 using namespace cv;
+
+string image1_filepath = "../../orb_features/src/1.png";
+string image2_filepath = "../../orb_features/src/2.png";
+string depth1_filepath = "../../orb_features/src/1_depth.png";
+string depth2_filepath = "../../orb_features/src/2_depth.png";
 
 void find_feature_matches(
   const Mat &img_1, const Mat &img_2,
@@ -56,9 +61,9 @@ public:
     _estimate = Sophus::SE3d::exp(update_eigen) * _estimate;
   }
 
-  virtual bool read(istream &in) override {}
+  virtual bool read(istream &in) override {return 0;}
 
-  virtual bool write(ostream &out) const override {}
+  virtual bool write(ostream &out) const override {return 0;}
 };
 
 /// g2o edge
@@ -81,22 +86,22 @@ public:
     _jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(xyz_trans);
   }
 
-  bool read(istream &in) {}
+  bool read(istream &in) {return 0;}
 
-  bool write(ostream &out) const {}
+  bool write(ostream &out) const {return 0;}
 
 protected:
   Eigen::Vector3d _point;
 };
 
 int main(int argc, char **argv) {
-  if (argc != 5) {
-    cout << "usage: pose_estimation_3d3d img1 img2 depth1 depth2" << endl;
-    return 1;
-  }
+//   if (argc != 5) {
+//     cout << "usage: pose_estimation_3d3d img1 img2 depth1 depth2" << endl;
+//     return 1;
+//   }
   //--- read image
-  Mat img_1 = imread(argv[1], CV_LOAD_IMAGE_COLOR);
-  Mat img_2 = imread(argv[2], CV_LOAD_IMAGE_COLOR);
+  Mat img_1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
+  Mat img_2 = imread(image2_filepath, CV_LOAD_IMAGE_COLOR);
 
   vector<KeyPoint> keypoints_1, keypoints_2;
   vector<DMatch> matches;
@@ -104,8 +109,8 @@ int main(int argc, char **argv) {
   cout << "A total of found" << matches.size() << "group matching points" << endl;
 
   // Create 3D points
-  Mat depth1 = imread(argv[3], CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
-  Mat depth2 = imread(argv[4], CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
+  Mat depth1 = imread(depth1_filepath, CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
+  Mat depth2 = imread(depth2_filepath, CV_LOAD_IMAGE_UNCHANGED); // The depth image is a 16-bit unsigned number, single channel image
   Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
   vector<Point3f> pts1, pts2;
 
@@ -218,7 +223,7 @@ void pose_estimation_3d3d(const vector<Point3f> &pts1,
   }
 
   // compute q1*q2^T
-  Eigen::Matrix3d ​​W = Eigen::Matrix3d::Zero();
+  Eigen::Matrix3d W = Eigen::Matrix3d::Zero();
   for (int i = 0; i < N; i++) {
     W += Eigen::Vector3d(q1[i].x, q1[i].y, q1[i].z) * Eigen::Vector3d(q2[i].x, q2[i].y, q2[i].z).transpose();
   }
@@ -226,13 +231,13 @@ void pose_estimation_3d3d(const vector<Point3f> &pts1,
 
   // SVD on W
   Eigen::JacobiSVD<Eigen::Matrix3d> svd(W, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Eigen::Matrix3d ​​U = svd.matrixU();
-  Eigen::Matrix3d ​​V = svd.matrixV();
+  Eigen::Matrix3d U = svd.matrixU();
+  Eigen::Matrix3d V = svd.matrixV();
 
   cout << "U=" << U << endl;
   cout << "V=" << V << endl;
 
-  Eigen::Matrix3d ​​R_ = U * (V.transpose());
+  Eigen::Matrix3d R_ = U * (V.transpose());
   if (R_.determinant() < 0) {
     R_ = -R_;
   }
@@ -289,7 +294,7 @@ void bundleAdjustment(
   cout << "T=\n" << pose->estimate().matrix() << endl;
 
   // convert to cv::Mat
-  Eigen::Matrix3d ​​R_ = pose->estimate().rotationMatrix();
+  Eigen::Matrix3d R_ = pose->estimate().rotationMatrix();
   Eigen::Vector3d t_ = pose->estimate().translation();
   R = (Mat_<double>(3, 3) <<
     R_(0, 0), R_(0, 1), R_(0, 2),
