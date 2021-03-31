@@ -41,5 +41,8 @@ target_link_libraries(pose_estimation_3d2d_original g2o_core g2o_stuff ${OpenCV_
 # ====================== #
 #  pose_estimation_3d3d  #
 # ====================== #
-# add_executable(pose_estimation_3d3d src/pose_estimation_3d3d.cpp)
-# target_link_libraries(pose_estimation_3d3d g2o_core g2o_stuff ${OpenCV_LIBS})
+add_executable(pose_estimation_3d3d src/pose_estimation_3d3d.cpp)
+target_link_libraries(pose_estimation_3d3d g2o_core g2o_stuff ${OpenCV_LIBS})
+
+add_executable(pose_estimation_3d3d_original src/pose_estimation_3d3d_original.cpp)
+target_link_libraries(pose_estimation_3d3d_original g2o_core g2o_stuff ${OpenCV_LIBS})
