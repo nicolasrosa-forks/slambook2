@@ -8,8 +8,10 @@
 /*  Function Prototypes  */
 /* ===================== */
 void pose_estimation_2d2d(
-    const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
+    const vector<KeyPoint> &keypoints1,
+    const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
-    Mat &R, Mat &t, Mat &K);
+    Mat &R, Mat &t, Mat &K
+);
 
 #endif

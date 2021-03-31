@@ -30,7 +30,7 @@
 #include "../../../common/libUtils.h"
 #include "../../include/find_features_matches.h"
 // #include "../../include/pose_estimation_2d2d.h"
-#include "../../include/bundleAdjustment.h"
+#include "../../include/pose_estimation_3d2d_bundleAdjustment.h"
 
 using namespace std;
 using namespace cv;
@@ -99,14 +99,14 @@ int main(int argc, char **argv) {
     Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
         // Gets the depth value of the feature point p1_i
-        ushort d = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
+        ushort d1 = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
 
         // Ignores bad feature pixels
-        if(d == 0)  // Invalid depth value
+        if(d1 == 0)  // Invalid depth value
             continue;
 
         // Converts uint16 data to meters
-        float dd = d / 5000.0;  // ScalingFactor from TUM Dataset.
+        float dd1 = d1 / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
         // The 3D Point P is described in {world} frame or in {camera1} frame? 
         // @nick I believe its in the {camera1} frame because the authors said its possible to compare the resulting 
         // R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
-        pts_3d.push_back(Point3f(x1.x * dd, x1.y * dd, dd));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
+        pts_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
         pts_2d.push_back(keypoints2[m.trainIdx].pt);          // {p2 = [u2, v2]^T}_n
     }
     
