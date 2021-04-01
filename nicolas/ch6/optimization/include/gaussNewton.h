@@ -32,7 +32,8 @@
 // #include <g2o/solvers/dense/linear_solver_dense.h>
 
 /* Custom Libraries */
-#include "../../include/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
 
 /* ===================== */
 /*  Function Prototypes  */

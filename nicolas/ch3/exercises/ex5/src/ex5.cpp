@@ -4,7 +4,8 @@
 #include <eigen3/Eigen/Core>
 
 /* Custom Libraries */
-#include "../../../include/libUtils.h"
+#include "../../../../common/libUtils_basic.h"
+#include "../../../../common/libUtils_eigen.h"
 
 using namespace std;
 using namespace Eigen;

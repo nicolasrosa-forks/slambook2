@@ -41,7 +41,9 @@
 #include <sophus/se3.hpp>
 
 /* Custom Libraries */
-#include "../../common/libUtils.h"
+#include "../../common/libUtils_basic.h"
+#include "../../common/libUtils_eigen.h"
+#include "../../common/libUtils_opencv.h"
 
 using namespace std;
 using namespace cv;
@@ -95,7 +97,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
     double cy = K(1, 2);
 
     /* Iteration Loop */
-    print("Summary: ");
+    cout << "Summary: " << endl;
     Timer t1 = chrono::steady_clock::now();
     for (int iter = 0; iter < iterations; iter++){
         Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
@@ -312,7 +314,7 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
     }
     
     /* ----- Solve! ----- */
-    print("Summary: ");
+    cout << "Summary: " << endl;
     Timer t1 = chrono::steady_clock::now();
     optimizer.initializeOptimization();      // Start!
     optimizer.optimize(10);                  // Number of optimization steps

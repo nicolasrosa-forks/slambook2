@@ -11,7 +11,8 @@
 #include <sophus/so3.hpp>
 
 /* Custom Libraries */
-#include "../../include/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
 
 using namespace std;
 using namespace Eigen;
@@ -37,7 +38,7 @@ int main(int argc, char** argv){
     // They are equivalent of course
     printMatrix<Matrix3d>("SO(3) from R: ", SO3_R.matrix());
     printMatrix<Matrix3d>("SO(3) from q: ", SO3_q.matrix());
-    print("They are equal!");
+    cout << "They are equal!" << endl;
     cout << endl;
 
     // Use the logarithmic map to get the 𝖘𝖔(3) Lie algebra, which is a 3D rotation vector (𝜙).
@@ -100,7 +101,7 @@ int main(int argc, char** argv){
     printVector<Vector6d>("small_se3_xi: ", small_se3_xi);
     printMatrix<Matrix4d>("SE(3) updated: ", SE3_updated.matrix());
 
-    print("Done.");
+    cout << "Done." << endl;
 
     return 0;
 }

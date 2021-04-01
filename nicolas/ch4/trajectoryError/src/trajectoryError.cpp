@@ -29,7 +29,7 @@ TimeStamp time_est, time_gt;
 
 /* This Program demonstrates the calculation of the Absolute Trajectory Error (ATE) and Relative Pose Error (RPE) */
 int main(int argc, char **argv){
-    print("[trajectoryError] Hello!\n");
+    cout << "[trajectoryError] Hello!" << endl << endl;
 
     // 1. Read the two trajectories (Sequences of Poses)
     TrajectoryType estimated = ReadTrajectory(time_est, traj_est_filepath);

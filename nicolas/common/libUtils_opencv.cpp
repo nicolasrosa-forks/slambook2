@@ -4,62 +4,12 @@
 #include <vector>
 #include <chrono>
 
-/* OpenCV Library */
+/* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 using namespace std;
-
-/* Chrono */
-typedef chrono::steady_clock::time_point Timer;
-void printElapsedTime(const char text[], Timer t1, Timer t2){
-    chrono::duration<double> time_elapsed = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-    cout << text << time_elapsed.count() << " s" << endl << endl;
-}
-
-/* ======================== */
-/*  Eigen/Sophus' Functions  */
-/* ======================== */
-void print(const char text[]){
-    cout << text << endl;
-}
-
-void print(const std::string &text){
-    cout << text << endl;
-}
-
-void print(double var){
-    cout << to_string(var) << endl;
-}
-
-void printVec(const char text[], const vector<double> &vec){
-  cout << text << "[";
-  for(int i=0; i < vec.size(); i++){
-    if(i != vec.size()-1){
-      cout << vec.at(i) << ", ";
-    }else{
-      cout << vec.at(i);
-    }
-  }
-  cout << "]" << endl << endl;
-}
-
-template <typename TTypeMat>
-void printMatrix(const char text[], TTypeMat mat){
-    cout << text << endl;
-    cout << mat << "\n" << "(" << mat.rows() << ", " << mat.cols() << ")" << endl << endl;
-}
-
-template <typename TTypeVec>
-void printVector(const char text[], TTypeVec vec){
-    cout << text << endl;
-    cout << vec << "\n" << "(" << vec.size() << ",)" << endl << endl;
-}
-
-template <typename TTypeQuat>
-void printQuaternion(const char text[], TTypeQuat quat){
-    cout << text << quat.coeffs().transpose() << endl << endl;
-}
+using namespace cv;
 
 /* ==================== */
 /*  OpenCV's Functions  */
@@ -126,4 +76,26 @@ void printImageInfo(const char var[], const cv::Mat &image){
     cout << "(" << image.rows << "," << image.cols << "," << image.channels() << ")";  // (Height, Width, Channels)
     cout << ", " << type2str(image.type()) << endl;
     cout << "min: " << minVal << ", max: " << maxVal << endl << endl;
+}
+
+void printMatrix(const char text[], cv::Mat var){
+    cout << text << var << "\n(" << var.rows << ", " << var.cols << ")" << endl << endl;
+}
+
+void printMatrix(const char text[], cv::MatExpr var){
+    cout << text << var << "\n(" << var.size().height << ", " << var.size().width << ")" << endl << endl;
+}
+
+/**
+ * @brief Convert Pixel Coordinates to Normalized Coordinates (Image Plane, f=1)
+ *
+ * @param p Point2f in Pixel Coordinates, p=(u,v)
+ * @param K Intrinsic Parameters Matrix
+ * @return Point2f in Normalized Coordinates, x=(x,y)=(X/Z, Y/Z)
+ */
+Point2f pixel2cam(const Point2f &p, const Mat &K) {
+    return Point2f(
+        (p.x - K.at<double>(0, 2))/K.at<double>(0, 0),  // x = (u-cx)/fx
+        (p.y - K.at<double>(1, 2))/K.at<double>(1, 1)   // y = (v-cy)/fy
+    );
 }

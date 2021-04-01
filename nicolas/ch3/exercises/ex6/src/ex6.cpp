@@ -5,7 +5,8 @@
 #include <eigen3/Eigen/Dense>   // Algebraic operations of dense matrices (inverse, eigenvalues, etc.)
 
 /* Custom Libraries */
-#include "../../../include/libUtils.h"
+#include "../../../../common/libUtils_basic.h"
+#include "../../../../common/libUtils_eigen.h"
 
 using namespace std;
 using namespace Eigen;
@@ -24,20 +25,20 @@ int main(int argc,char** argv){
     // Option 1: x = inv(A)*b
     Matrix<double, 3, 1> x = A.inverse()*b;
 
-    print("[Option 1]: inv(A)*b");
+    cout << "[Option 1]: inv(A)*b" << endl;
     printMatrix<MatrixXd>("inv(A): ", A.inverse());
     printMatrix<MatrixXd>("x: ", x);
 
     // Option 2: QR Decomposition
     x = A.colPivHouseholderQr().solve(b);
 
-    print("[Option 2]: QR Decomposition");
+    cout << "[Option 2]: QR Decomposition" << endl;
     printMatrix<MatrixXd>("x: ", x);
 
     // Option 3: Cholesky Decomposition
     x = A.ldlt().solve(b);
 
-    print("[Option 3] Cholesky Decomposition");
+    cout << "[Option 3] Cholesky Decomposition" << endl;
     printMatrix<MatrixXd>("x: ", x);
 
     return 0;

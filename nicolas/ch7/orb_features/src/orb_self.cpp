@@ -10,7 +10,9 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../../common/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
+#include "../../../common/libUtils_opencv.h"
 
 using namespace std;
 using namespace cv;
@@ -48,7 +50,7 @@ void BFMatcher_custom(const vector<DescType> &desc1, const vector<DescType> &des
 /* ====== */
 /* This program demonstrates how to extract ORB features and perform matching from scratch (Faster than the OpenCV version). */
 int main(int argc, char **argv) {
-    print("[orb_self] Hello!\n");
+    cout << "[orb_self] Hello!" << endl << endl;
 
     /* Load the images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);

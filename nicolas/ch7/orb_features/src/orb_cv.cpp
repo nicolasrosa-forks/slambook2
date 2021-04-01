@@ -11,7 +11,9 @@
 #include <opencv2/highgui/highgui.hpp>
 
 /* Custom Libraries */
-#include "../../../common/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
+#include "../../../common/libUtils_opencv.h"
 
 using namespace std;
 using namespace cv;
@@ -28,7 +30,7 @@ double matches_lower_bound = 30.0;
 /* ====== */
 /* This program demonstrates how to extract ORB features and perform matching using the OpenCV library. */
 int main(int argc, char **argv) {
-    print("[orb_cv] Hello!\n");
+    cout << "[orb_cv] Hello!" << endl << endl;
 
     /* Load the images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);

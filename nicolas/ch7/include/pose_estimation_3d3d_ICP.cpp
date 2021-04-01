@@ -41,7 +41,9 @@
 #include <sophus/se3.hpp>
 
 /* Custom Libraries */
-#include "../../common/libUtils.h"
+#include "../../common/libUtils_basic.h"
+#include "../../common/libUtils_eigen.h"
+#include "../../common/libUtils_opencv.h"
 
 using namespace std;
 using namespace cv;
@@ -59,13 +61,84 @@ int optimization_method_selected = 1;
 /* =========== */
 /*  Functions  */
 /* =========== */
-void pose_estimation_3d3d(const vector<Point3f> &pts1, const vector<Point3f> &pts2, Mat &R, Mat &t){
+void pose_estimation_3d3d(const vector<Point3f> &pts1_p, const vector<Point3f> &pts2_p, Mat &R, Mat &t){
+    /* 1. Calculate the centroids of the two groups of points p, p', and then calculate the de-centroid coordinates of each point: */
+    // Centroids:
+    //   p = 1/n*sum_i(p_i), p' = 1/n*sum_i(p'_i)
+    Point3f p1_cent, p2_cent;  // Centroids, p and p'
+
+    int N = pts1_p.size();
+    for(int i=0; i < N; i++){
+        p1_cent += pts1_p[i];
+        p2_cent += pts2_p[i];
+    }
+
+    p1_cent = p1_cent/float(N);
+    p2_cent = p2_cent/float(N);
+
+    // FIXME: Why make these conversions?
+    // p1_cent = Point3f(Vec3f(p1_cent) / N);
+    // p2_cent = Point3f(Vec3f(p2_cent) / N);
+
+    cout << "Centroids:" << endl;
+    cout << "-- p1_cent: " << p1_cent << endl;
+    cout << "-- p2_cent: " << p2_cent << endl << endl;
+
+    // De-centroid coordinates: 
+    //   q_i = p_i − p, q'_i = p'_i − p'.
+    vector<Point3f> pts1_q(N), pts2_q(N);  // {q_i}_n, {q'_i}_n
     
+    for(int i=0; i < N; i++){
+        pts1_q[i] = pts1_q[i] - p1_cent;  // q_i
+        pts2_q[i] = pts2_q[i] - p2_cent;  // q'_i
+    }
+
+    /* 2. The rotation matrix is calculated according to the following optimization problem: */
+    // R∗ = argmin_R 0.5*sum_i(||q_i-R*q'_i||^2)
+    // Next, we introduce how to solve the optimal R in the above minimization problem through SVD;
+    // Let's Compute W = sum_i(q_i*q'_i^T), W is a 3-by-3 matrix.
+    Eigen::Matrix3d W = Eigen::Matrix3d::Zero();
+
+    for(int i=0; i < N; i++){
+        // Since q_i, q'_i are Point3f, it's necessary to convert to the Eigen's Vector3d.
+        W += Eigen::Vector3d(pts1_q[i].x, pts1_q[i].y, pts1_q[i].z)*Eigen::Vector3d(pts2_q[i].x, pts2_q[i].y, pts2_q[i].z).transpose();
+    }
+    
+    printMatrix<Eigen::Matrix3d>("W: ", W);
+
+    // Decompose W, W = UΣV^T
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(W, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix3d U = svd.matrixU();
+    Eigen::Matrix3d V = svd.matrixV();
+
+    printMatrix<Eigen::Matrix3d>("U: ", U);
+    printMatrix<Eigen::Matrix3d>("V: ", V);
+
+    // Calculate R, R = U*V^T
+    Eigen::Matrix3d R_ = U*V.transpose();
+
+    // Check if the det(R_) is negative
+    if(R_.determinant() < 0) 
+        R_ = -R_;
+
+    /* 3. Calculate t according to R in step 2: */
+    // t∗ = p − Rp'.
+    Eigen::Vector3d t_ = Eigen::Vector3d(p1_cent.x, p1_cent.y, p1_cent.z) - R_*Eigen::Vector3d(p2_cent.x, p2_cent.y, p2_cent.z);
+
+    /* Convert Eigen::Vector3d back to cv::Mat */
+    R = (Mat_<double>(3, 3) << 
+        R_(0, 0), R_(0, 1), R_(0, 2), 
+        R_(1, 0), R_(1, 1), R_(1, 2), 
+        R_(2, 0), R_(2, 1), R_(2, 2)
+    );
+    t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
+
+    
+    printMatrix("R:\n",R);
+    printMatrix("t:\n",R);
 }
 
-void pose_estimation_3d3d_original(const vector<Point3f> &pts1,
-                                                    const vector<Point3f> &pts2,
-                                                    Mat &R, Mat &t) {
+void pose_estimation_3d3d_original(const vector<Point3f> &pts1, const vector<Point3f> &pts2, Mat &R, Mat &t) {
     Point3f p1, p2;     // center of mass
     int N = pts1.size();
     for (int i = 0; i < N; i++) {
@@ -74,6 +147,7 @@ void pose_estimation_3d3d_original(const vector<Point3f> &pts1,
     }
     p1 = Point3f(Vec3f(p1) / N);
     p2 = Point3f(Vec3f(p2) / N);
+    
     vector<Point3f> q1(N), q2(N); // remove the center
     for (int i = 0; i < N; i++) {
         q1[i] = pts1[i] - p1;
@@ -150,7 +224,7 @@ void bundleAdjustment(const vector<Point3f> &points_3d, const vector<Point3f> &p
 //     double cy = K(1, 2);
 
 //     /* Iteration Loop */
-//     print("Summary: ");
+//     cout << "Summary: " << endl;
 //     Timer t1 = chrono::steady_clock::now();
 //     for (int iter = 0; iter < iterations; iter++){
 //         Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
@@ -367,7 +441,7 @@ void bundleAdjustment(const vector<Point3f> &points_3d, const vector<Point3f> &p
 //     }
     
 //     /* ----- Solve! ----- */
-//     print("Summary: ");
+//     cout << "Summary: " << endl;
 //     Timer t1 = chrono::steady_clock::now();
 //     optimizer.initializeOptimization();      // Start!
 //     optimizer.optimize(10);                  // Number of optimization steps

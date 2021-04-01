@@ -44,7 +44,7 @@ double RMSE(const double est[], const double gt[]){
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    print("[ceresCurveFitting] Hello!\n");
+    cout << "[ceresCurveFitting] Hello!" << endl << endl;
 
     /* Variables */
     double ar = 1.0, br =  2.0, cr = 1.0;       // Real parameters values
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     ceres::Solver::Summary summary;
 
     /* ----- Solve ----- */
-    print("Summary: ");
+    cout << "Summary: " << endl;
     Timer t1 = chrono::steady_clock::now();
     ceres::Solve(options, &problem, &summary);
     Timer t2 = chrono::steady_clock::now();
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
     double rmse = RMSE(abc_e, abc_r);
 
     /* ----- Results ----- */
-    print(summary.BriefReport());
+    cout << summary.BriefReport() << endl;
 
     cout << "\n---" << endl;
     cout << "Real:\t   a,b,c = ";

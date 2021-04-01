@@ -18,7 +18,7 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../../common/libUtils.h"
+#include "../../../common/libUtils_opencv.h"
 
 /* ===================== */
 /*  Function Prototypes  */

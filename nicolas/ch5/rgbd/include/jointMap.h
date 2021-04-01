@@ -27,7 +27,7 @@
 #include <boost/format.hpp>  // For formating strings
 
 /* Custom Libraries */
-#include "../../../common/libUtils.h"
+#include "../../../common/libUtils_opencv.h"
 
 /* ===================== */
 /*  Function Prototypes  */

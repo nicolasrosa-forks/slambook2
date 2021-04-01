@@ -8,7 +8,8 @@
 #include <eigen3/Eigen/Geometry>
 
 /* Custom Libraries */
-#include "../../include/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
 
 using namespace std;
 using namespace Eigen;
@@ -19,7 +20,7 @@ int main(int argc, char** argv){
     Quaterniond q1(0.35, 0.2, 0.3, 0.1);
     Quaterniond q2(-0.5, 0.4, -0.1, 0.2);
 
-    print("Arbitrary Quaternions:");
+    cout << "Arbitrary Quaternions:" << endl;
     printQuaternion("q1: ", q1);
     printQuaternion("q2: ", q2);
     cout << endl;
@@ -28,7 +29,7 @@ int main(int argc, char** argv){
     q1.normalize();
     q2.normalize();
 
-    print("Normalized Quaternions:");
+    cout << "Normalized Quaternions:" << endl;
     printQuaternion("q1: ", q1);
     printQuaternion("q2: ", q2);
     cout << endl;

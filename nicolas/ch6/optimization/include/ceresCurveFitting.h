@@ -20,7 +20,8 @@
 #include <ceres/ceres.h>
 
 /* Custom Libraries */
-#include "../../include/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
 
 /* ===================== */
 /*  Function Prototypes  */

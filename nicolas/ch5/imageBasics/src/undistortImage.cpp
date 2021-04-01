@@ -18,7 +18,7 @@ double fx = 458.654, fy = 457.296, cx = 367.215, cy = 248.375;
 /* ====== */
 /* In this program we implement the undistortion by ourselves rather than using OpenCV */
 int main(int argc, char **argv){
-    print("[undistortImage] Hello!\n");
+    cout << "[undistortImage] Hello!" << endl << endl;
 
     // 1. Read the image as 8UC1 (Grayscale)
     cout << "[undistortImage] Reading '" << image_filepath << "'...";

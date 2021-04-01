@@ -13,7 +13,9 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../../common/libUtils.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
+#include "../../../common/libUtils_opencv.h"
 #include "../../include/find_features_matches.h"
 #include "../../include/pose_estimation_2d2d.h"
 
@@ -39,7 +41,7 @@ Mat vee2hat(const Mat var);
 /* ====== */
 /* This program demonstrates how to use 2D-2D feature matching to estimate camera motion. */
 int main(int argc, char **argv) {
-    print("[pose_estimation_2d2d] Hello!\n");
+    cout << "[pose_estimation_2d2d] Hello!" << endl << endl;
 
     /* Load the images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);

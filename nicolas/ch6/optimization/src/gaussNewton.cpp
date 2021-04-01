@@ -19,7 +19,7 @@ double RMSE(const Vector3d est, const Vector3d gt){
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    print("[gaussNetwon] Hello!\n");
+    cout << "[gaussNetwon] Hello!" << endl << endl;
 
     /* Variables */
     double ar = 1.0, br = 2.0, cr = 1.0;        // Real parameters values
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     double cost = 0.0, lastCost = 0.0;  // The cost of current iteration and the cost of the previous one
 
     /* Iteration Loop */
-    print("Summary: ");
+    cout << "Summary: " << endl;
     Timer t1 = chrono::steady_clock::now();
     for(int iter=0; iter < iterations; iter++){
         Matrix3d H = Matrix3d::Zero();     // Hessian, H(x) = J(x)'*Ω*J(x) in Gauss-Newton

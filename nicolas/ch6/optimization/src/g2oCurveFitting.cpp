@@ -149,7 +149,7 @@ double RMSE(const Vector3d est, const Vector3d gt){
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    print("[g2oCurveFitting] Hello!\n");
+    cout << "[g2oCurveFitting] Hello!" << endl << endl;
 
     /* Variables */
     double ar = 1.0, br = 2.0, cr = 1.0;        // Real parameters values
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
     /* ----- Solve (Perform optimization) ----- */
     cout << "[g2oCurveFitting] Start optimization..." << endl;
 
-    print("Summary: ");
+    cout << "Summary: " << endl;
     Timer t1 = chrono::steady_clock::now();
     optimizer.initializeOptimization();
     optimizer.optimize(10);  // Number of optimization steps
