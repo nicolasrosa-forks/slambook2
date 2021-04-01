@@ -28,7 +28,7 @@ double matches_lower_bound = 30.0;
 /* ====== */
 /* This program demonstrates how to extract ORB features and perform matching using the OpenCV library. */
 int main(int argc, char **argv) {
-    cout << "[orb_cv] Hello!" << endl;
+    print("[orb_cv] Hello!\n");
 
     /* Load the images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);

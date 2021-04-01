@@ -60,7 +60,7 @@ Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 /* ====== */
 /* This program demonstrates how to use 2D-2D feature matching to estimate camera motion. */
 int main(int argc, char **argv) {
-    cout << "[pose_estimation_3d2d] Hello!" << endl;
+    print("[pose_estimation_3d2d] Hello!\n");
 
     /* Load the color images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
@@ -93,8 +93,8 @@ int main(int argc, char **argv) {
     /*  Pose Estimation 3D-2D  */
     /* ----------------------- */
     //--- Step 1: Create 3D-2D pairs
-    vector<Point3f> pts_3d;  // (P1)_n
-    vector<Point2f> pts_2d;  // (p2)_n
+    vector<Point3f> pts_3d;  // {P1}_n
+    vector<Point2f> pts_2d;  // {p2}_n
 
     Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
         // The 3D Point P is described in {world} frame or in {camera1} frame? 
         // @nick I believe its in the {camera1} frame because the authors said its possible to compare the resulting 
         // R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
-        pts_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
-        pts_2d.push_back(keypoints2[m.trainIdx].pt);          // {p2 = [u2, v2]^T}_n
+        pts_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
+        pts_2d.push_back(keypoints2[m.trainIdx].pt);             // {p2}_n, p2 = [u2, v2]^T
     }
     Timer t4 = chrono::steady_clock::now();
     

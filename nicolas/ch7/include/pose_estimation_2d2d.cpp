@@ -30,9 +30,9 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     double focal_length = K.at<double>(1,1);                        // Camera focal length
 
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
-    vector<Point2f> points1, points2;  // (x1, x2)_n
+    vector<Point2f> points1, points2;  // {(x1, x2)}_n
 
-    for (int i=0; i < (int) matches.size(); i++){  // For each matched pair (p1, p2)_n, do...
+    for (int i=0; i < (int) matches.size(); i++){  // For each matched pair {(p1, p2)}_n, do...
         // Convert pixel coordinates to camera normalized coordinates
         cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
         points1.push_back(keypoints1[matches[i].queryIdx].pt);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1

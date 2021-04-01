@@ -39,7 +39,7 @@ Mat vee2hat(const Mat var);
 /* ====== */
 /* This program demonstrates how to use 2D-2D feature matching to estimate camera motion. */
 int main(int argc, char **argv) {
-    cout << "[pose_estimation_2d2d] Hello!" << endl;
+    print("[pose_estimation_2d2d] Hello!\n");
 
     /* Load the images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
@@ -73,8 +73,8 @@ int main(int argc, char **argv) {
     int counter = 0;
     string flag;
 
-    for(DMatch m : goodMatches){  // For each matched pair (p1, p2)_n, do...
-        // Pixel Coordinates to Normalized Coordinates, (p1, p2)_n to (x1, x2)_n
+    for(DMatch m : goodMatches){  // For each matched pair {(p1, p2)}_n, do...
+        // Pixel Coordinates to Normalized Coordinates, {(p1, p2)}_n to {(x1, x2)}_n
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
         Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
 

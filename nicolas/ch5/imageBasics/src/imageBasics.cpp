@@ -11,7 +11,7 @@ string image_filepath = "../../imageBasics/src/dog.jpg";
 /* ====== */
 /* This Program demonstrates the following operations: image reading, displaying, pixel vising, copying, assignment, etc */
 int main(int argc, char **argv){
-    print("[imageBasics] Hello!");
+    print("[imageBasics] Hello!\n");
 
     // Read the image as 8UC3 (BGR)
     cout << "[imageBasics] Reading '" << image_filepath << "'...";

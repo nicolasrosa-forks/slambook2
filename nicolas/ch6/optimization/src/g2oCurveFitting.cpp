@@ -149,7 +149,7 @@ double RMSE(const Vector3d est, const Vector3d gt){
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    cout << "[g2oCurveFitting] Hello!" << endl;
+    print("[g2oCurveFitting] Hello!\n");
 
     /* Variables */
     double ar = 1.0, br = 2.0, cr = 1.0;        // Real parameters values

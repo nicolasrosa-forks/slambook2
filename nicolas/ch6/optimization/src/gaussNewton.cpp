@@ -19,7 +19,7 @@ double RMSE(const Vector3d est, const Vector3d gt){
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    cout << "[gaussNetwon] Hello!" << endl;
+    print("[gaussNetwon] Hello!\n");
 
     /* Variables */
     double ar = 1.0, br = 2.0, cr = 1.0;        // Real parameters values

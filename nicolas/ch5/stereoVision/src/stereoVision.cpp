@@ -20,7 +20,7 @@ double b = 0.573;                     // Baseline
 /* Now we start from the left and right images, calculate the disparity map corresponding to the left eye, and
 then calculate the coordinates of each pixel in the camera coordinate system, which will form a point cloud */
 int main(int argc, char **argv){
-    print("[stereoVision] Hello!");
+    print("[stereoVision] Hello!\n");
 
     // 1. Read the image as 8UC1
     cout << "[stereoVision] Reading '" << left_filepath << "'...";

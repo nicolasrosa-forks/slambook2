@@ -83,7 +83,7 @@ void printStringVector(const std::vector<std::string> &image_filepaths){
 /* ====== */
 /* This program demonstrates how to extract ORB features and perform matching using the OpenCV library. */
 int main(int argc, char **argv) {
-    cout << "[orb_cv] Hello!" << endl;
+    print("[orb_cv] Hello!\n");
     
     #ifdef OPENCV3
         cout << "'OpenCV3' selected." << endl << endl;

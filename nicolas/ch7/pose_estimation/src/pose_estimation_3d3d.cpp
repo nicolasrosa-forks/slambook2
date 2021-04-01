@@ -61,7 +61,7 @@ Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 /* ====== */
 /* This program demonstrates how to use 2D-2D feature matching to estimate camera motion. */
 int main(int argc, char **argv) {
-    cout << "[pose_estimation_3d3d] Hello!" << endl;
+    print("[pose_estimation_3d3d] Hello!\n");
 
     /* Load the color images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
@@ -94,8 +94,8 @@ int main(int argc, char **argv) {
     /*  Pose Estimation 3D-3D  */
     /* ----------------------- */
     //--- Step 1: Create 3D-3D pairs
-    vector<Point3f> pts1_3d;  // (P1)_n
-    vector<Point3f> pts2_3d;  // (P2)_n
+    vector<Point3f> pts1_3d;  // {P1}_n, P' = {p1', p2', ..., pn'}
+    vector<Point3f> pts2_3d;  // {P2}_n, P  = {p1 , p2 , ..., pn }
 
     Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
@@ -115,8 +115,8 @@ int main(int argc, char **argv) {
         Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
         Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
 
-        pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
-        pts2_3d.push_back(Point3f(x2.x * dd2, x2.y * dd2, dd2));  // {P2 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T}_n, x = [x, y] = [X/Z, Y/Z]
+        pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X1, Y1, Z1]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
+        pts2_3d.push_back(Point3f(x2.x * dd2, x2.y * dd2, dd2));  // {P2}_n, P2 = [X2, Y2, Z2]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
     }
     Timer t4 = chrono::steady_clock::now();
     

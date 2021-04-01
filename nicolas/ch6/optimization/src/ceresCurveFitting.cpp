@@ -44,7 +44,7 @@ double RMSE(const double est[], const double gt[]){
 /*  Main  */
 /* ====== */
 int main(int argc, char **argv) {
-    cout << "[ceresCurveFitting] Hello!" << endl<< endl;
+    print("[ceresCurveFitting] Hello!\n");
 
     /* Variables */
     double ar = 1.0, br =  2.0, cr = 1.0;       // Real parameters values

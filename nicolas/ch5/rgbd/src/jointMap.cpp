@@ -21,7 +21,7 @@ double depthScale = 1000.0;     // Depth Scale for decoding the Depth data.
 // 1. Calculate the point cloud corresponding to each pair of RGB-D images based on internal parameters;
 // 2. According to the camera pose of each image (that is, external parameters), put the points to a global cloud by the camera poses.
 int main(int argc, char **argv){
-    print("[jointMap] Hello!");
+    print("[jointMap] Hello!\n");
 
     // 1. Read camera poses file
     TrajectoryType poses = ReadTrajectory2(pose_filepath);  // FIXME: File not found doesn't kill the program.
