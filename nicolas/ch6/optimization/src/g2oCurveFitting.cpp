@@ -84,7 +84,7 @@ public:
 /* ------------------ */
 /*  CurveFittingEdge  */
 /* ------------------ */
-/* Description: Curve Error model
+/* Description: Minimizes the CurveFitting Error model
 /* Template parameters: measurement dimension, measurement type, connection vertex type
 */
 class CurveFittingEdge : public g2o::BaseUnaryEdge<1, double, CurveFittingVertex> {  // Inheritance of the class "g2o::BaseUnaryEdge"
@@ -94,7 +94,7 @@ public:
     /** Constructor
      * 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x". Construct a new Projection Edge object
      * 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
-     * 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
+     * 3. The "_x(x)" stores the passed value passed to "x" on the class private attribute "_x".
      */
     CurveFittingEdge(double x) : BaseUnaryEdge(), _x(x) {}
 
