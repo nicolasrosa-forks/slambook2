@@ -18,4 +18,5 @@ void ICP_bundleAdjustment(
     const vector<Point3f> &pts2_p,
     Mat &R, Mat &t
 );
+
 #endif
