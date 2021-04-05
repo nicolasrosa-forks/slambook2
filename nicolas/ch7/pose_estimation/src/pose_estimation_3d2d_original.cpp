@@ -265,9 +265,9 @@ public:
         _estimate = Sophus::SE3d::exp(update_eigen) * _estimate;
     }
 
-    virtual bool read(istream &in) override {}
+    virtual bool read(istream &in) override {return 0;}
 
-    virtual bool write(ostream &out) const override {}
+    virtual bool write(ostream &out) const override {return 0;}
 };
 
 class EdgeProjection : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexPose> {
@@ -301,9 +301,9 @@ public:
             0, -fy / Z, fy * Y / (Z * Z), fy + fy * Y * Y / Z2, -fy * X * Y / Z2, -fy * X / Z;
     }
 
-    virtual bool read(istream &in) override {}
+    virtual bool read(istream &in) override {return 0;}
 
-    virtual bool write(ostream &out) const override {}
+    virtual bool write(ostream &out) const override {return 0;}
 
 private:
     Eigen::Vector3d _pos3d;
