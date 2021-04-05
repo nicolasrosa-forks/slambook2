@@ -187,9 +187,7 @@ public:
     // Update, Left Multiplication on SE3
     virtual void oplusImpl(const double *update) override {
         // Conversion to Eigen data type
-        // Vector6d dx = Vector6d(update);  // δξ
-        Eigen::Matrix<double, 6, 1> dx;
-        dx << update[0], update[1], update[2], update[3], update[4], update[5];
+        Vector6d dx = Vector6d(update);  // δξ
         
         // Left multiply T by a disturbance quantity exp(δξ)
         _estimate = Sophus::SE3d::exp(dx)*_estimate;  // T_k = exp(δξ_k).T_{k-1}
@@ -204,7 +202,7 @@ public:
 /* ---------------- */
 /*  ProjectionEdge  */
 /* ---------------- */
-/* Description: Reprojection Error (2D) model, e = p2 - p2^ = [e_u, e_v]
+/* Description: Minimizes the 3D-2D Points Reprojection Error model, e = p2 - p2^ = [e_u, e_v]
 /* Template parameters: measurement dimension, measurement type, connection vertex type
 */
 class ProjectionEdge : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, PoseVertex> {
@@ -214,7 +212,7 @@ public:
     /** Constructor
      * 1. This is a construct declaration when using the operator () to pass a given parameter, in this case a double variable "x". Construct a new Projection Edge object
      * 2. Since this class inherited the "BaseUnaryEdge" class, we also need to initialized it.
-     * 3. The "_x(x)" stores the passed value passed to "x" on the class public attribute "_x".
+     * 3. The "_x(x)" stores the passed value passed to "x" on the class private attribute "_x".
      */
     ProjectionEdge(const Eigen::Vector3d &P1, const Eigen::Matrix3d &K) : _P1(P1), _K(K) {}
 
@@ -230,7 +228,7 @@ public:
         
         // Calculate the residual
         // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
-        _error = _measurement - p2_proj.head<2>();  // e = p2-p2^ = [eu, ev]^T
+        _error = _measurement - p2_proj.head<2>();  // e = p2 - p2^ = [eu, ev]^T
     }
 
     /** Calculate the Jacobian matrix
@@ -265,7 +263,7 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
 
     /* ----- Build Graph for Optimization ----- */
     // First, let's set g2o
-    typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;            // Pose is 6D, Landmark is 3D (3D Points)
+    typedef g2o::BlockSolver<g2o::BlockSolverTraits<6, 3>> BlockSolverType;            // Pose is 6D, Landmark are 3D (3D Points)
     typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;  // Solver type: Linear
 
     // Gradient descent method, you can choose from GN (Gauss-Newton), LM(Levenberg-Marquardt), Powell's dog leg methods.
