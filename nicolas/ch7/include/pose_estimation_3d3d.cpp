@@ -19,6 +19,9 @@
 
 /* Eigen3 Libraries */
 #include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
+#include <eigen3/Eigen/SVD>
 
 /* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
@@ -56,7 +59,7 @@ typedef vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> VecVe
 
 // Choose the optimization algorithm:
 const char* optimization_methods_enum2str[] = {"Gauss-Newton", "Levenberg-Marquardt", "Powell's Dog Leg"};
-int optimization_method_selected = 1;
+int optimization_method_selected = 2;
 
 /* =========== */
 /*  Functions  */
@@ -65,131 +68,73 @@ void ICP_SVD(const vector<Point3f> &pts1_p, const vector<Point3f> &pts2_p, Mat &
     cout << "| ----------- |" << endl;
     cout << "|  ICP (SVD)  |" << endl;
     cout << "| ----------- |" << endl;
-    // /* 1. Calculate the centroids of the two groups of points p, p', and then calculate the de-centroid coordinates of each point: */
-    // // Centroids:
-    // //   p = 1/n*sum_i(p_i), p' = 1/n*sum_i(p'_i)
-    // Point3f p1_cent, p2_cent;  // Centroids, p and p'
+    /* 1. Calculate the centroids of the two groups of points p, p', and then calculate the de-centroid coordinates of each point: */
+    // Centroids:
+    //   p = 1/n*sum_i(p_i), p' = 1/n*sum_i(p'_i)
+    Point3f p1_cent, p2_cent;  // Centroids, p and p'
 
-    // int N = pts1_p.size();
-    // for(int i=0; i < N; i++){
-    //     p1_cent += pts1_p[i];
-    //     p2_cent += pts2_p[i];
-    // }
-
-    // // p1_cent = p1_cent/float(N);
-    // // p2_cent = p2_cent/float(N);
-
-    // // FIXME: Why make these conversions?
-    // p1_cent = Point3f(Vec3f(p1_cent) / N);
-    // p2_cent = Point3f(Vec3f(p2_cent) / N);
-
-    // cout << "Centroids:" << endl;
-    // cout << "-- p1_cent: " << p1_cent << endl;
-    // cout << "-- p2_cent: " << p2_cent << endl << endl;
-
-    // // De-centroid coordinates: 
-    // //   q_i = p_i − p, q'_i = p'_i − p'.
-    // vector<Point3f> pts1_q(N), pts2_q(N);  // {q_i}_n, {q'_i}_n
-    
-    // for(int i=0; i < N; i++){
-    //     pts1_q[i] = pts1_p[i] - p1_cent;  // q_i
-    //     pts2_q[i] = pts2_p[i] - p2_cent;  // q'_i
-    // }
-
-    // /* 2. The rotation matrix is calculated according to the following optimization problem: */
-    // // R∗ = argmin_R 0.5*sum_i(||q_i-R*q'_i||^2)
-    // // Next, we introduce how to solve the optimal R in the above minimization problem through SVD;
-    // // Let's Compute W = sum_i(q_i*q'_i^T), W is a 3-by-3 matrix.
-    // Eigen::Matrix3d W = Eigen::Matrix3d::Zero();
-
-    // for(int i=0; i < N; i++){
-    //     // Since q_i, q'_i are Point3f, it's necessary to convert to the Eigen's Vector3d.
-    //     W += Eigen::Vector3d(pts1_q[i].x, pts1_q[i].y, pts1_q[i].z)*Eigen::Vector3d(pts2_q[i].x, pts2_q[i].y, pts2_q[i].z).transpose();
-    // }
-    
-    // printMatrix<Eigen::Matrix3d>("W: ", W);
-
-    // // Decompose W, W = UΣV^T
-    // Eigen::JacobiSVD<Eigen::Matrix3d> svd(W, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    // Eigen::Matrix3d U = svd.matrixU();
-    // Eigen::Matrix3d V = svd.matrixV();
-
-    // printMatrix<Eigen::Matrix3d>("U: ", U);
-    // printMatrix<Eigen::Matrix3d>("V: ", V);
-
-    // // Calculate R, R = U*V^T
-    // Eigen::Matrix3d R_ = U*(V.transpose());
-
-    // // Check if the det(R_) is negative
-    // if(R_.determinant() < 0) 
-    //     R_ = -R_;
-
-    // /* 3. Calculate t according to R in step 2: */
-    // // t∗ = p − Rp'.
-    // Eigen::Vector3d t_ = Eigen::Vector3d(p1_cent.x, p1_cent.y, p1_cent.z) - R_*Eigen::Vector3d(p2_cent.x, p2_cent.y, p2_cent.z);
-
-    // /* Convert Eigen::Vector3d back to cv::Mat */
-    // R = (Mat_<double>(3, 3) << 
-    //     R_(0, 0), R_(0, 1), R_(0, 2), 
-    //     R_(1, 0), R_(1, 1), R_(1, 2), 
-    //     R_(2, 0), R_(2, 1), R_(2, 2)
-    // );
-    // t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
-
-
-
-    Point3f p1_cent, p2_cent;     // center of mass
     int N = pts1_p.size();
-    for (int i = 0; i < N; i++) {
+    for(int i=0; i < N; i++){
         p1_cent += pts1_p[i];
         p2_cent += pts2_p[i];
     }
-    p1_cent = Point3f(Vec3f(p1_cent) / N);
-    p2_cent = Point3f(Vec3f(p2_cent) / N);
 
-    cout << "Centroids: " << endl;
-    cout << p1_cent << endl;
-    cout << p2_cent << endl;
+    p1_cent /= float(N);
+    p2_cent /= float(N);
 
-    vector<Point3f> pts1_q(N), pts2_q(N); // remove the center
-    for (int i = 0; i < N; i++) {
-        pts1_q[i] = pts1_p[i] - p1_cent;
-        pts2_q[i] = pts2_p[i] - p2_cent;
+    cout << "Centroids:" << endl;
+    cout << "-- p1_cent: " << p1_cent << endl;
+    cout << "-- p2_cent: " << p2_cent << endl << endl;
+
+    // De-centroid coordinates: 
+    //   q_i = p_i − p, q'_i = p'_i − p'.
+    vector<Point3f> pts1_q(N), pts2_q(N);  // {q_i}_n, {q'_i}_n
+    
+    for(int i=0; i < N; i++){
+        pts1_q[i] = pts1_p[i] - p1_cent;  // q_i
+        pts2_q[i] = pts2_p[i] - p2_cent;  // q'_i
     }
 
-
-     // compute q1*q2^T
+    /* 2. The rotation matrix is calculated according to the following optimization problem: */
+    //   R∗ = argmin_R 0.5*sum_i(||q_i-R*q'_i||^2)
+    // 
+    // Next, we introduce how to solve the optimal R in the above minimization problem through SVD;
+    // Let's Compute W = sum_i(q_i*q'_i^T), W is a 3-by-3 matrix.
     Eigen::Matrix3d W = Eigen::Matrix3d::Zero();
-    for (int i = 0; i < N; i++) {
-        W += Eigen::Vector3d(pts1_q[i].x, pts1_q[i].y, pts1_q[i].z) * Eigen::Vector3d(pts2_q[i].x, pts2_q[i].y, pts2_q[i].z).transpose();
-    }
-    cout << "W=" << W << endl;
 
-    // SVD on W
+    for(int i=0; i < N; i++){
+        // Since q_i, q'_i are Point3f, it's necessary to convert to the Eigen's Vector3d.
+        W += Eigen::Vector3d(pts1_q[i].x, pts1_q[i].y, pts1_q[i].z)*Eigen::Vector3d(pts2_q[i].x, pts2_q[i].y, pts2_q[i].z).transpose();
+    }
+    
+    printMatrix<Eigen::Matrix3d>("W: ", W);
+
+    // Decompose W, W = UΣV^T
     Eigen::JacobiSVD<Eigen::Matrix3d> svd(W, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix3d U = svd.matrixU();
     Eigen::Matrix3d V = svd.matrixV();
 
-    cout << "U=" << U << endl;
-    cout << "V=" << V << endl;
+    printMatrix<Eigen::Matrix3d>("U: ", U);
+    printMatrix<Eigen::Matrix3d>("V: ", V);
 
-    Eigen::Matrix3d R_ = U * (V.transpose());
-    if (R_.determinant() < 0) {
+    // Calculate R, R = U*V^T
+    Eigen::Matrix3d R_ = U*(V.transpose());
+
+    // Check if the det(R_) is negative
+    if(R_.determinant() < 0) 
         R_ = -R_;
-    }
-    Eigen::Vector3d t_ = Eigen::Vector3d(p1_cent.x, p1_cent.y, p1_cent.z) - R_ * Eigen::Vector3d(p2_cent.x, p2_cent.y, p2_cent.z);
 
-    // convert to cv::Mat
-    R = (Mat_<double>(3, 3) <<
-        R_(0, 0), R_(0, 1), R_(0, 2),
-        R_(1, 0), R_(1, 1), R_(1, 2),
+    /* 3. Calculate t according to R in step 2: */
+    // t∗ = p − Rp'.
+    Eigen::Vector3d t_ = Eigen::Vector3d(p1_cent.x, p1_cent.y, p1_cent.z) - R_*Eigen::Vector3d(p2_cent.x, p2_cent.y, p2_cent.z);
+
+    /* Convert Eigen::Vector3d back to cv::Mat */
+    R = (Mat_<double>(3, 3) << 
+        R_(0, 0), R_(0, 1), R_(0, 2), 
+        R_(1, 0), R_(1, 1), R_(1, 2), 
         R_(2, 0), R_(2, 1), R_(2, 2)
     );
     t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
-
-    
-
-    
 
     /* Results */
     cout << "ICP via SVD results: " << endl;
@@ -217,7 +162,10 @@ public:
     // Update, Left Multiplication on SE3
     virtual void oplusImpl(const double *update) override {
         // Conversion to Eigen data type
-        Vector6d dx = Vector6d(update);  // δξ
+        // Vector6d dx = Vector6d(update);  // δξ  // FIXME: This should work!, remove lines below
+
+        Eigen::Matrix<double, 6, 1> dx;
+        dx << update[0], update[1], update[2], update[3], update[4], update[5];
 
         // Left multiply T by a disturbance quantity exp(δξ)
         _estimate = Sophus::SE3d::exp(dx)*_estimate;  // T_k = exp(δξ_k).T_{k-1}
@@ -249,7 +197,7 @@ public:
     // Calculate the 3D-3D Matching error
     virtual void computeError() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
-        const PoseVertex *v = static_cast<PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge // FIXME: There is a 'const' in the casting! Fix other g2o files
         Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
 
         // Calculate the residual
@@ -262,7 +210,7 @@ public:
      */
     virtual void linearizeOplus() override{
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
-        const PoseVertex *v = static_cast<PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
         Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
 
         // Describe the 3D Space Point P2 in the {camera1} frame using the T*
@@ -319,21 +267,21 @@ void ICP_bundleAdjustment(const vector<Point3f> &pts1_p, const vector<Point3f> &
     optimizer.setVerbose(true);      // Turn on debugging output
 
     // Add vertices to the graph
-    PoseVertex *poseVertex = new PoseVertex();  // Camera Pose Vertex
-    poseVertex->setId(0);                       //! Sets the id of the node in the graph, be sure that the graph keeps consistent after changing the id
-    poseVertex->setEstimate(Sophus::SE3d());    //! Sets the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
-    optimizer.addVertex(poseVertex);
+    PoseVertex *pose_v = new PoseVertex();  // Camera Pose Vertex
+    pose_v->setId(0);                       //! Sets the id of the node in the graph, be sure that the graph keeps consistent after changing the id
+    pose_v->setEstimate(Sophus::SE3d());    //! Sets the estimate for the vertex also calls g2o::OptimizableGraph::Vertex::updateCache()
+    optimizer.addVertex(pose_v);
 
     // Add edges to the graph
     // int index = 1;
-    for(size_t i=0; i<pts1_p.size(); ++i){
+    for(size_t i=0; i<pts1_p.size(); i++){
         // cv::Point3f to Eigen::Vector3d
-        Vector3d P1_3d(pts1_p[i].x, pts1_p[i].y, pts2_p[i].z);  // P1_i, p_i
+        Vector3d P1_3d(pts1_p[i].x, pts1_p[i].y, pts1_p[i].z);  // P1_i, p_i
         Vector3d P2_3d(pts2_p[i].x, pts2_p[i].y, pts2_p[i].z);  // P2_i, p'_i
         
         ProjectXYZRGBDPoseOnlyEdge *projEdge = new ProjectXYZRGBDPoseOnlyEdge(P2_3d);  // Creates the i-th edge
-        // projEdge->setId(index);                                   // Specifies the edge ID  // FIXME: the original code doesn't have this line. Why?
-        projEdge->setVertex(0, poseVertex);                       // Connects edge to the vertex (Node, 0)
+        // projEdge->setId(index);                                // Specifies the edge ID  // FIXME: the original code doesn't have this line. Why?
+        projEdge->setVertex(0, pose_v);                           // Connects edge to the vertex (Node, 0)
         projEdge->setMeasurement(P1_3d);                          // Observed value
         projEdge->setInformation(Eigen::Matrix3d::Identity());    // Information matrix: the inverse of the covariance matrix
         optimizer.addEdge(projEdge);
@@ -350,7 +298,7 @@ void ICP_bundleAdjustment(const vector<Point3f> &pts1_p, const vector<Point3f> &
     printElapsedTime("Solver time: ", t1, t2);
 
     /* ----- Results ----- */
-    Sophus::SE3d pose = poseVertex->estimate();  // T*
+    Sophus::SE3d pose = pose_v->estimate();  // T*
     Matrix3d R_ = pose.rotationMatrix();
     Vector3d t_ = pose.translation();
 
@@ -362,22 +310,7 @@ void ICP_bundleAdjustment(const vector<Point3f> &pts1_p, const vector<Point3f> &
     );
     t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
     
-    printMatrix<Matrix4d>("\nT* (g2o):\n", pose.matrix());
+    printMatrix<Matrix4d>("\nT* (g2o): ", pose.matrix());
     printMatrix("R:\n", R);
     printMatrix("t:\n", t);
 }
-
-// TODO: Excluir codigos abaixo ----------------------------------------------------------------------------------------------------------------------
-
-    // cout << endl << "after optimization:" << endl;
-    // cout << "T=\n" << pose->estimate().matrix() << endl;
-
-    // // convert to cv::Mat
-    // Eigen::Matrix3d R_ = pose->estimate().rotationMatrix();
-    // Eigen::Vector3d t_ = pose->estimate().translation();
-    // R = (Mat_<double>(3, 3) <<
-    //     R_(0, 0), R_(0, 1), R_(0, 2),
-    //     R_(1, 0), R_(1, 1), R_(1, 2),
-    //     R_(2, 0), R_(2, 1), R_(2, 2)
-    // );
-    // t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
