@@ -22,7 +22,4 @@ Point2f pixel2cam(const Point2f &p, const Mat &K);
 
 Point2d pixel2cam2(const Point2d &p, const Mat &K);
 
-// Point2f cam2pixel(const Point2f &x, const Mat &K); // TODO
-
-
 #endif

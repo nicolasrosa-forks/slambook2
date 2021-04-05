@@ -219,8 +219,8 @@ public:
     // Calculate the reprojection error
     virtual void computeError() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
-        const PoseVertex *v = static_cast<PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
+        const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        Sophus::SE3d T = v->estimate();                                        // Get estimated value, T*
 
         // Describe the 3D Space Point P in the {camera2} frame
         Eigen::Vector3d p2_proj = _K*(T*_P1);  // s2.p2^ = K.(T*.P1) = K.P2 = [s2.u2, s2.v2, s2]^T
@@ -236,8 +236,8 @@ public:
      */
     virtual void linearizeOplus() override{
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
-        const PoseVertex *v = static_cast<PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
+        const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        Sophus::SE3d T = v->estimate();                                        // Get estimated value, T*
         
         // Describe the 3D Space Point P in the {camera2} frame
         Eigen::Vector3d P2 = T*_P1;  // P2 = T*.P1 = [X, Y, Z]^T

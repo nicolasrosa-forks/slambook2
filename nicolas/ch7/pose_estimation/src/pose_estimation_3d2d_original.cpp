@@ -277,7 +277,7 @@ public:
     EdgeProjection(const Eigen::Vector3d &pos, const Eigen::Matrix3d &K) : _pos3d(pos), _K(K) {}
 
     virtual void computeError() override {
-        const VertexPose *v = static_cast<VertexPose *> (_vertices[0]);
+        const VertexPose *v = static_cast<const VertexPose *> (_vertices[0]);
         Sophus::SE3d T = v->estimate();
         Eigen::Vector3d pos_pixel = _K * (T * _pos3d);
         pos_pixel /= pos_pixel[2];
@@ -285,7 +285,7 @@ public:
     }
 
     virtual void linearizeOplus() override {
-        const VertexPose *v = static_cast<VertexPose *> (_vertices[0]);
+        const VertexPose *v = static_cast<const VertexPose *> (_vertices[0]);
         Sophus::SE3d T = v->estimate();
         Eigen::Vector3d pos_cam = T * _pos3d;
         double fx = _K(0, 0);

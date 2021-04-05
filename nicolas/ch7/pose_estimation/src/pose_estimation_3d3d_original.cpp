@@ -80,7 +80,7 @@ public:
     }
 
     virtual void linearizeOplus() override {
-        VertexPose *pose = static_cast<VertexPose *>(_vertices[0]);
+        VertexPose *pose = static_cast<const VertexPose *>(_vertices[0]);
         Sophus::SE3d T = pose->estimate();
         Eigen::Vector3d xyz_trans = T * _point;
         _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();

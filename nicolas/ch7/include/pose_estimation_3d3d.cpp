@@ -162,10 +162,7 @@ public:
     // Update, Left Multiplication on SE3
     virtual void oplusImpl(const double *update) override {
         // Conversion to Eigen data type
-        // Vector6d dx = Vector6d(update);  // δξ  // FIXME: This should work!, remove lines below
-
-        Eigen::Matrix<double, 6, 1> dx;
-        dx << update[0], update[1], update[2], update[3], update[4], update[5];
+        Vector6d dx = Vector6d(update);  // δξ
 
         // Left multiply T by a disturbance quantity exp(δξ)
         _estimate = Sophus::SE3d::exp(dx)*_estimate;  // T_k = exp(δξ_k).T_{k-1}
@@ -197,8 +194,8 @@ public:
     // Calculate the 3D-3D Matching error
     virtual void computeError() override {
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
-        const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge // FIXME: There is a 'const' in the casting! Fix other g2o files
-        Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
+        const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
+        Sophus::SE3d T = v->estimate();                                        // Get estimated value, T*
 
         // Calculate the residual
         // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
@@ -211,7 +208,7 @@ public:
     virtual void linearizeOplus() override{
         // Creates a pointer to the already created graph's vertice (Node, id=0), which allows to access and retrieve the values of "T".
         const PoseVertex *v = static_cast<const PoseVertex *> (_vertices[0]);  // _vertices was inherited from g2o::BaseUnaryEdge
-        Sophus::SE3d T = v->estimate();                                  // Get estimated value, T*
+        Sophus::SE3d T = v->estimate();                                        // Get estimated value, T*
 
         // Describe the 3D Space Point P2 in the {camera1} frame using the T*
         Eigen::Vector3d P1_est = T*_P2;  // P2 = T*.P1 = [X, Y, Z]^T
@@ -219,7 +216,7 @@ public:
         /* ----- Compute Jacobian Matrix ----- */
         // The jacobian matrix indicates how the error varies according to the increment δξ, ∂e/∂δξ
         _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();  // TODO: Why?
-        _jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(P1_est);  // TODO: Why?
+        _jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(P1_est);     // TODO: Why?
     }
 
     virtual bool read(istream &in) override {return 0;}
@@ -302,7 +299,7 @@ void ICP_bundleAdjustment(const vector<Point3f> &pts1_p, const vector<Point3f> &
     Matrix3d R_ = pose.rotationMatrix();
     Vector3d t_ = pose.translation();
 
-     /* Convert Eigen::Vector3d back to cv::Mat */
+    /* Convert Eigen::Vector3d back to cv::Mat */
     R = (Mat_<double>(3, 3) << 
         R_(0, 0), R_(0, 1), R_(0, 2), 
         R_(1, 0), R_(1, 1), R_(1, 2), 
@@ -313,4 +310,16 @@ void ICP_bundleAdjustment(const vector<Point3f> &pts1_p, const vector<Point3f> &
     printMatrix<Matrix4d>("\nT* (g2o): ", pose.matrix());
     printMatrix("R:\n", R);
     printMatrix("t:\n", t);
+
+    // Verify P1 = R * P2 + t
+    cout << "Verify 'P1 = R * P2 + t' ..." << endl; 
+    for (int i = 0; i < 5; i++) {
+        cout << " | P1 = " << pts1_p[i] << endl;
+        cout << " | P2 = " << pts2_p[i] << endl;
+        
+        Mat P1_est_ = R*(Mat_<double>(3, 1) << pts2_p[i].x, pts2_p[i].y, pts2_p[i].z) + t;            // Mat(3,1)
+        Point3f P1_est(P1_est_.at<double>(0, 0), P1_est_.at<double>(1, 0), P1_est_.at<double>(2, 0)); // Point3f
+
+        cout << " | (R*P2+t) = " << P1_est << endl << endl;
+    }
 }

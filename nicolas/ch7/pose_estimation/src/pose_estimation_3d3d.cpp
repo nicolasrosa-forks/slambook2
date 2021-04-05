@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     /* --------- */
     /*  Results  */
     /* --------  */
-    cout << "-------------------------------------------------" << endl;
+    cout << "-----------------------------------------------------" << endl;
     printElapsedTime("Pose estimation 3D-3D: ", t1, t8);
     printElapsedTime(" | Features Calculation: ", t1, t2);
     printElapsedTime(" | Create 3D-3D Pairs: ", t3, t4);
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     
     // NOTE: Observe that not all the 79 feature matches have valid depth values. 7 3D-3D pairs were discarded.
     cout << "\n-- Number of 3D-3D pairs: " << pts1_3d.size() << endl;
-    cout << "-------------------------------------------------" << endl;
+    cout << "-----------------------------------------------------" << endl;
 
     /* Display Images */
     // imshow("image1", image1);
