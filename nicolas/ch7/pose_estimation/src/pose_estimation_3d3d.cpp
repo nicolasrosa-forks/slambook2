@@ -32,8 +32,8 @@
 #include "../../../common/libUtils_opencv.h"
 #include "../../include/find_features_matches.h"
 // #include "../../include/pose_estimation_2d2d.h"
-// #include "../../include/pose_estimation_3d2d_bundleAdjustment.h"
-#include "../../include/pose_estimation_3d3d_ICP.h"
+// #include "../../include/pose_estimation_3d2d.h"
+#include "../../include/pose_estimation_3d3d.h"
 
 using namespace std;
 using namespace cv;
@@ -114,62 +114,40 @@ int main(int argc, char **argv) {
         float dd2 = float(d2) / 5000.0;  // ScalingFactor from TUM Dataset.
 
         // Calculates the 3D Points
-        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
-        Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
+        // Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        // Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
+
+        // FIXME: It should be Point2f?
+        Point2d x1 = pixel2cam2(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1 # FIXME
+        Point2d x2 = pixel2cam2(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
+
 
         pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X1, Y1, Z1]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
         pts2_3d.push_back(Point3f(x2.x * dd2, x2.y * dd2, dd2));  // {P2}_n, P2 = [X2, Y2, Z2]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
     }
     Timer t4 = chrono::steady_clock::now();
     
-    //--- Step 2: Iterative Closest Point (ICP)
+    //--- Step 2.1: Iterative Closest Point (ICP) - SVD
     Mat R, t;  // Rotation Matrix, Translation Vector
-    pose_estimation_3d3d(pts1_3d, pts2_3d, R, t);
 
-    //--- Step 3: Bundle Adjustment (BA)
-    /* In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares
-       optimization problem to adjust the estimated values (bundle adjustment). */
-    // VecVector3d pts_3d_eigen;
-    // VecVector2d pts_2d_eigen;
-
-    // // Copy data from OpenCV's vector to Eigen's Vector.
-    // for(size_t i = 0; i<pts_3d.size(); i++){
-    //     pts_3d_eigen.push_back(Eigen::Vector3d(pts_3d[i].x, pts_3d[i].y, pts_3d[i].z));
-    //     pts_2d_eigen.push_back(Eigen::Vector2d(pts_2d[i].x, pts_2d[i].y));
-    // }
+    Timer t5 = chrono::steady_clock::now();
+    ICP_SVD(pts1_3d, pts2_3d, R, t);
+    Timer t6 = chrono::steady_clock::now();
     
-    // // printVector<Eigen::Vector3d>("pts_3d_eigen[0]:", pts_3d_eigen[0]);
-    // // printVector<Eigen::Vector2d>("pts_2d_eigen[0]:", pts_2d_eigen[0]);
-
-    // // K
-    // Eigen::Matrix3d K_eigen;
-    // K_eigen <<
-    //     K.at<double>(0, 0), K.at<double>(0, 1), K.at<double>(0, 2),
-    //     K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
-    //     K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
-
-    // //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
-    // Sophus::SE3d pose_gn;
-    // Timer t6 = chrono::steady_clock::now();
-    // bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_gn);
-    // Timer t7 = chrono::steady_clock::now();
-    
-    // //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
-    // Sophus::SE3d pose_g2o;
-    // Timer t8 = chrono::steady_clock::now();
-    // bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_g2o);
-    Timer t9 = chrono::steady_clock::now();
+    //--- Step 2.2: Iterative Closest Point (ICP) - Bundle Adjustment (BA)
+    Timer t7 = chrono::steady_clock::now();
+    ICP_bundleAdjustment(pts1_3d, pts2_3d, R, t);
+    Timer t8 = chrono::steady_clock::now();
     
     /* --------- */
     /*  Results  */
     /* --------  */
     cout << "-------------------------------------------------" << endl;
-    printElapsedTime("Pose estimation 3D-3D: ", t1, t9);
+    printElapsedTime("Pose estimation 3D-3D: ", t1, t8);
     printElapsedTime(" | Features Calculation: ", t1, t2);
     printElapsedTime(" | Create 3D-3D Pairs: ", t3, t4);
-    // printElapsedTime(" | Iterative Closest Point (ICP, SVD): ", t4, t5); // TODO
-    // printElapsedTime(" | Bundle Adjustment (GN): ", t6, t7);
-    // printElapsedTime(" | Bundle Adjustment (g2o): ", t8, t9);
+    printElapsedTime(" | Iterative Closest Point (ICP, SVD): ", t5, t6);
+    printElapsedTime(" | Iterative Closest Point (ICP, BA): ", t7, t8);
     
     // NOTE: Observe that not all the 79 feature matches have valid depth values. 7 3D-3D pairs were discarded.
     cout << "\n-- Number of 3D-3D pairs: " << pts1_3d.size() << endl;
@@ -292,4 +270,83 @@ same, while the t is quite different." */
 /* ==================================== */
 /*  Results from Pose Estimation 3D-3D  */
 /* ==================================== */
-// TODO
+// Centroids:
+// -- p1_cent: [-0.0719497, -0.102462, 1.65064]
+// -- p2_cent: [-0.127945, -0.0629768, 1.68894]
+
+// W: 
+//   10.871 -1.01948  2.54771
+// -2.16033  3.85307 -5.77742
+//  3.94738 -5.79979  9.62203
+// (3, 3)
+
+// U: 
+//   0.558087  -0.829399 -0.0252034
+//  -0.428009  -0.313755   0.847565
+//   0.710878   0.462228   0.530093
+// (3, 3)
+
+// V: 
+//   0.617887  -0.784771 -0.0484806
+//  -0.399894  -0.366747   0.839989
+//   0.676979   0.499631   0.540434
+// (3, 3)
+
+// ICP via SVD results: 
+// R:
+// [0.9969452349200465, 0.05983347846666433, -0.05020112971629315;
+//  -0.05932607711456848, 0.9981719677231771, 0.01153860588791605;
+//  0.05079975535776821, -0.008525122064790724, 0.9986724724099343]
+// (3, 3)
+
+// t:
+// [0.1441598539458168;
+//  -0.06667852731466012;
+//  -0.03009747291721965]
+// (3, 1)
+
+// R_inv:
+// [0.9969452349200465, -0.05932607711456848, 0.05079975535776821;
+//  0.05983347846666433, 0.9981719677231771, -0.008525122064790724;
+//  -0.05020112971629315, 0.01153860588791605, 0.9986724724099343]
+// (3, 3)
+
+// t_inv:
+// [-0.1461463106503255;
+//  0.05767446666727236;
+//  0.03806388246721711]
+// (3, 1)
+
+/* ==================================== */ 
+/*  Original Code (pixel2cam, Point2d)  */
+/* ==================================== */
+// Centroids: 
+// [-0.0719497, -0.102462, 1.65064]
+// [-0.127945, -0.0629768, 1.68894
+// 
+// W=  10.871 -1.01948  2.54771
+// -2.16033  3.85307 -5.77742
+//  3.94738 -5.79979  9.62203
+// 
+// U=  0.558087  -0.829399 -0.0252034
+//  -0.428009  -0.313755   0.847565
+//   0.710878   0.462228   0.530093
+// 
+// V=  0.617887  -0.784771 -0.0484806
+//  -0.399894  -0.366747   0.839989
+//   0.676979   0.499631   0.540434
+
+// ICP via SVD results: 
+// R = [0.9969452349468715, 0.05983347698056557, -0.05020113095482046;
+//  -0.05932607657705309, 0.9981719679735133, 0.01153858699565957;
+//  0.05079975545906246, -0.008525103184062521, 0.9986724725659557]
+// t = [0.144159841091821;
+//  -0.06667849443812729;
+//  -0.03009747273569774]
+// 
+// R_inv = [0.9969452349468715, -0.05932607657705309, 0.05079975545906246;
+//  0.05983347698056557, 0.9981719679735133, -0.008525103184062521;
+//  -0.05020113095482046, 0.01153858699565957, 0.9986724725659557]
+// t_inv = [-0.1461462958593589;
+//  0.05767443542067568;
+//  0.03806388018483625
