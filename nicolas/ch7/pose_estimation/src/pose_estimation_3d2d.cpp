@@ -32,7 +32,7 @@
 #include "../../../common/libUtils_opencv.h"
 #include "../../include/find_features_matches.h"
 // #include "../../include/pose_estimation_2d2d.h"
-#include "../../include/pose_estimation_3d2d_bundleAdjustment.h"
+#include "../../include/pose_estimation_3d2d.h"
 
 using namespace std;
 using namespace cv;
