@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 
         // If the frame is empty, break immediately
         if (image1.empty() && image2.empty())
-          break;
+            break;
 
         /* ----- Features Extraction and Matching ----- */
         find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
         char c = (char) waitKey(25);
         if(c==27) break;
     }
- 
+
     // When everything done, release the video capture object
     cap.release();
 
