@@ -99,10 +99,3 @@ Point2f pixel2cam(const Point2f &p, const Mat &K) {
         (p.y - K.at<double>(1, 2))/K.at<double>(1, 1)   // y = (v-cy)/fy
     );
 }
-
-Point2d pixel2cam2(const Point2d &p, const Mat &K) {
-    return Point2d(
-        (p.x - K.at<double>(0, 2)) / K.at<double>(0, 0),
-        (p.y - K.at<double>(1, 2)) / K.at<double>(1, 1)
-    );
-}
