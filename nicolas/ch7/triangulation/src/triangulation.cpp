@@ -26,7 +26,7 @@ using namespace cv;
 string image1_filepath = "../../orb_features/src/1.png";
 string image2_filepath = "../../orb_features/src/2.png";
 
-int orb_nfeatures = 500;
+int nfeatures = 500;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -40,7 +40,7 @@ void triangulation(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
     const Mat &R, const Mat &t,
-    vector<Point3d> &points_3d);
+    vector<Point3d> &pts_3d);
 
 // For drawing
 inline cv::Scalar get_color(float depth);
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     /* ---------------------------------- */
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
-    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
+    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, nfeatures, true);
 
     /* ------------------------------------------- */
     /*  Pose Estimation 2D-2D  (Epipolar Geometry) */
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 /* ======================= */
 /*  Functions Declaration  */
 /* ======================= */
-void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &points_3d){
+void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &pts_3d){
     Mat T1w = (Mat_<float>(3, 4) <<
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -193,12 +193,12 @@ void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &k
     printMatrix("T21:\n", T21);
 
     //--- Convert the Matched Feature points to the form of vector<Point2f> (Pixels Coordinates)
-    vector<Point2f> points1, points2; // {(x1, x2)}_n
+    vector<Point2f> pts1_2d_x, pts2_2d_x; // {(x1, x2)}_n
 
     for(DMatch m : matches){  // For each matched pair {(p1, p2)}_n, do...
         // Convert pixel coordinates to camera normalized coordinates
-        points1.push_back(pixel2cam(keypoints1[m.queryIdx].pt, K));  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
-        points2.push_back(pixel2cam(keypoints2[m.trainIdx].pt, K));  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
+        pts1_2d_x.push_back(pixel2cam(keypoints1[m.queryIdx].pt, K));  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
+        pts2_2d_x.push_back(pixel2cam(keypoints2[m.trainIdx].pt, K));  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
     }
 
     /* NOTE: This part says that returns the "World" 3D Points Coordinate. 
@@ -207,19 +207,19 @@ void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &k
     /* from Camera {1} to Camera {2}, since the estimated (R, t) are (R21, t21), not the (R1w, t1w).
     */   
     //--- Get World 3D Points Coordinates (in Homogeneous Coordinates)
-    Mat points_4d;  // It should be Pw = [Xw, Yw, Zw], but in fact it's P = ~Pc = [X, Y, Z]!!!
-    triangulatePoints(T1w, T21, points1, points2, points_4d);  // Returns 4xN array of reconstructed points in homogeneous coordinates. These points are returned in the world's coordinate system.
+    Mat pts_4d;  // It should be Pw = [Xw, Yw, Zw], but in fact it's P = ~Pc = [X, Y, Z]!!!
+    triangulatePoints(T1w, T21, pts1_2d_x, pts2_2d_x, pts_4d);  // Returns 4xN array of reconstructed points in homogeneous coordinates. These points are returned in the world's coordinate system.
 
     //--- Convert to non-homogeneous coordinates
-    for (int i=0; i<points_4d.cols; i++) {
-        Mat x = points_4d.col(i);
+    for (int i=0; i<pts_4d.cols; i++) {
+        Mat x = pts_4d.col(i);
         x /= x.at<float>(3, 0);  // Normalization, Pw = [Xw, Yw, Zw, 1] or P = [X, Y, Z, 1]
         Point3d p(
             x.at<float>(0, 0),  // Xw or X
             x.at<float>(1, 0),  // Yw or Y
             x.at<float>(2, 0)   // Zw or Z
         );
-        points_3d.push_back(p);  // Pw = [Xw, Yw, Zw] or P = [X, Y, Z]
+        pts_3d.push_back(p);  // Pw = [Xw, Yw, Zw] or P = [X, Y, Z]
     }
 }
 

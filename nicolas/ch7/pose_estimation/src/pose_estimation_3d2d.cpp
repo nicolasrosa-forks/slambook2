@@ -43,7 +43,7 @@ string image2_filepath = "../../orb_features/src/2.png";
 string depth1_filepath = "../../orb_features/src/1_depth.png";
 string depth2_filepath = "../../orb_features/src/2_depth.png";
 
-int orb_nfeatures = 500;
+int nfeatures = 500;
 
 // Choose the PnP Method:
 const char* pnp_methods_enum2str[] = {"Iterative (LM)", "EPnP", "P3P"};
@@ -52,15 +52,10 @@ int pnp_method_selected = 1;
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 
-/* ===================== */
-/*  Function Prototypes  */
-/* ===================== */
-
-
 /* ====== */
 /*  Main  */
 /* ====== */
-/* This program demonstrates how to use 2D-2D feature matching to estimate camera motion. */
+/* This program demonstrates how to use the Perspective-n-Point (PnP) to estimate camera motion (3D-2D Pose Estimation). */
 int main(int argc, char **argv) {
     cout << "[pose_estimation_3d2d] Hello!" << endl << endl;
 
@@ -86,17 +81,17 @@ int main(int argc, char **argv) {
     vector<KeyPoint> keypoints1, keypoints2;
     vector<DMatch> goodMatches;
 
-    //--- Step 0: Features Calculation
+    //--- Step 0: Features Extraction, Matching and Filtering
     Timer t1 = chrono::steady_clock::now();
-    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
+    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, nfeatures, true);
     Timer t2 = chrono::steady_clock::now();
 
     /* ----------------------- */
     /*  Pose Estimation 3D-2D  */
     /* ----------------------- */
     //--- Step 1: Create 3D-2D pairs
-    vector<Point3f> pts_3d;  // {P1}_n
-    vector<Point2f> pts_2d;  // {p2}_n
+    vector<Point3f> pts1_3d;  // {P1}_n
+    vector<Point2f> pts2_2d;  // {p2}_n
 
     Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
@@ -116,17 +111,17 @@ int main(int argc, char **argv) {
         // The 3D Point P is described in {world} frame or in {camera1} frame? 
         // @nick I believe its in the {camera1} frame because the authors said its possible to compare the resulting 
         // R, t with the R, t obtained in the Pose Estimation 2D-2D (Two-View Problem), and there R, t were R21, t21!
-        pts_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
-        pts_2d.push_back(keypoints2[m.trainIdx].pt);             // {p2}_n, p2 = [u2, v2]^T
+        pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X, Y, Z]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
+        pts2_2d.push_back(keypoints2[m.trainIdx].pt);             // {p2}_n, p2 = [u2, v2]^T
     }
     Timer t4 = chrono::steady_clock::now();
     
-    //--- Step 2: Perspective-n-Point (PnP)
+    //--- Step 2: Perspective-n-Point (PnP) using OpenCV's solvePnP
     Mat r, R, t;  // Rotation Vector, Rotation Matrix, Translation Vector
     
     // P3P Variables
-    vector<Point3f> pts_3d_3;
-    vector<Point2f> pts_2d_3;
+    vector<Point3f> pts1_3d_3;
+    vector<Point2f> pts2_2d_3;
 
     // Calls OpenCV's PnP to solve, choose Iterative (LM), EPnP, P3P, DLS (broken), UPnP (broken), and other methods.
     /** @brief Finds an object pose from 3D-2D point correspondences using the RANSAC scheme.
@@ -149,18 +144,18 @@ int main(int argc, char **argv) {
     // Estimation 2D-2D.
     switch(pnp_method_selected){
         case 1:  // Option 1: Iterative method is based on a Levenberg-Marquardt optimization
-            cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_ITERATIVE);
+            cv::solvePnP(pts1_3d, pts2_2d, K, Mat(), r, t, false, SOLVEPNP_ITERATIVE);
             break;
         case 2:  // Option 2: EPnP
-            cv::solvePnP(pts_3d, pts_2d, K, Mat(), r, t, false, SOLVEPNP_EPNP);  
+            cv::solvePnP(pts1_3d, pts2_2d, K, Mat(), r, t, false, SOLVEPNP_EPNP);  
             break;
         case 3:  //Option 3: P3P
             // P3P needs 4 3D-2D pairs: 3 pairs of 3D-2D matching points and 1 verification pair for removing solution ambiguity.
-            pts_3d_3 = slicing<vector<Point3f>>(pts_3d, 0, 3);
-            pts_2d_3 = slicing<vector<Point2f>>(pts_2d, 0, 3);
-            // printVec("pts_3d_3:\n", pts_3d_3);
-            // printVec("pts_2d_3:\n", pts_2d_3);
-            cv::solvePnP(pts_3d_3, pts_2d_3, K, Mat(), r, t, false, SOLVEPNP_P3P);
+            pts1_3d_3 = slicing<vector<Point3f>>(pts1_3d, 0, 3);
+            pts2_2d_3 = slicing<vector<Point2f>>(pts2_2d, 0, 3);
+            // printVec("pts1_3d_3:\n", pts1_3d_3);
+            // printVec("pts2_2d_3:\n", pts2_2d_3);
+            cv::solvePnP(pts1_3d_3, pts2_2d_3, K, Mat(), r, t, false, SOLVEPNP_P3P);
             break;
         default:
             break;
@@ -176,17 +171,17 @@ int main(int argc, char **argv) {
     //--- Step 3: Bundle Adjustment (BA)
     /* In SLAM, the usual approach is to first estimate the camera pose using P3P/EPnP and then construct a least-squares
        optimization problem to adjust the estimated values (bundle adjustment). */
-    VecVector3d pts_3d_eigen;
-    VecVector2d pts_2d_eigen;
+    VecVector3d pts1_3d_eigen;
+    VecVector2d pts2_2d_eigen;
 
     // Copy data from OpenCV's vector to Eigen's Vector.
-    for(size_t i = 0; i<pts_3d.size(); i++){
-        pts_3d_eigen.push_back(Eigen::Vector3d(pts_3d[i].x, pts_3d[i].y, pts_3d[i].z));
-        pts_2d_eigen.push_back(Eigen::Vector2d(pts_2d[i].x, pts_2d[i].y));
+    for(size_t i = 0; i<pts1_3d.size(); i++){
+        pts1_3d_eigen.push_back(Eigen::Vector3d(pts1_3d[i].x, pts1_3d[i].y, pts1_3d[i].z));
+        pts2_2d_eigen.push_back(Eigen::Vector2d(pts2_2d[i].x, pts2_2d[i].y));
     }
     
-    // printVector<Eigen::Vector3d>("pts_3d_eigen[0]:", pts_3d_eigen[0]);
-    // printVector<Eigen::Vector2d>("pts_2d_eigen[0]:", pts_2d_eigen[0]);
+    // printVector<Eigen::Vector3d>("pts1_3d_eigen[0]:", pts1_3d_eigen[0]);
+    // printVector<Eigen::Vector2d>("pts2_2d_eigen[0]:", pts2_2d_eigen[0]);
 
     // K
     Eigen::Matrix3d K_eigen;
@@ -195,16 +190,16 @@ int main(int argc, char **argv) {
         K.at<double>(1, 0), K.at<double>(1, 1), K.at<double>(1, 2),
         K.at<double>(2, 0), K.at<double>(2, 1), K.at<double>(2, 2);
 
-    //--- Step 3.1: Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
+    //--- Step 3.1: Perspective-n-Point (PnP) using Bundle Adjustment by Non-linear Optimization (Gauss Newton, GN)
     Sophus::SE3d pose_gn;
     Timer t6 = chrono::steady_clock::now();
-    bundleAdjustmentGaussNewton(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_gn);
+    bundleAdjustmentGaussNewton(pts1_3d_eigen, pts2_2d_eigen, K_eigen, pose_gn);
     Timer t7 = chrono::steady_clock::now();
     
-    //--- Step 3.2: Bundle Adjustment by Graph Optimization (g2o)
+    //--- Step 3.2: Perspective-n-Point (PnP) using Bundle Adjustment by Graph Optimization (g2o)
     Sophus::SE3d pose_g2o;
     Timer t8 = chrono::steady_clock::now();
-    bundleAdjustmentG2O(pts_3d_eigen, pts_2d_eigen, K_eigen, pose_g2o);
+    bundleAdjustmentG2O(pts1_3d_eigen, pts2_2d_eigen, K_eigen, pose_g2o);
     Timer t9 = chrono::steady_clock::now();
     
     /* --------- */
@@ -219,7 +214,7 @@ int main(int argc, char **argv) {
     printElapsedTime(" | Bundle Adjustment (g2o): ", t8, t9);
     
     // NOTE: Observe that not all the 79 feature matches have valid depth values. 4 3D-2D pairs were discarded.
-    cout << "\n-- Number of 3D-2D pairs: " << pts_3d.size() << endl;
+    cout << "\n-- Number of 3D-2D pairs: " << pts1_3d.size() << endl;
     cout << "-- PnP Method selected: " << pnp_methods_enum2str[pnp_method_selected-1] << endl;
     cout << "-------------------------------------------------" << endl;
 

@@ -27,7 +27,7 @@ using namespace cv;
 
 /* Global Variables */
 string data_root = "/media/nicolas/nicolas_seagate/datasets/tum_rgbd/handheld_slam/rgbd_dataset_freiburg2_desk/rgb/";
-int orb_nfeatures = 100;
+int nfeatures = 500;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -53,7 +53,7 @@ std::vector<std::string> get_filepaths_in_path(const string &path){
 
     closedir(dir);
     
-    // Pop first two positions
+    // Pop the first two positions
     filepaths.erase(filepaths.begin());  // Remove "."
     filepaths.erase(filepaths.begin());  // Remove ".."
 
@@ -63,7 +63,7 @@ std::vector<std::string> get_filepaths_in_path(const string &path){
     return filepaths;
 }
 
-void print_string_info(string str){
+void printStringInfo(string str){
     std::cout << str << endl;
     std::cout << "size: " << str.size() << endl;
     std::cout << "length: " << str.length() << endl;
@@ -86,7 +86,7 @@ void printStringVector(const std::vector<std::string> &image_filepaths){
 /* This program demonstrates how to extract ORB features and perform matching using the OpenCV library. */
 int main(int argc, char **argv) {
     cout << "[pose_estimation_2d2d_tum] Hello!" << endl << endl;
-    
+
     #ifdef OPENCV3
         cout << "'OpenCV3' selected." << endl << endl;
     #else
@@ -116,18 +116,16 @@ int main(int argc, char **argv) {
     /*  Loop  */
     /* ------ */
     for(int i=0; i<n_images; i++){
-        /* ------ */
-        /*  read  */
-        /* ------ */
+        /* Read */
         // Capture frame-by-frame
         image2 = imread(image_filepaths[i+1], CV_LOAD_IMAGE_COLOR);  // image_filepaths[i+1]
 
         // If the frame is empty, break immediately
         if (image1.empty() && image2.empty())
-          break;
+            break;
 
         /* ----- Features Extraction and Matching ----- */
-        find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
+        find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, nfeatures, false);
 
         /* ----- Pose Estimation 2D-2D  (Epipolar Geometry) ----- */
         //--- Step 6.1: Estimate the motion (R, t) between the two images
@@ -160,7 +158,7 @@ int main(int argc, char **argv) {
 
         i++;
     }
- 
+
     // Closes all the frames
     destroyAllWindows();
 

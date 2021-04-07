@@ -69,8 +69,8 @@ void ICP_SVD(const vector<Point3f> &pts1_p, const vector<Point3f> &pts2_p, Mat &
     cout << "|  ICP (SVD)  |" << endl;
     cout << "| ----------- |" << endl;
     /* 1. Calculate the centroids of the two groups of points p, p', and then calculate the de-centroid coordinates of each point: */
-    // Centroids:
-    //   p = 1/n*sum_i(p_i), p' = 1/n*sum_i(p'_i)
+    // Centroids of the 3D Points described in {Cam1} and {Cam2} frames, respectively:
+    //   p = (1/n)*sum_i(p_i), p' = (1/n)*sum_i(p'_i)
     Point3f p1_cent, p2_cent;  // Centroids, p and p'
 
     int N = pts1_p.size();
@@ -107,6 +107,7 @@ void ICP_SVD(const vector<Point3f> &pts1_p, const vector<Point3f> &pts2_p, Mat &
         W += Eigen::Vector3d(pts1_q[i].x, pts1_q[i].y, pts1_q[i].z)*Eigen::Vector3d(pts2_q[i].x, pts2_q[i].y, pts2_q[i].z).transpose();
     }
     
+    cout << "/* ----- SVD Decomposition ----- */" << endl;
     printMatrix<Eigen::Matrix3d>("W: ", W);
 
     // Decompose W, W = UΣV^T
@@ -124,7 +125,7 @@ void ICP_SVD(const vector<Point3f> &pts1_p, const vector<Point3f> &pts2_p, Mat &
     if(R_.determinant() < 0) 
         R_ = -R_;
 
-    /* 3. Calculate t according to R in step 2: */
+    /* 3. Calculate t according to R in step 2 */
     // t∗ = p − Rp'.
     Eigen::Vector3d t_ = Eigen::Vector3d(p1_cent.x, p1_cent.y, p1_cent.z) - R_*Eigen::Vector3d(p2_cent.x, p2_cent.y, p2_cent.z);
 
@@ -137,11 +138,14 @@ void ICP_SVD(const vector<Point3f> &pts1_p, const vector<Point3f> &pts2_p, Mat &
     t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
 
     /* Results */
-    cout << "ICP via SVD results: " << endl;
-    printMatrix("R:\n", R);
-    printMatrix("t:\n", t);
-    printMatrix("R_inv:\n", R.t());
-    printMatrix("t_inv:\n", -R.t()*t);
+    // NOTE: Since the above derivation is based on p_i = R*p'_i + t, here (R,t) is the transformation from the {cam2} 
+    // frame to {cam1} frame, i.e., (R12, t12), which is the OPPOSITE of the previous theorical part (PnP). So in the 
+    // output, we also printed the inverse transform (R21, t21).
+    cout << "/* ----- ICP via SVD results ----- */" << endl;
+    printMatrix("R, R12:\n", R);
+    printMatrix("t, t12:\n", t);
+    printMatrix("R_inv, R21:\n", R.t());
+    printMatrix("t_inv, t21:\n", -R.t()*t);
 }
 
 /* ------------ */
@@ -177,7 +181,7 @@ public:
 /* ---------------------------- */
 /*  ProjectXYZRGBDPoseOnlyEdge  */
 /* ---------------------------- */
-/* Description: Minimizes the 3D-3D Points Matching Error model, e = p_i - R*p'_i
+/* Description: Minimizes the 3D-3D Points Matching Error model, e_i = p_i - R*p'_i
 /* Template parameters: measurement dimension, measurement type, connection vertex type
 */
 class ProjectXYZRGBDPoseOnlyEdge : public g2o::BaseUnaryEdge<3, Eigen::Vector3d, PoseVertex> {
@@ -199,7 +203,7 @@ public:
 
         // Calculate the residual
         // Residual = Y_real - Y_estimated = _measurement - h(_x, _estimate)
-        _error = _measurement - T*_P2;  // e = p_i - R*p'_i
+        _error = _measurement - T*_P2;  // e_i = p_i - (R*p'_i + t)
     }
 
     /** Calculate the Jacobian matrix
@@ -211,12 +215,16 @@ public:
         Sophus::SE3d T = v->estimate();                                        // Get estimated value, T*
 
         // Describe the 3D Space Point P2 in the {camera1} frame using the T*
-        Eigen::Vector3d P1_est = T*_P2;  // P2 = T*.P1 = [X, Y, Z]^T
+        Eigen::Vector3d P1_est = T*_P2;  // ~p = (Rp'_i+t)^, P1 = T*.P2 = [X, Y, Z]^T
 
         /* ----- Compute Jacobian Matrix ----- */
-        // The jacobian matrix indicates how the error varies according to the increment δξ, ∂e/∂δξ
-        _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();  // TODO: Why?
-        _jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(P1_est);     // TODO: Why?
+        // The jacobian matrix ∂e/∂δξ indicates how the error varies according to the increment δξ, which is a 3x6 matrix.
+        // ∂e/∂δξ = -∂(T.p')/∂δξ = [-I, (Rp'_i+t)^] = [-I, (Rp'_i+t)^] = [-I, (~p)^]
+        
+        // The following lines means we set the 3x3 block at index (0,0) as -I, and also set the 3x3 block at (0,3) to (Rp'_i+t)^, which is the same as what we write in the equation.
+        // See https://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html if you are unfamiliar with Eigen's block operations. It's more convenient than assigning the matrix elements one by one.
+        _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();
+        _jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(P1_est);
     }
 
     virtual bool read(istream &in) override {return 0;}
@@ -307,16 +315,20 @@ void ICP_bundleAdjustment(const vector<Point3f> &pts1_p, const vector<Point3f> &
     );
     t = (Mat_<double>(3, 1) << t_(0, 0), t_(1, 0), t_(2, 0));
     
-    printMatrix<Matrix4d>("\nT* (g2o): ", pose.matrix());
-    printMatrix("R:\n", R);
-    printMatrix("t:\n", t);
+    cout << "\n/* ----- ICP via g2o results ----- */" << endl;
+    printMatrix<Matrix4d>("T*, T12*: ", pose.matrix());
+    printMatrix("R, R12:\n", R);
+    printMatrix("t, t12:\n", t);
+    printMatrix("R_inv, R21:\n", R.t());
+    printMatrix("t_inv, t21:\n", -R.t()*t);
 
-    // Verify P1 = R * P2 + t
+    // Verify p_i = R*p'_i + t
     cout << "Verify 'P1 = R * P2 + t' ..." << endl; 
     for (int i = 0; i < 5; i++) {
         cout << " | P1 = " << pts1_p[i] << endl;
         cout << " | P2 = " << pts2_p[i] << endl;
         
+        // P1 = R*P2 + t
         Mat P1_est_ = R*(Mat_<double>(3, 1) << pts2_p[i].x, pts2_p[i].y, pts2_p[i].z) + t;            // Mat(3,1)
         Point3f P1_est(P1_est_.at<double>(0, 0), P1_est_.at<double>(1, 0), P1_est_.at<double>(2, 0)); // Point3f
 

@@ -26,7 +26,7 @@ using namespace cv;
 string image1_filepath = "../../orb_features/src/1.png";
 string image2_filepath = "../../orb_features/src/2.png";
 
-int orb_nfeatures = 500;
+int nfeatures = 500;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     /* ---------------------------------- */
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
-    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
+    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, nfeatures, true);
 
     /* ------------------------------------------- */
     /*  Pose Estimation 2D-2D  (Epipolar Geometry) */
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     //--- Step 6.2: Verify E = t^*R*scale
     Mat t_hat = vee2hat(t);
 
-    printMatrix("t_hat:\n", t_hat);
+    printMatrix("t^:\n", t_hat);
     printMatrix("t^*R=\n", t_hat*R);
 
     //--- Step 6.3: Verify the Epipolar Constraint, x2^T*E*x1 = 0

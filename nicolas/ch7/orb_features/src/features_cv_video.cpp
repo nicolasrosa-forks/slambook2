@@ -22,7 +22,7 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-int orb_nfeatures = 500;
+int nfeatures = 500;
 
 /* ===================== */
 /*  Function Prototypes  */
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     }
 
     // If you do not care about backward compatibility
-    // You can use the following instead for OpenCV 3
+    // You can use the following instead for OpenCV3
     double fps = cap.get(CAP_PROP_FPS);
     cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps << endl;
 
@@ -75,9 +75,7 @@ int main(int argc, char **argv) {
     /*  Loop  */
     /* ------ */
     while(1){
-        /* ------ */
-        /*  read  */
-        /* ------ */
+        /* Read */
         // Capture frame-by-frame
         cap >> image2;
 
@@ -86,8 +84,7 @@ int main(int argc, char **argv) {
             break;
 
         /* ----- Features Extraction and Matching ----- */
-        find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, false);
-
+        find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, nfeatures, false);
 
         /* ----- Results ----- */
         // Display

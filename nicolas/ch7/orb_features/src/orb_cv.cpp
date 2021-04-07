@@ -22,7 +22,7 @@ using namespace cv;
 string image1_filepath = "../../orb_features/src/1.png";
 string image2_filepath = "../../orb_features/src/2.png";
 
-int orb_nfeatures = 500;
+int nfeatures = 500;
 double matches_lower_bound = 30.0;
 
 /* ====== */
@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
     /* ---------------------------------- */
     /*  Features Extraction and Matching  */
     /* ---------------------------------- */
-    Ptr<FeatureDetector> detector = ORB::create(orb_nfeatures);
-    Ptr<DescriptorExtractor> descriptor = ORB::create(orb_nfeatures);
+    Ptr<FeatureDetector> detector = ORB::create(nfeatures);
+    Ptr<DescriptorExtractor> descriptor = ORB::create(nfeatures);
     Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
 
     //--- Step 1: Detect the position of the Oriented FAST keypoints (Corner Points)
@@ -74,23 +74,24 @@ int main(int argc, char **argv) {
     Timer t5 = chrono::steady_clock::now();
 
     //--- Step 4: Select correct matching (filtering)
-    // Calculate the min & max distances
-
-    /* Parameters: __first – Start of range.
-    /*             __last – End of range.
-    /*             __comp – Comparison functor.
-    */
-    auto min_max = minmax_element(matches.begin(), matches.end(),
-        [](const DMatch &m1, const DMatch &m2) {
+    /* Calculate the min & max distances */
+    /** Parameters: 
+     * @param[in] __first – Start of range.
+    /* @param[in] __last – End of range.
+    /* @param[in] __comp – Comparison functor.
+    /* @param[out] make_pair(m,M) Return a pair of iterators pointing to the minimum and maximum elements in a range.
+     */
+    auto min_max = minmax_element(matches.begin(), matches.end(), [](const DMatch &m1, const DMatch &m2){
         //cout << m1.distance << " " << m2.distance << endl;
-        return m1.distance < m2.distance;});  // Return a pair of iterators pointing to the minimum and maximum elements in a range.
+        return m1.distance < m2.distance;
+    });  
 
     double min_dist = min_max.first->distance;
     double max_dist = min_max.second->distance;
 
-
-    // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching as wrong.
-    // But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
+    /* Perform Filtering */
+    // Rule of Thumb: When the distance between the descriptors is greater than 2 times the min distance, we treat the matching
+    // as wrong. But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
     vector<DMatch> goodMatches;
 
     Timer t6 = chrono::steady_clock::now();
@@ -134,7 +135,7 @@ int main(int argc, char **argv) {
     cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
-    // Save
+    /* Save */
     imwrite("../../orb_features/src/results_orb_cv_goodMatches.png", image_goodMatches);
 
     cout << "Done." << endl;

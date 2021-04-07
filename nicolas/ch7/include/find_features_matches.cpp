@@ -1,3 +1,9 @@
+/** Features
+ * @ORB: https://docs.opencv.org/master/df/dd2/tutorial_py_surf_intro.html
+ * @SURF: https://docs.opencv.org/master/df/dd2/tutorial_py_surf_intro.html
+ * 
+ */
+
 /* =========== */
 /*  Libraries  */
 /* =========== */
@@ -27,14 +33,16 @@ using namespace cv;
 /* ==================== */
 double matches_lower_bound = 30.0;
 
-void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches, int orb_nfeatures, bool verbose){
+void find_features_matches(const Mat &image1, const Mat &image2, vector<KeyPoint> &keypoints1, vector<KeyPoint> &keypoints2, vector<DMatch> &goodMatches, int nfeatures, bool verbose){
     //--- Initialization
     Mat descriptors1, descriptors2;
 
     #ifdef OPENCV3
 //        cout << "'OpenCV3' selected." << endl << endl;
-        Ptr<FeatureDetector> detector = ORB::create(orb_nfeatures);
-        Ptr<DescriptorExtractor> descriptor = ORB::create(orb_nfeatures);
+        // Ptr<FeatureDetector> detector = SIFT::create(500); // TODO: Terminar
+        // Ptr<DescriptorExtractor> descriptor = SIFT::create(500);
+        Ptr<FeatureDetector> detector = ORB::create(nfeatures);
+        Ptr<DescriptorExtractor> descriptor = ORB::create(nfeatures);
         Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
         // Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("FlannBased");
     #else

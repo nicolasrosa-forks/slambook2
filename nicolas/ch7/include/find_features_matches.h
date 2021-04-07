@@ -13,7 +13,7 @@ void find_features_matches(
     vector<KeyPoint> &keypoints1,
     vector<KeyPoint> &keypoints2,
     vector<DMatch> &goodMatches,
-    int orb_nfeatures,
+    int nfeatures,
     bool verbose
 );
 

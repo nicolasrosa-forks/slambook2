@@ -44,24 +44,15 @@ string image2_filepath = "../../orb_features/src/2.png";
 string depth1_filepath = "../../orb_features/src/1_depth.png";
 string depth2_filepath = "../../orb_features/src/2_depth.png";
 
-int orb_nfeatures = 500;
-
-// Choose the PnP Method:
-const char* pnp_methods_enum2str[] = {"Iterative (LM)", "EPnP", "P3P"};
-int pnp_method_selected = 1;
+int nfeatures = 500;
 
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 
-/* ===================== */
-/*  Function Prototypes  */
-/* ===================== */
-
-
 /* ====== */
 /*  Main  */
 /* ====== */
-/* This program demonstrates how to use 2D-2D feature matching to estimate camera motion. */
+/* This program demonstrates how to use the Iterative Closest Point (ICP) to estimate camera motion (3D-3D Pose Estimation). */
 int main(int argc, char **argv) {
     cout << "[pose_estimation_3d3d] Hello!" << endl << endl;
 
@@ -87,9 +78,9 @@ int main(int argc, char **argv) {
     vector<KeyPoint> keypoints1, keypoints2;
     vector<DMatch> goodMatches;
 
-    //--- Step 0: Features Calculation
+    //--- Step 0: Features Extraction, Matching and Filtering
     Timer t1 = chrono::steady_clock::now();
-    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, orb_nfeatures, true);
+    find_features_matches(image1, image2, keypoints1, keypoints2, goodMatches, nfeatures, true);
     Timer t2 = chrono::steady_clock::now();
 
     /* ----------------------- */
@@ -101,9 +92,10 @@ int main(int argc, char **argv) {
 
     Timer t3 = chrono::steady_clock::now();
     for(DMatch m : goodMatches){  // Loop through feature matches
-        // Gets the depth value of the feature point p1_i
-        ushort d1 = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
-        ushort d2 = depth2.ptr<unsigned short>(int(keypoints2[m.trainIdx].pt.y))[int(keypoints2[m.trainIdx].pt.x)];  // ushort: unsigned short int, [0 to 65,535]
+        // Gets the depth value of the feature points p1_i and p2_i
+        // ushort: unsigned short int, [0 to 65,535]
+        ushort d1 = depth1.ptr<unsigned short>(int(keypoints1[m.queryIdx].pt.y))[int(keypoints1[m.queryIdx].pt.x)];  
+        ushort d2 = depth2.ptr<unsigned short>(int(keypoints2[m.trainIdx].pt.y))[int(keypoints2[m.trainIdx].pt.x)];
 
         // Ignores bad feature pixels
         if(d1 == 0 || d2 == 0)  // Invalid depth value
@@ -113,17 +105,13 @@ int main(int argc, char **argv) {
         float dd1 = float(d1) / 5000.0;  // ScalingFactor from TUM Dataset.
         float dd2 = float(d2) / 5000.0;  // ScalingFactor from TUM Dataset.
 
-        // Calculates the 3D Points
-        // Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
-        // Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
+        // Calculates the 3D Points by using the 2D Normalized Coordinates and the Depth Values
+        // x = [x, y] = [X/Z, Y/Z]
+        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1 # FIXME
+        Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
 
-        // FIXME: It should be Point2f?
-        Point2d x1 = pixel2cam2(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1 # FIXME
-        Point2d x2 = pixel2cam2(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
-
-
-        pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X1, Y1, Z1]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
-        pts2_3d.push_back(Point3f(x2.x * dd2, x2.y * dd2, dd2));  // {P2}_n, P2 = [X2, Y2, Z2]^T = [x*Z, y*Z, Z]^T, x = [x, y] = [X/Z, Y/Z]
+        pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X1, Y1, Z1]^T = [x*Z, y*Z, Z]^T
+        pts2_3d.push_back(Point3f(x2.x * dd2, x2.y * dd2, dd2));  // {P2}_n, P2 = [X2, Y2, Z2]^T = [x*Z, y*Z, Z]^T
     }
     Timer t4 = chrono::steady_clock::now();
     
@@ -170,9 +158,9 @@ int main(int argc, char **argv) {
 It can be seen that when 3D information is involved, the estimated R is almost the
 same, while the t is quite different." */
 
-/* ==================================== */
-/*  Results from Pose Estimation 2D-2D  */
-/* ==================================== */
+/* =========================================== */
+/*  Results from Pose Estimation 2D-2D (Nick)  */
+/* =========================================== */
 // R:
 // [0.9969387384754708, -0.05155574188737422, 0.05878058527591362;
 //  0.05000441581290405, 0.998368531736214, 0.02756507279306545;
@@ -185,9 +173,9 @@ same, while the t is quite different." */
 //  0.3526890700495534]
 // (3, 1)
 
-/* ==================================== */
-/*  Results from Pose Estimation 3D-2D  */
-/* ==================================== */
+/* =========================================== */
+/*  Results from Pose Estimation 3D-2D (Nick)  */
+/* =========================================== */
 // This following results should be more accurate than the previous one, since utilized the depth information (3D-2D).
 
 /* ----- Only PnP ----- */
@@ -217,9 +205,9 @@ same, while the t is quite different." */
 //  -0.0412540488609  -0.0260749135293    0.998808391203   0.0603493574888
 //                 0                 0                 0                 1
 
-/* ==================================== */ 
-/*  Original Code (pixel2cam, Point2f)  */
-/* ==================================== */ 
+/* ======================================================================== */
+/*  Results from Pose Estimation 3D-2D (XiangGao, pixel2cam using Point2f)  */
+/* ======================================================================== */
 // PnP:
 // R=
 // [0.9979059095501289, -0.05091940089111061, 0.03988747043647122;
@@ -242,9 +230,9 @@ same, while the t is quite different." */
 //  -0.0412540488609  -0.0260749135293    0.998808391203   0.0603493574888
 //                 0                 0                 0                 1
 
-/* ==================================== */ 
-/*  Original Code (pixel2cam, Point2d)  */
-/* ==================================== */ 
+/* ======================================================================== */
+/*  Results from Pose Estimation 3D-2D (XiangGao, pixel2cam using Point2d)  */
+/* ======================================================================== */
 // PnP:
 // R=
 // [0.9979059096319058, -0.05091940167648939, 0.03988746738797636;
@@ -267,13 +255,14 @@ same, while the t is quite different." */
 //  -0.0412540452162  -0.0260749011938    0.998808391675    0.060349345057
 //                 0                 0                 0                 1
 
-/* ==================================== */
-/*  Results from Pose Estimation 3D-3D  */
-/* ==================================== */
+/* ==================================================================== */
+/*  Results from Pose Estimation 3D-3D (Nick, pixel2cam using Point2f)  */
+/* ==================================================================== */
 // Centroids:
 // -- p1_cent: [-0.0719497, -0.102462, 1.65064]
 // -- p2_cent: [-0.127945, -0.0629768, 1.68894]
 
+/* ----- SVD Decomposition ----- */
 // W: 
 //   10.871 -1.01948  2.54771
 // -2.16033  3.85307 -5.77742
@@ -292,38 +281,47 @@ same, while the t is quite different." */
 //   0.676979   0.499631   0.540434
 // (3, 3)
 
-// ICP via SVD results: 
-// R:
+/* ----- ICP via SVD results ----- */
+// R, R12:
 // [0.9969452349200465, 0.05983347846666433, -0.05020112971629315;
 //  -0.05932607711456848, 0.9981719677231771, 0.01153860588791605;
 //  0.05079975535776821, -0.008525122064790724, 0.9986724724099343]
 // (3, 3)
 
-// t:
+// t, t12:
 // [0.1441598539458168;
 //  -0.06667852731466012;
 //  -0.03009747291721965]
 // (3, 1)
 
-// R_inv:
+// R_inv, R21:
 // [0.9969452349200465, -0.05932607711456848, 0.05079975535776821;
 //  0.05983347846666433, 0.9981719677231771, -0.008525122064790724;
 //  -0.05020112971629315, 0.01153860588791605, 0.9986724724099343]
 // (3, 3)
 
-// t_inv:
+// t_inv, t21:
 // [-0.1461463106503255;
 //  0.05767446666727236;
 //  0.03806388246721711]
 // (3, 1)
 
-/* ==================================== */ 
-/*  Original Code (pixel2cam, Point2d)  */
-/* ==================================== */
+/* ----- ICP via g2o results ----- */
+// T*, T12*: 
+//    0.996945   0.0598335  -0.0502011     0.14416
+//  -0.0593261    0.998172   0.0115386  -0.0666785
+//   0.0507998 -0.00852511    0.998672  -0.0300979
+//           0           0           0           1
+// (4, 4)
+
+/* ======================================================================== */
+/*  Results from Pose Estimation 3D-3D (XiangGao, pixel2cam using Point2d)  */
+/* ======================================================================== */
 // Centroids: 
 // [-0.0719497, -0.102462, 1.65064]
 // [-0.127945, -0.0629768, 1.68894
-// 
+
+/* ----- SVD Decomposition ----- */
 // W=  10.871 -1.01948  2.54771
 // -2.16033  3.85307 -5.77742
 //  3.94738 -5.79979  9.62203
@@ -336,7 +334,7 @@ same, while the t is quite different." */
 //  -0.399894  -0.366747   0.839989
 //   0.676979   0.499631   0.540434
 
-// ICP via SVD results: 
+/* ----- ICP via SVD results ----- */
 // R = [0.9969452349468715, 0.05983347698056557, -0.05020113095482046;
 //  -0.05932607657705309, 0.9981719679735133, 0.01153858699565957;
 //  0.05079975545906246, -0.008525103184062521, 0.9986724725659557]
@@ -351,7 +349,7 @@ same, while the t is quite different." */
 //  0.05767443542067568;
 //  0.03806388018483625
 
-// after optimization:
+/* ----- ICP via g2o results ----- */
 // T=
 //   0.996945  0.0598335 -0.0502011    0.14416
 // -0.0593261   0.998172  0.0115386 -0.0666785

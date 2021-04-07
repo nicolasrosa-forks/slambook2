@@ -61,23 +61,19 @@ int main(int argc, char **argv) {
     vector<KeyPoint> keypoints1, keypoints2;
     vector<DescType> descriptors1, descriptors2;
 
-    /* Step 1 - Calculate Oriented FAST keypoints, threshold=40 */
+    /* ---------------------------------- */
+    /*  Features Extraction and Matching  */
+    /* ---------------------------------- */
+    //--- Step 1: Calculate Oriented FAST keypoints, threshold=40
     Timer t1 = chrono::steady_clock::now();
     FAST(image1, keypoints1, 40);
     FAST(image1, keypoints2, 40);
-
-    /* Step 2: Calculate BRIEF descriptors based on the position of Oriented FAST keypoints */
     Timer t2 = chrono::steady_clock::now();
+
+    //--- Step 2: Calculate the BRIEF descriptors based on the position of Oriented FAST keypoints
     ComputeORB(image1, keypoints1, descriptors1);
     ComputeORB(image2, keypoints2, descriptors2);
     Timer t3 = chrono::steady_clock::now();
-
-    printElapsedTime("ORB Features Extraction: ", t1, t3);
-    printElapsedTime(" | Oriented FAST Keypoints detection: ", t1, t2);
-    printElapsedTime(" | BRIEF descriptors calculation: ", t2, t3);
-
-    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
-    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
     //cout << descriptors1 << endl;
     //cout << descriptors2 << endl;
@@ -86,24 +82,27 @@ int main(int argc, char **argv) {
     drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
     drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
-    /* Step 3: Match BRIEF descriptors of the two images using Hamming distance */
+    //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
 
-    t1 = chrono::steady_clock::now();
+    Timer t4 = chrono::steady_clock::now();
     BFMatcher_custom(descriptors1, descriptors2, matches);
-    t2 = chrono::steady_clock::now();
+    Timer t5 = chrono::steady_clock::now();
 
-    printElapsedTime("ORB Features Matching: ", t1, t2);
-
-    cout << "-- Number of matches: " << matches.size() << endl;
-
-    /* Step 4: Visualize the Matching result */
+    //--- Step 4: Visualize the Matching result
     Mat image_matches;
 
     drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
 
-    /* Save */
-    imwrite("../../orb_features/src/results_orb_self_matches.png", image_matches);
+    /* Results */
+    printElapsedTime("ORB Features Extraction: ", t1, t3);
+    printElapsedTime(" | Oriented FAST Keypoints detection: ", t1, t2);
+    printElapsedTime(" | BRIEF descriptors calculation: ", t2, t3);
+    cout << "\n-- Number of detected keypoints1: " << keypoints1.size() << endl;
+    cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
+
+    printElapsedTime("ORB Features Matching: ", t4, t5);
+    cout << "-- Number of matches: " << matches.size() << endl;
 
     /* Display */
     imshow("image1", image1);
@@ -113,6 +112,9 @@ int main(int argc, char **argv) {
     imshow("image_matches", image_matches);
     cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
+
+    /* Save */
+    imwrite("../../orb_features/src/results_orb_self_matches.png", image_matches);
 
     cout << "Done." << endl;
 

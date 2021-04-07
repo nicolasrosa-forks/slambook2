@@ -8,15 +8,15 @@
 /*  Function Prototypes  */
 /* ===================== */
 void bundleAdjustmentGaussNewton(
-    const VecVector3d &points_3d,
-    const VecVector2d &points_2d,
+    const VecVector3d &pts1_3d,
+    const VecVector2d &pts2_2d,
     const Eigen::Matrix3d &K,
     Sophus::SE3d &pose
 );
 
 void bundleAdjustmentG2O(
-    const VecVector3d &points_3d,
-    const VecVector2d &points_2d,
+    const VecVector3d &pts1_3d,
+    const VecVector2d &pts2_2d,
     const Eigen::Matrix3d &K,
     Sophus::SE3d &pose
 );

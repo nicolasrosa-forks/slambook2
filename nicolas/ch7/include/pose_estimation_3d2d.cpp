@@ -82,7 +82,7 @@ Eigen::Matrix<double, 2, 6> calculateJacobian(const Eigen::Vector3d &P2, const E
     return J;
 }
 
-void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d &points_2d, const Eigen::Matrix3d &K, Sophus::SE3d &pose){
+void bundleAdjustmentGaussNewton(const VecVector3d &pts1_3d, const VecVector2d &pts2_2d, const Eigen::Matrix3d &K, Sophus::SE3d &pose){
     cout << "| ----------------------- |" << endl;
     cout << "|  Bundle Adjustment (GN) |" << endl;
     cout << "| ----------------------- |" << endl;
@@ -106,17 +106,17 @@ void bundleAdjustmentGaussNewton(const VecVector3d &points_3d, const VecVector2d
         cost = 0.0;  // Reset
 
         /* Data Loop, Compute Cost */
-        for (int i = 0; i < points_3d.size(); i++){
+        for (int i = 0; i < pts1_3d.size(); i++){
             /* ----- Coordinate System Transformation ----- */
             // Describe the 3D Space Point P @ {camera1} in the {camera2} frame
-            Eigen::Vector3d P2 = pose * points_3d[i]; // P'_i = (T*.P_i)1:3, P2_i = T21*.P1_i
+            Eigen::Vector3d P2 = pose * pts1_3d[i]; // P'_i = (T*.P_i)1:3, P2_i = T21*.P1_i
 
             /* ----- Compute Reprojection Error ----- */
             // Compute the Estimated Projection of P2 in Camera 2's Image Plane (Pixel Coordinates)
             Eigen::Vector2d proj = cam2pixel(P2, K);  // p2^=[u2, v2]^T = [fx*X/Z+cx, fy*Y/Z+cy]^T
 
             // Compute Residual
-            Eigen::Vector2d e = points_2d[i] - proj; // e = p2_i - p2^_i
+            Eigen::Vector2d e = pts2_2d[i] - proj; // e = p2_i - p2^_i
             
             // Compute the Least-Squares Cost 
             // This is the actual error function being minimized (Objective Function) by 
@@ -256,7 +256,7 @@ private:
     Eigen::Matrix3d _K;
 };
 
-void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points_2d, const Eigen::Matrix3d &K, Sophus::SE3d &pose){
+void bundleAdjustmentG2O(const VecVector3d &pts1_3d, const VecVector2d &pts2_2d, const Eigen::Matrix3d &K, Sophus::SE3d &pose){
     cout << "| ------------------------- |" << endl;
     cout << "|  Bundle Adjustment (g2o)  |" << endl;
     cout << "| ------------------------- |" << endl;
@@ -298,9 +298,9 @@ void bundleAdjustmentG2O(const VecVector3d &points_3d, const VecVector2d &points
 
     // Add edges to the graph
     int index = 1;
-    for(size_t i=0; i<points_2d.size(); ++i){
-        auto P1_3d = points_3d[i];  // P1_i
-        auto p2_2d = points_2d[i];  // p2_i
+    for(size_t i=0; i<pts2_2d.size(); ++i){
+        auto P1_3d = pts1_3d[i];  // P1_i
+        auto p2_2d = pts2_2d[i];  // p2_i
 
         ProjectionEdge *projEdge = new ProjectionEdge(P1_3d, K);  // Creates the i-th edge
         projEdge->setId(index);                                   // Specifies the edge ID

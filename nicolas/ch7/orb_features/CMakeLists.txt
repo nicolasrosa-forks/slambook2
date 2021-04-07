@@ -30,7 +30,7 @@ add_executable(orb_self src/orb_self.cpp)
 target_link_libraries(orb_self ${OpenCV_LIBS})
 
 # ============== #
-#  orb_cv_video  #
+#  features_cv_video  #
 # ============== #
-add_executable(orb_cv_video src/orb_cv_video.cpp)
-target_link_libraries(orb_cv_video ${OpenCV_LIBS})
+add_executable(features_cv_video src/features_cv_video.cpp)
+target_link_libraries(features_cv_video ${OpenCV_LIBS})
