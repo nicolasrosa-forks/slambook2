@@ -33,12 +33,9 @@ Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 Point2d principal_point(325.1, 249.7);  // Camera Optical center coordinates
 double focal_length = 521.0;            // Camera focal length
 
-/* ================= */
-/*  Functions Scope  */
-/* ================= */
-Mat vee2hat(const Mat var);
-
-
+/* ===================== */
+/*  Functions Prototype  */
+/* ===================== */
 void triangulation(
     const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
@@ -181,17 +178,6 @@ int main(int argc, char **argv) {
 /* ======================= */
 /*  Functions Declaration  */
 /* ======================= */
-Mat vee2hat(const Mat var){
-    Mat var_hat = (Mat_<double>(3,3) <<
-                         0.0, -var.at<double>(2,0),  var.at<double>(1,0),
-         var.at<double>(2,0),                  0.0, -var.at<double>(0,0),
-        -var.at<double>(1,0),  var.at<double>(0,0),                 0.0);  // Inline Initializer
-
-    //printMatrix("var_hat:", var_hat);
-
-    return var_hat;
-}
-
 void triangulation(const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2, const vector<DMatch> &matches, const Mat &R, const Mat &t, vector<Point3d> &points_3d){
     Mat T1w = (Mat_<float>(3, 4) <<
         1, 0, 0, 0,

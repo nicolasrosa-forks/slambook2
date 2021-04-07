@@ -31,10 +31,6 @@ int orb_nfeatures = 500;
 // Camera Internal parameters, TUM Dataset Freiburg2 sequence
 Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
 
-/* ===================== */
-/*  Function Prototypes  */
-/* ===================== */
-Mat vee2hat(const Mat var);
 
 /* ====== */
 /*  Main  */
@@ -110,18 +106,4 @@ int main(int argc, char **argv) {
     cout << "Done." << endl;
 
     return 0;
-}
-
-/* ======================= */
-/*  Functions Declaration  */
-/* ======================= */
-Mat vee2hat(const Mat var){
-    Mat var_hat = (Mat_<double>(3,3) <<
-                         0.0, -var.at<double>(2,0),  var.at<double>(1,0),
-         var.at<double>(2,0),                  0.0, -var.at<double>(0,0),
-        -var.at<double>(1,0),  var.at<double>(0,0),                 0.0);  // Inline Initializer
-
-    //printMatrix("var_hat:", var_hat);
-
-    return var_hat;
 }
