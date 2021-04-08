@@ -424,7 +424,7 @@ void ComputeORB(const Mat &img, vector<KeyPoint> &keypoints, vector<DescType> &d
                 Point2f pp = Point2f(cos_theta*p.x - sin_theta*p.y, sin_theta*p.x + cos_theta*p.y) + kp.pt;
                 Point2f qq = Point2f(cos_theta*q.x - sin_theta*q.y, sin_theta*q.x + cos_theta*q.y) + kp.pt;
 
-                // TODO: Debug
+                // Debug
                 // cout << "pp: "<< pp.y << " " << pp.x << " " << endl;
                 // cout << img.at<uchar>(pp.y, pp.x) << endl << endl;
 

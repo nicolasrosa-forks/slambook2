@@ -41,9 +41,9 @@ int main(int argc, char **argv) {
     vector<KeyPoint> keypoints1, keypoints2;
     Mat descriptors1, descriptors2;
 
-    /* ---------------------------------- */
-    /*  Features Extraction and Matching  */
-    /* ---------------------------------- */
+    /* --------------------- */
+    /*  Features Extraction  */
+    /* --------------------- */
     Ptr<FeatureDetector> detector = ORB::create(nfeatures);
     Ptr<DescriptorExtractor> descriptor = ORB::create(nfeatures);
     Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
@@ -62,10 +62,10 @@ int main(int argc, char **argv) {
     //cout << descriptors1 << endl;
     //cout << descriptors2 << endl;
 
-    Mat outImage1, outImage2;
-    drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-    drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
+    /* ------------------- */
+    /*  Features Matching  */
+    /* ------------------- */
     //--- Step 3: Match the BRIEF descriptors of the two images using the Hamming distance
     vector<DMatch> matches;
 
@@ -73,7 +73,10 @@ int main(int argc, char **argv) {
     matcher->match(descriptors1, descriptors2, matches);
     Timer t5 = chrono::steady_clock::now();
 
-    //--- Step 4: Select correct matching (filtering)
+    /* -------------------- */
+    /*  Features Filtering  */
+    /* -------------------- */
+    //--- Step 4: Correct matching selection
     /* Calculate the min & max distances */
     /** Parameters: 
      * @param[in] __first – Start of range.
@@ -81,6 +84,7 @@ int main(int argc, char **argv) {
     /* @param[in] __comp – Comparison functor.
     /* @param[out] make_pair(m,M) Return a pair of iterators pointing to the minimum and maximum elements in a range.
      */
+    Timer t6 = chrono::steady_clock::now();
     auto min_max = minmax_element(matches.begin(), matches.end(), [](const DMatch &m1, const DMatch &m2){
         //cout << m1.distance << " " << m2.distance << endl;
         return m1.distance < m2.distance;
@@ -94,18 +98,22 @@ int main(int argc, char **argv) {
     // as wrong. But sometimes the min distance could be very small, set an experience value of 30 as the lower bound.
     vector<DMatch> goodMatches;
 
-    Timer t6 = chrono::steady_clock::now();
+    Timer t7 = chrono::steady_clock::now();
     for (int i=0; i<descriptors1.rows; i++){
         // cout << matches[i].distance << endl;
         if (matches[i].distance <= max(2*min_dist, matches_lower_bound)){
             goodMatches.push_back(matches[i]);
         }
     }
-    Timer t7 = chrono::steady_clock::now();
+    Timer t8 = chrono::steady_clock::now();
 
     //--- Step 5: Visualize the Matching result
+    Mat outImage1, outImage2;
     Mat image_matches;
     Mat image_goodMatches;
+
+    drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+    drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
     drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
     drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
@@ -118,12 +126,15 @@ int main(int argc, char **argv) {
     cout << "-- Number of detected keypoints2: " << keypoints2.size() << endl << endl;
 
     printElapsedTime("ORB Features Matching: ", t4, t5);
-    cout << "-- Number of matches: " << matches.size() << endl;
+    cout << "-- Number of matches: " << matches.size() << endl << endl;
+    
+    printElapsedTime("ORB Features Filtering: ", t6, t8);
+    printElapsedTime(" | Min & Max Distances Calculation: ", t6, t7);
+    printElapsedTime(" | Filtering by Hamming Distance: ", t7, t8);
     cout << "-- Min dist: " << min_dist << endl;
-    cout << "-- Max dist: " << max_dist << endl << endl;
-
-    printElapsedTime("ORB Features Filtering: ", t6, t7);
-    cout << "-- Number of good matches: " << goodMatches.size() << endl;
+    cout << "-- Max dist: " << max_dist << endl;
+    cout << "-- Number of good matches: " << goodMatches.size() << endl << endl;
+    cout << "In total, we get " << goodMatches.size() << "/" << matches.size() << " good pairs of feature points." << endl << endl;
 
     /* Display */
     imshow("image1", image1);

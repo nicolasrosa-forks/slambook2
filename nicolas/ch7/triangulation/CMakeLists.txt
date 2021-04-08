@@ -12,9 +12,9 @@ find_package(OpenCV 3 REQUIRED)
 find_package(Sophus REQUIRED)
 
 include_directories(
-        ${OpenCV_INCLUDE_DIRS}
-        ${Sophus_INCLUDE_DIRS}
-        "/usr/include/eigen3/"
+    ${OpenCV_INCLUDE_DIRS}
+    ${Sophus_INCLUDE_DIRS}
+    "/usr/include/eigen3/"
 )
 
 # add_executable( triangulation triangulation.cpp extra.cpp) # use this if in opencv2

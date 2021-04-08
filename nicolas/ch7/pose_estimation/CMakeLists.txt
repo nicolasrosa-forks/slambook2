@@ -13,10 +13,10 @@ find_package(G2O REQUIRED)
 find_package(Sophus REQUIRED)
 
 include_directories(
-        ${OpenCV_INCLUDE_DIRS}
-        ${G2O_INCLUDE_DIRS}
-        ${Sophus_INCLUDE_DIRS}
-        "/usr/include/eigen3/"
+    ${OpenCV_INCLUDE_DIRS}
+    ${G2O_INCLUDE_DIRS}
+    ${Sophus_INCLUDE_DIRS}
+    "/usr/include/eigen3/"
 )
 
 # ====================== #

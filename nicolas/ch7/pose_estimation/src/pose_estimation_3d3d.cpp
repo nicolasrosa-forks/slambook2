@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 
         // Calculates the 3D Points by using the 2D Normalized Coordinates and the Depth Values
         // x = [x, y] = [X/Z, Y/Z]
-        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1 # FIXME
+        Point2f x1 = pixel2cam(keypoints1[m.queryIdx].pt, K);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
         Point2f x2 = pixel2cam(keypoints2[m.trainIdx].pt, K);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
 
         pts1_3d.push_back(Point3f(x1.x * dd1, x1.y * dd1, dd1));  // {P1}_n, P1 = [X1, Y1, Z1]^T = [x*Z, y*Z, Z]^T
