@@ -87,12 +87,6 @@ void printStringVector(const std::vector<std::string> &image_filepaths){
 int main(int argc, char **argv) {
     cout << "[pose_estimation_2d2d_tum] Hello!" << endl << endl;
 
-    #ifdef OPENCV3
-        cout << "'OpenCV3' selected." << endl << endl;
-    #else
-        cout << "'OpenCV2' selected." << endl << endl;
-    #endif
-
     /* Load the images */
     std::vector<std::string> image_filepaths = get_filepaths_in_path(data_root);
     // printStringVector(image_filepaths);

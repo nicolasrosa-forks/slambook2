@@ -64,8 +64,8 @@ int optimization_method_selected = 1;
 Eigen::Matrix<double, 2, 6> calculateJacobian(const Eigen::Vector3d &P2, const Eigen::Matrix3d &K){
     double fx = K(0,0);
     double fy = K(1,1);
-    double cx = K(0,2);
-    double cy = K(1,2);
+    // double cx = K(0,2);
+    // double cy = K(1,2);
 
     double X = P2[0];        
     double Y = P2[1];
@@ -89,7 +89,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &pts1_3d, const VecVector2d &
 
     /* Initialization */
     const int iterations = 10;
-    double cost = 0.0, lastCost = 0.0;
+    double lastCost = 0.0;
     
     double fx = K(0, 0);
     double fy = K(1, 1);
@@ -103,7 +103,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &pts1_3d, const VecVector2d &
         Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
         Vector6d b = Vector6d::Zero();
 
-        cost = 0.0;  // Reset
+        double cost = 0.0;  // Reset
 
         /* Data Loop, Compute Cost */
         for (int i = 0; i < pts1_3d.size(); i++){

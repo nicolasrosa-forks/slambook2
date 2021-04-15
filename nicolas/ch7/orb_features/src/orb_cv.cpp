@@ -115,8 +115,10 @@ int main(int argc, char **argv) {
     drawKeypoints(image1, keypoints1, outImage1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
     drawKeypoints(image2, keypoints2, outImage2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
-    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
-    drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches);
+    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches,
+        Scalar::all(-1), Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+    drawMatches(image1, keypoints1, image2, keypoints2, goodMatches, image_goodMatches,
+        Scalar::all(-1), Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 
     /* Results */
     printElapsedTime("ORB Features Extraction: ", t1, t3);

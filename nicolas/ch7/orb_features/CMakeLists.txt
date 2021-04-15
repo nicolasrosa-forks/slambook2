@@ -29,8 +29,14 @@ target_link_libraries(orb_cv ${OpenCV_LIBS})
 add_executable(orb_self src/orb_self.cpp)
 target_link_libraries(orb_self ${OpenCV_LIBS})
 
-# ============== #
+# ============= #
+#  features_cv  #
+# ============= #
+add_executable(features_cv src/features_cv.cpp)
+target_link_libraries(features_cv ${OpenCV_LIBS})
+
+# =================== #
 #  features_cv_video  #
-# ============== #
+# =================== #
 add_executable(features_cv_video src/features_cv_video.cpp)
 target_link_libraries(features_cv_video ${OpenCV_LIBS})

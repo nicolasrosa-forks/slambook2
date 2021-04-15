@@ -92,7 +92,8 @@ int main(int argc, char **argv) {
     //--- Step 4: Visualize the Matching result
     Mat image_matches;
 
-    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches);
+    drawMatches(image1, keypoints1, image2, keypoints2, matches, image_matches,
+        Scalar::all(-1), Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 
     /* Results */
     printElapsedTime("ORB Features Extraction: ", t1, t3);

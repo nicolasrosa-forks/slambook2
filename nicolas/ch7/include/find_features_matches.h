@@ -17,4 +17,6 @@ void find_features_matches(
     bool verbose
 );
 
+void adaptiveNonMaximalSuppresion(std::vector<cv::KeyPoint> &keypoints, const int numToKeep);
+
 #endif

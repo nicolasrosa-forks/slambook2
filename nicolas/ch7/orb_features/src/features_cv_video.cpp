@@ -36,12 +36,6 @@ int nfeatures = 500;
 int main(int argc, char **argv) {
     cout << "[orb_cv_video] Hello!" << endl << endl;
 
-    #ifdef OPENCV3
-        cout << "'OpenCV3' selected." << endl << endl;
-    #else
-        cout << "'OpenCV2' selected." << endl << endl;
-    #endif
-
     /* Load the images */
     // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name

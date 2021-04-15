@@ -36,7 +36,7 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
 
     for (int i=0; i < (int) matches.size(); i++){  // For each matched pair {(p1, p2)}_n, do...
         // Convert pixel coordinates to camera normalized coordinates
-        cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
+        // cout << i << " " << matches[i].queryIdx << " " << matches[i].trainIdx << endl;
         points1.push_back(keypoints1[matches[i].queryIdx].pt);  // p1->x1, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 1
         points2.push_back(keypoints2[matches[i].trainIdx].pt);  // p2->x2, Camera Normalized Coordinates of the n-th Feature Keypoint in Image 2
     }
