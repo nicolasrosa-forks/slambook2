@@ -11,8 +11,8 @@
 using namespace std;
 using namespace cv;
 
-string file_1 = "../LK1.png";  // first image
-string file_2 = "../LK2.png";  // second image
+string file_1 = "../images/LK1.png";  // first image
+string file_2 = "../images/LK2.png";  // second image
 
 /// Optical flow tracker and interface
 class OpticalFlowTracker {
@@ -184,8 +184,7 @@ void OpticalFlowSingleLevel(
     kp2.resize(kp1.size());
     success.resize(kp1.size());
     OpticalFlowTracker tracker(img1, img2, kp1, kp2, success, inverse, has_initial);
-    parallel_for_(Range(0, kp1.size()),
-                  std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, placeholders::_1));
+    parallel_for_(Range(0, kp1.size()), std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, placeholders::_1));
 }
 
 void OpticalFlowTracker::calculateOpticalFlow(const Range &range) {
