@@ -4,9 +4,9 @@ project(optimization)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Compilation Settings
+set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++14 -O3")  # Set C++ Standard
 # set(CMAKE_CXX_FLAGS "-std=c++11 -O2")  # Set C++ Standard
-set(CMAKE_BUILD_TYPE "Release")
 
 # Eigen3
 include_directories("/usr/include/eigen3")
