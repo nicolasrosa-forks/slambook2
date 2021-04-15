@@ -1,4 +1,7 @@
 ## Slambook2
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/62018205b71c4d20b560a80954f7b344)](https://app.codacy.com/gh/nicolasrosa-forks/slambook2?utm_source=github.com&utm_medium=referral&utm_content=nicolasrosa-forks/slambook2&utm_campaign=Badge_Grade_Settings)
+
 ![titlepage](./figures/title.png)
 
 Welcome to Slambook 2nd Edition! This is the codebase of our book. Here are some relavant links if you need them: 
