@@ -4,8 +4,8 @@
 using namespace std;
 using namespace cv;
 
-string image1_filepath = "../../orb_features/src/1.png";
-string image2_filepath = "../../orb_features/src/2.png";
+string image1_filepath = "../../images/1.png";
+string image2_filepath = "../../images/2.png";
 
 void find_feature_matches(
     const Mat &img_1, const Mat &img_2,

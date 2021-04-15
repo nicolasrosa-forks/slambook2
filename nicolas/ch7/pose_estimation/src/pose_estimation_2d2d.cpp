@@ -23,8 +23,8 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-string image1_filepath = "../../orb_features/src/1.png";
-string image2_filepath = "../../orb_features/src/2.png";
+string image1_filepath = "../../images/1.png";
+string image2_filepath = "../../images/2.png";
 
 int nfeatures = 500;
 

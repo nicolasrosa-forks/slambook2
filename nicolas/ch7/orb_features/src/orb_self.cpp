@@ -18,8 +18,8 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-string image1_filepath = "../../orb_features/src/1.png";
-string image2_filepath = "../../orb_features/src/2.png";
+string image1_filepath = "../../images/1.png";
+string image2_filepath = "../../images/2.png";
 
 // In this example, we use a 256-bit Binary Description, which corresponds to 8 32-bit unsigned int data (8x32=256 bits)
 typedef vector<uint32_t> DescType;  // Descriptor Type
