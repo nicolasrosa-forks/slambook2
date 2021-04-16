@@ -85,11 +85,11 @@ int main(int argc, char **argv) {
 
         /* ----- Solve ----- */
         // Solve the Linear System A*x=b, H(x)*∆x = g(x)
-        Vector3d dx = H.ldlt().solve(b);
+        Vector3d dx = H.ldlt().solve(b);  // ∆x
 
         // Check Solution
         if(isnan(dx[0])){
-            cout << "Result is nan!" << endl;
+            cout << "Update is nan!" << endl;
             break;
         }
 

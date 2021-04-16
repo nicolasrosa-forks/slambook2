@@ -135,11 +135,11 @@ void bundleAdjustmentGaussNewton(const VecVector3d &pts1_3d, const VecVector2d &
 
         /* ----- Solve! ----- */
         // Solve the Linear System A*x=b, H(x)*∆x = g(x)
-        Vector6d dx = H.ldlt().solve(b);  // δξ (Lie Algebra)
+        Vector6d dx = H.ldlt().solve(b);  // ∆x=δξ (Lie Algebra)
 
         // Check Solution
         if (isnan(dx[0])){
-            cout << "Result is nan!" << endl;
+            cout << "Update is nan!" << endl;
             break;
         }
 

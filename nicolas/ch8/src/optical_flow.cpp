@@ -51,6 +51,9 @@ void OpticalFlowSingleLevel(
 
     /* Create Class Object */
     OpticalFlowTracker tracker(img1, img2, kps1, kps2, success, inverse, has_initial_guess);
+
+    /* Run */
+    parallel_for_(Range(0, kps1.size()), std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, placeholders::_1));
 }
 
 /* ====== */
@@ -116,7 +119,14 @@ int main(int argc, char **argv) {
     Mat outImage2_flow1_single, outImage2_flow2_multi, outImage2_flow3_opencv;
 
     // Draw tracked features on Image 2 - Method 1
-    
+    cv::cvtColor(image2, outImage2_flow1_single, COLOR_GRAY2BGR);
+    for(int i = 0; i < keypoints2_single.size(); i++){
+        if(success_single[i]){
+            cv::circle(outImage2_flow1_single, keypoints2_single[i].pt, 2, cv::Scalar(0, 250, 0), 2);
+            cv::line(outImage2_flow1_single, pts1_2d[i], keypoints2_single[i].pt, cv::Scalar(0, 250, 0));
+        }
+    }
+
     // Draw tracked features on Image 2 - Method 2
 
     // Draw tracked features on Image 2 - Method 3 (Opencv's LK Flow)
@@ -134,7 +144,7 @@ int main(int argc, char **argv) {
     /* Display Images */
     // imshow("image1", image1);
     // imshow("image2", image2);
-    // imshow("Tracked by Single-layer", outImage2_flow1_single);
+    imshow("Tracked by Single-layer", outImage2_flow1_single);
     // imshow("Tracked by Multi-level", outImage2_flow3_multi);
     imshow("Tracked by OpenCV", outImage2_flow3_opencv);
     cout << "\nPress 'ESC' to exit the program..." << endl;
