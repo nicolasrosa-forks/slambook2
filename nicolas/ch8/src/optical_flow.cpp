@@ -13,7 +13,7 @@
 #include "../../common/libUtils_basic.h"
 #include "../../common/libUtils_eigen.h"
 #include "../../common/libUtils_opencv.h"
-#include "../include/optical_flow_tracker.h"
+#include "../include/OpticalFlowTracker.h"
 
 using namespace std;
 using namespace cv;
@@ -40,20 +40,17 @@ int nfeatures = 500;
  * @param has_initial_guess 
  */
 void OpticalFlowSingleLevel(
-    const Mat &img1, 
-    const Mat &img2, 
-    const vector<KeyPoint> &kps1, 
-    vector<KeyPoint> &kps2, 
+    const Mat &img1, const Mat &img2, 
+    const vector<KeyPoint> &kps1, vector<KeyPoint> &kps2, 
     vector<bool> &success, 
-    bool inverse = false, 
-    bool has_initial_guess = false){
+    bool inverse = false, bool has_initial_guess = false){
     
     /* Resize vectors */
     kps2.resize(kps1.size());
     success.resize(kps1.size());
 
     /* Create Class Object */
-    // OpticalFlowTracker
+    OpticalFlowTracker tracker(img1, img2, kps1, kps2, success, inverse, has_initial_guess);
 }
 
 /* ====== */

@@ -19,6 +19,7 @@
 #include "../../common/libUtils_basic.h"
 #include "../../common/libUtils_eigen.h"
 #include "../../common/libUtils_opencv.h"
+#include "../include/OpticalFlowTracker.h"
 
 using namespace std;
 using namespace cv;
@@ -26,3 +27,10 @@ using namespace cv;
 /* ============================== */
 /*  Class Methods Implementation  */
 /* ============================== */
+// void OpticalFlowTracker::OpticalFlowTracker(){
+
+// }
+
+void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
+    cout << "heloo" << endl;
+}
