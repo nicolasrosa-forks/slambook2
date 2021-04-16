@@ -5,8 +5,8 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <chrono>
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 using namespace std;
 using namespace cv;
