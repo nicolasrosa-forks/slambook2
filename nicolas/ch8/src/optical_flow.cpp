@@ -37,7 +37,7 @@ int nfeatures = 500;
  * @param [in, out] kps2 Keypoints in Image 2. If empty, use initial guess in `kps1`
  * @param [out] success 
  * @param [in] inverse 
- * @param has_initial_guess 
+ * @param [in] has_initial_guess 
  */
 void OpticalFlowSingleLevel(
     const Mat &img1, const Mat &img2, 
@@ -49,11 +49,23 @@ void OpticalFlowSingleLevel(
     kps2.resize(kps1.size());
     success.resize(kps1.size());
 
-    /* Create Class Object */
+    /* Create Tracker Object */
     OpticalFlowTracker tracker(img1, img2, kps1, kps2, success, inverse, has_initial_guess);
 
     /* Run */
     parallel_for_(Range(0, kps1.size()), std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, placeholders::_1));
+}
+
+template <typename TType>
+void drawOpticalFlow(const Mat &inImage, Mat &outImage, const vector<Point2f> &pts1_2d, const vector<Point2f> &pts2_2d, vector<TType> &status){
+    cv::cvtColor(inImage, outImage, COLOR_GRAY2BGR);
+    
+    for(int i = 0; i < pts2_2d.size(); i++){
+        if(status[i]){
+            cv::circle(outImage, pts2_2d[i], 2, cv::Scalar(0, 250, 0), 2);
+            cv::line(outImage, pts1_2d[i], pts2_2d[i], cv::Scalar(0, 250, 0));
+        }
+    }
 }
 
 /* ====== */
@@ -69,9 +81,10 @@ int main(int argc, char **argv) {
     Mat image2 = imread(image2_filepath, cv::IMREAD_GRAYSCALE);
 
     /* Initialization */
-    vector<KeyPoint> keypoints1;
+    vector<Point2f> pts1_2d;
+    vector<KeyPoint> kps1;  // Keypoints on Image 1
 
-    /* -------------------- */
+    /* --------------------- */
     /*  Features Extraction  */
     /* --------------------- */
     /** GFTT: Good Features To Track (Shi-Tomasi method)
@@ -80,34 +93,34 @@ int main(int argc, char **argv) {
     Ptr<GFTTDetector> detector = GFTTDetector::create(500, 0.01, 20);
     
     Timer t1 = chrono::steady_clock::now();
-    detector->detect(image1, keypoints1);
+    detector->detect(image1, kps1);
     Timer t2 = chrono::steady_clock::now();
+
+    // Fills the `pts1_2d` with the detected keypoints in Image 1.
+    for (auto &kp: kps1) pts1_2d.push_back(kp.pt);
 
     /* ------------------ */
     /*  LK Flow in OpenCV */
     /* ------------------ */
-    // Let's use opencv's flow for validation.
-    vector<Point2f> pts1_2d, pts2_2d;
-    vector<uchar> status;  // uchar: unsigned char, [0, 255]
-    vector<float> error;
-
-    // Fills the pts1_2d with the detected keypoints in Image 1.
-    for (auto &kp: keypoints1) pts1_2d.push_back(kp.pt);
+    // Let's use OpenCV's flow for validation.
+    vector<Point2f> cv_flow_pts2_2d;
+    vector<uchar> cv_flow_status;  // uchar: unsigned char, [0, 255]
+    vector<float> cv_flow_error;
 
     Timer t3 = chrono::steady_clock::now();
-    cv::calcOpticalFlowPyrLK(image1, image2, pts1_2d, pts2_2d, status, error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
+    cv::calcOpticalFlowPyrLK(image1, image2, pts1_2d, cv_flow_pts2_2d, cv_flow_status, cv_flow_error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
     Timer t4 = chrono::steady_clock::now();
 
     /* --------------------------------------- */
     /*  Optical Flow with Gauss-Newton method  */
     /* --------------------------------------- */
     /* ----- Single-Layer Optical Flow ----- */
-    // Now lets track these keypoints in the second image
-    vector<KeyPoint> keypoints2_single;
-    vector<bool> success_single;
+    // Now let's track these keypoints in the second image
+    vector<KeyPoint> single_flow_kps2;
+    vector<Point2f> single_flow_pts2_2d;
+    vector<bool> single_flow_status;
 
-    OpticalFlowSingleLevel(image1, image2, keypoints1, keypoints2_single, success_single);
-
+    OpticalFlowSingleLevel(image1, image2, kps1, single_flow_kps2, single_flow_status);
 
     /* ----- Multi-Level Optical Flow ----- */
     //TODO
@@ -116,37 +129,24 @@ int main(int argc, char **argv) {
     /* --------- */
     /*  Results  */
     /* --------  */
-    Mat outImage2_flow1_single, outImage2_flow2_multi, outImage2_flow3_opencv;
+    Mat cv_flow_outImage2, single_flow_outImage2, multi_flow_outImage2;
 
-    // Draw tracked features on Image 2 - Method 1
-    cv::cvtColor(image2, outImage2_flow1_single, COLOR_GRAY2BGR);
-    for(int i = 0; i < keypoints2_single.size(); i++){
-        if(success_single[i]){
-            cv::circle(outImage2_flow1_single, keypoints2_single[i].pt, 2, cv::Scalar(0, 250, 0), 2);
-            cv::line(outImage2_flow1_single, pts1_2d[i], keypoints2_single[i].pt, cv::Scalar(0, 250, 0));
-        }
-    }
+    // Draw tracked features on Image 2
+    for (auto &kp: single_flow_kps2) single_flow_pts2_2d.push_back(kp.pt);
 
-    // Draw tracked features on Image 2 - Method 2
+    drawOpticalFlow<uchar>(image2, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
+    drawOpticalFlow<bool>(image2, single_flow_outImage2, pts1_2d, single_flow_pts2_2d, single_flow_status);
 
-    // Draw tracked features on Image 2 - Method 3 (Opencv's LK Flow)
-    cv::cvtColor(image2, outImage2_flow3_opencv, COLOR_GRAY2BGR);
-    for(int i = 0; i < pts2_2d.size(); i++){
-        if(status[i]){
-            cv::circle(outImage2_flow3_opencv, pts2_2d[i], 2, cv::Scalar(0, 250, 0), 2);
-            cv::line(outImage2_flow3_opencv, pts1_2d[i], pts2_2d[i], cv::Scalar(0, 250, 0));
-        }
-    }
-
+    
     printElapsedTime(" | Feature Extraction (GFTT): ", t1, t2);
     printElapsedTime(" | Opencv's LK Flow: ", t3, t4);
 
     /* Display Images */
     // imshow("image1", image1);
     // imshow("image2", image2);
-    imshow("Tracked by Single-layer", outImage2_flow1_single);
+    imshow("Tracked by Single-layer", single_flow_outImage2);
     // imshow("Tracked by Multi-level", outImage2_flow3_multi);
-    imshow("Tracked by OpenCV", outImage2_flow3_opencv);
+    imshow("Tracked by OpenCV", cv_flow_outImage2);
     cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
