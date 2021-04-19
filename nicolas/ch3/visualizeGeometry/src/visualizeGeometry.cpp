@@ -67,19 +67,19 @@ istream &operator>>(istream &in, TranslationVector &t){
 /*  QuaternionDraw Overloading Operators */
 /* ===================================== */
 struct QuaternionDraw {
-  Quaterniond q;
+    Quaterniond q;
 };
 
 // Overload operator <<
-ostream &operator<<(ostream &out, const QuaternionDraw quat) {
-  auto c = quat.q.coeffs();
-  out << "=[" << c[0] << "," << c[1] << "," << c[2] << "," << c[3] << "]";
-  return out;
+ostream &operator<<(ostream &out, const QuaternionDraw &quat) {
+    auto c = quat.q.coeffs();
+    out << "=[" << c[0] << "," << c[1] << "," << c[2] << "," << c[3] << "]";
+    return out;
 }
 
 // Overload operator >>
-istream &operator>>(istream &in, const QuaternionDraw quat) {
-  return in;
+istream &operator>>(istream &in, const QuaternionDraw &quat) {
+    return in;
 }
 
 /* ================================================================= */

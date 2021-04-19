@@ -134,17 +134,6 @@ public:
     double _x;  // x value, y value (_measurement)
 };
 
-double RMSE(const Vector3d est, const Vector3d gt){
-    double sum = 0.0;
-    int N = 3;
-
-    for(int i=0;i<N;i++){
-        sum += pow(est[i]-gt[i], 2.0);
-    }
-
-    return sqrt(sum/(double)N);
-}
-
 /* ====== */
 /*  Main  */
 /* ====== */

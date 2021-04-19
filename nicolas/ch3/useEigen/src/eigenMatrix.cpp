@@ -12,7 +12,7 @@ using namespace Eigen;
 /* Global Variables */
 #define MATRIX_SIZE 50
 
-double getElapsedTime_ms(const time_t t_start){
+double getElapsedTime_ms(const time_t &t_start){
     double elapsed_time = 1000*(clock () - t_start) / (double) CLOCKS_PER_SEC;
 
     return elapsed_time;

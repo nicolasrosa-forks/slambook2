@@ -37,7 +37,8 @@ double focal_length = 521.0;            // Camera focal length
 /*  Functions Prototype  */
 /* ===================== */
 void triangulation(
-    const vector<KeyPoint> &keypoints1, const vector<KeyPoint> &keypoints2,
+    const vector<KeyPoint> &keypoints1,
+    const vector<KeyPoint> &keypoints2,
     const vector<DMatch> &matches,
     const Mat &R, const Mat &t,
     vector<Point3d> &pts_3d);

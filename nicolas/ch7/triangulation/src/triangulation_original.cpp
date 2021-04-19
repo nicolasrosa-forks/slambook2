@@ -178,7 +178,7 @@ void triangulation(
 
     Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
     vector<Point2f> pts_1, pts_2;
-    for (DMatch m:matches) {
+    for (DMatch m: matches) {
         // Convert pixel coordinates to camera coordinates
         pts_1.push_back(pixel2cam(keypoint_1[m.queryIdx].pt, K));
         pts_2.push_back(pixel2cam(keypoint_2[m.trainIdx].pt, K));

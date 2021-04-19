@@ -17,6 +17,8 @@ void printVector(const char text[], TTypeEigenVec vec);
 template <typename TTypeEigenQuat>
 void printQuaternion(const char text[], TTypeEigenQuat quat);
 
+double RMSE(const Vector3d &est, const Vector3d &gt);
+
 Eigen::Vector2d cam2pixel(const Eigen::Vector3d &P, const Eigen::Matrix3d &K);
 
 #endif

@@ -82,26 +82,26 @@ int main(int argc, char **argv){
         cout << "t_diff:" << time_gt[i+k] - time_gt[i] << endl;
 
         while(i+k < N && (time_gt[i+k] - time_gt[i] < dt)){
-          k++;
+            k++;
         }
 
         if (i+k < N){
-          auto pose_est_dt = estimated[i+k], pose_gt_dt = groundtruth[i+k];
+            auto pose_est_dt = estimated[i+k], pose_gt_dt = groundtruth[i+k];
 
-          double rpe_all_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).log().norm();
-          double rpe_trans_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).translation().norm();
+            double rpe_all_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).log().norm();
+            double rpe_trans_error = ((pose_gt.inverse()*pose_gt_dt).inverse()*(pose_est.inverse()*pose_est_dt)).translation().norm();
 
-          rpe_all_sum += rpe_all_error * rpe_all_error;
-          rpe_trans_sum += rpe_trans_error * rpe_trans_error;
+            rpe_all_sum += rpe_all_error * rpe_all_error;
+            rpe_trans_sum += rpe_trans_error * rpe_trans_error;
 
-          cout << "error value updated!" << endl;
+            cout << "error value updated!" << endl;
 
-          k=1;
-          j++;
+            k=1;
+            j++;
 
-          cout << "k: " << k << endl << endl;
+            cout << "k: " << k << endl << endl;
         }else{
-          break;
+            break;
         }
     }
 
@@ -150,55 +150,55 @@ TrajectoryType ReadTrajectory(TimeStamp &timestamps, const string &path){
 }
 
 void DrawTrajectory(const TrajectoryType &est, const TrajectoryType &gt) {
-  // Create Pangolin window and plot the trajectory
-  pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
+    // Create Pangolin window and plot the trajectory
+    pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
 
-  glEnable(GL_DEPTH_TEST);                            // The Depth Test is a per-sample processing operation performed after the Fragment Shader (and sometimes before). https://www.khronos.org/opengl/wiki/Depth_Test
-  glEnable(GL_BLEND);                                 // If enabled, blend the computed fragment color values with the values in the color buffers. https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glEnable.xml
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Pixels can be drawn using a function that blends the incoming (source) RGBA values with the RGBA values that are already in the frame buffer (the destination values). https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBlendFunc.xml
+    glEnable(GL_DEPTH_TEST);                            // The Depth Test is a per-sample processing operation performed after the Fragment Shader (and sometimes before). https://www.khronos.org/opengl/wiki/Depth_Test
+    glEnable(GL_BLEND);                                 // If enabled, blend the computed fragment color values with the values in the color buffers. https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glEnable.xml
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Pixels can be drawn using a function that blends the incoming (source) RGBA values with the RGBA values that are already in the frame buffer (the destination values). https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glBlendFunc.xml
 
-  pangolin::OpenGlRenderState s_cam(
-    pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
-    pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
-  );  // Object representing attached OpenGl Matrices/transforms
+    pangolin::OpenGlRenderState s_cam(
+        pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
+        pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
+    );  // Object representing attached OpenGl Matrices/transforms
 
-  pangolin::View &d_cam = pangolin::CreateDisplay()
-    .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
-    .SetHandler(new pangolin::Handler3D(s_cam));
+    pangolin::View &d_cam = pangolin::CreateDisplay()
+        .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
+        .SetHandler(new pangolin::Handler3D(s_cam));
 
-  /* Loop */
-  while (pangolin::ShouldQuit() == false){
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    d_cam.Activate(s_cam);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glLineWidth(2);
+    /* Loop */
+    while (pangolin::ShouldQuit() == false){
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        d_cam.Activate(s_cam);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glLineWidth(2);
 
-    /* Draw the connections between Poses */
-    for (size_t i=0; i < gt.size()-1; i++) {
-      // Get two consecutive poses
-      auto p1 = gt[i], p2 = gt[i + 1];
+        /* Draw the connections between Poses */
+        for (size_t i=0; i < gt.size()-1; i++) {
+            // Get two consecutive poses
+            auto p1 = gt[i], p2 = gt[i + 1];
 
-      glBegin(GL_LINES);
-      glColor3f(0.0f, 0.0f, 1.0f);  // Blue for ground truth trajectory
-      glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
-      glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
-      glEnd();
-    }
+            glBegin(GL_LINES);
+            glColor3f(0.0f, 0.0f, 1.0f);  // Blue for ground truth trajectory
+            glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
+            glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
+            glEnd();
+        }
 
-    /* Draw the connections between Poses */
-    for(size_t i=0; i < est.size()-1; i++){
-      // Get two consecutive poses
-      auto p1 = est[i], p2 = est[i + 1];
+        /* Draw the connections between Poses */
+        for(size_t i=0; i < est.size()-1; i++){
+            // Get two consecutive poses
+            auto p1 = est[i], p2 = est[i + 1];
 
-      // Draw links vertexes
-      glBegin(GL_LINES);
-      glColor3f(1.0f, 0.0f, 0.0f);  // Red for estimated trajectory
-      glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
-      glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
-      glEnd();
-    }
+            // Draw links vertexes
+            glBegin(GL_LINES);
+            glColor3f(1.0f, 0.0f, 0.0f);  // Red for estimated trajectory
+            glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
+            glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
+            glEnd();
+        }
 
-    pangolin::FinishFrame();
-    usleep(5000);  // sleep 5 ms
-  }
+        pangolin::FinishFrame();
+        usleep(5000);  // sleep 5 ms
+        }
 }

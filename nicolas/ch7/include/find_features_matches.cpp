@@ -82,7 +82,7 @@ bool isFirstTime = true;
 /* =========== */
 /*  Functions  */
 /* =========== */
-void adaptiveNonMaximalSuppresion(std::vector<cv::KeyPoint> &keypoints, const int numToKeep){
+void adaptiveNonMaximalSuppresion(std::vector<cv::KeyPoint> &keypoints, const int &numToKeep){
     if( keypoints.size() < numToKeep ) { return; }
 
     //

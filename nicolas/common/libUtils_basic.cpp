@@ -10,7 +10,7 @@
 using namespace std;
 
 /* Basic */
-void printVec(const char text[], const std::vector<double>  &vec){
+void printVec(const char text[], const std::vector<double> &vec){
     cout << text << "[";
     for(int i=0; i < vec.size(); i++){
         if(i != vec.size()-1){

@@ -80,7 +80,7 @@ void pose_estimation_2d2d(const vector<KeyPoint> &keypoints1, const vector<KeyPo
     printMatrix("t:\n", t);
 }
 
-Mat vee2hat(const Mat var){
+Mat vee2hat(const Mat &var){
     Mat var_hat = (Mat_<double>(3,3) <<
                          0.0, -var.at<double>(2,0),  var.at<double>(1,0),
          var.at<double>(2,0),                  0.0, -var.at<double>(0,0),

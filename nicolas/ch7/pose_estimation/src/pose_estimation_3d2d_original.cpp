@@ -23,7 +23,8 @@ string depth1_filepath = "../../images/1_depth.png";
 string depth2_filepath = "../../images/2_depth.png";
 
 void find_feature_matches(
-    const Mat &img_1, const Mat &img_2,
+    const Mat &img_1,
+    const Mat &img_2,
     std::vector<KeyPoint> &keypoints_1,
     std::vector<KeyPoint> &keypoints_2,
     std::vector<DMatch> &matches);

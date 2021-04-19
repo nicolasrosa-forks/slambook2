@@ -14,6 +14,6 @@ void pose_estimation_2d2d(
     Mat &R, Mat &t, Mat &K
 );
 
-Mat vee2hat(const Mat var);
+Mat vee2hat(const Mat &var);
 
 #endif

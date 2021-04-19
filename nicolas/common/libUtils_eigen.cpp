@@ -33,6 +33,17 @@ void printQuaternion(const char text[], TTypeEigenQuat quat){
     cout << text << quat.coeffs().transpose() << endl << endl;
 }
 
+double RMSE(const Vector3d &est, const Vector3d &gt){
+    double sum = 0.0;
+    int N = est.size();
+
+    for(int i=0; i<N; i++){
+        sum += pow(est[i]-gt[i], 2.0);
+    }
+
+    return sqrt(sum/(double)N);
+}
+
 /**
  * @brief Convert Normalized Coordinates to Pixel Coordinates (Image Plane, f=1)
  *
