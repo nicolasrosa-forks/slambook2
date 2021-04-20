@@ -4,19 +4,19 @@
 /* System Libraries */
 #include <iostream>
 #include <chrono>
-#include <dirent.h>
+//#include <dirent.h>
 #include <string>
-#include <system_error>
+//#include <system_error>
 
 /* Eigen Libraries */
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 
 /* OpenCV Libraries */
-#include <opencv2/core/core.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
+//#include <opencv2/core/core.hpp>
+//#include <opencv2/features2d/features2d.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+//#include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
@@ -28,6 +28,14 @@
 using namespace std;
 using namespace cv;
 
+/** Description
+ * @brief Get a grayscale value from reference image (bilinear interpolation)
+ * 
+ * @param img
+ * @param x
+ * @param y
+ * @return the interpolated value of this pixel
+ */
 inline float GetPixelValue(const cv::Mat &img, float x, float y){
     // Boundary check
     if (x < 0) x = 0;                    // Avoid negative x-axis coordinates
@@ -138,14 +146,14 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
             // Check Solution
             if (isnan(update[0])){
                 // Sometimes occurs when we have a black or white patch, or when H is irresversible
-                cout << "Update is nan!" << endl;
+                // cout << "Update is nan!" << endl;
                 succ = false;
                 break;
             }
 
             /* Stopping Criteria */
             // If the cost increased, the update was not good, then break.
-            if (iter > 0 && cost >= lastCost){
+            if (iter > 0 && cost >= lastCost){  //FIXME: cost > lastCost? or cost >= lastCost?
                 // cout << "\ncost: " << cost << " >= lastCost: " << lastCost << ", break!" << endl;
                 break;
             }
@@ -153,7 +161,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
             /* ----- Update ----- */
             dx += update[0];  // dx
             dy += update[1];  // dy
-            
+
             lastCost = cost;
             succ = true;
 
@@ -169,6 +177,6 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
         // Set kps2
         kps2[i].pt = kp.pt + Point2f(dx, dy);  // I2(x+dx, y + dy)
 
-        cout << endl;
+        // cout << endl;
     }
 }

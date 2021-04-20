@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <string>
+#include <ctime>
 
 /* OpenCV Libraries */
 #include <opencv2/opencv.hpp>
@@ -13,6 +14,7 @@
 #include "../../common/libUtils_basic.h"
 #include "../../common/libUtils_eigen.h"
 #include "../../common/libUtils_opencv.h"
+#include "../include/optical_flow.h"
 #include "../include/OpticalFlowTracker.h"
 
 using namespace std;
@@ -23,50 +25,12 @@ string image1_filepath = "../images/LK1.png";
 string image2_filepath = "../images/LK2.png";
 
 int nfeatures = 500;
+bool saveResults = false;
 
 /* =========== */
 /*  Functions  */
 /* =========== */
 
-/** Description
- * @brief Single-level/layer Optical Flow
- * 
- * @param [in] img1 The first image
- * @param [in] img2 The second image
- * @param [in] kps1 Detected keypoints in the Image 1
- * @param [in, out] kps2 Keypoints in Image 2. If empty, use initial guess in `kps1`
- * @param [out] success 
- * @param [in] inverse 
- * @param [in] has_initial_guess 
- */
-void OpticalFlowSingleLevel(
-    const Mat &img1, const Mat &img2, 
-    const vector<KeyPoint> &kps1, vector<KeyPoint> &kps2, 
-    vector<bool> &success, 
-    bool inverse = false, bool has_initial_guess = false){
-    
-    /* Resize vectors */
-    kps2.resize(kps1.size());
-    success.resize(kps1.size());
-
-    /* Create Tracker Object */
-    OpticalFlowTracker tracker(img1, img2, kps1, kps2, success, inverse, has_initial_guess);
-
-    /* Run */
-    parallel_for_(Range(0, kps1.size()), std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, placeholders::_1));
-}
-
-template <typename TType>
-void drawOpticalFlow(const Mat &inImage, Mat &outImage, const vector<Point2f> &pts1_2d, const vector<Point2f> &pts2_2d, vector<TType> &status){
-    cv::cvtColor(inImage, outImage, COLOR_GRAY2BGR);
-    
-    for(int i = 0; i < pts2_2d.size(); i++){
-        if(status[i]){
-            cv::circle(outImage, pts2_2d[i], 2, cv::Scalar(0, 250, 0), 2);
-            cv::line(outImage, pts1_2d[i], pts2_2d[i], cv::Scalar(0, 250, 0));
-        }
-    }
-}
 
 /* ====== */
 /*  Main  */
@@ -81,8 +45,9 @@ int main(int argc, char **argv) {
     Mat image2 = imread(image2_filepath, cv::IMREAD_GRAYSCALE);
 
     /* Initialization */
-    vector<Point2f> pts1_2d;
-    vector<KeyPoint> kps1;  // Keypoints on Image 1
+    vector<KeyPoint> kps1;    // Keypoints in Image 1
+    vector<Point2f> pts1_2d;  // Coordinates of the Keypoints in Image 1
+    
 
     /* --------------------- */
     /*  Features Extraction  */
@@ -114,39 +79,67 @@ int main(int argc, char **argv) {
     /* --------------------------------------- */
     /*  Optical Flow with Gauss-Newton method  */
     /* --------------------------------------- */
+    
     /* ----- Single-Layer Optical Flow ----- */
     // Now let's track these keypoints in the second image
-    vector<KeyPoint> single_flow_kps2;
-    vector<Point2f> single_flow_pts2_2d;
+    // First use the single-layer LK in the validation picture
+    vector<KeyPoint> single_flow_kps2;    // Estimated KeyPoints in Image 2 by Single-Level Optical Flow
+    vector<Point2f> single_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
     vector<bool> single_flow_status;
 
+    Timer t5 = chrono::steady_clock::now();
     OpticalFlowSingleLevel(image1, image2, kps1, single_flow_kps2, single_flow_status);
+    Timer t6 = chrono::steady_clock::now();
 
-    /* ----- Multi-Level Optical Flow ----- */
-    //TODO
-    
+    /* ----- Multi-Layer Optical Flow ----- */
+    // Then let's test the multi-layer LK
+    vector<KeyPoint> multi_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
+    vector<Point2f> multi_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
+    vector<bool> multi_flow_status;
+
+    Timer t7 = chrono::steady_clock::now();
+    OpticalFlowMultiLevel(image1, image2, kps1, multi_flow_kps2, multi_flow_status, true);
+    Timer t8 = chrono::steady_clock::now();
 
     /* --------- */
     /*  Results  */
     /* --------  */
-    Mat cv_flow_outImage2, single_flow_outImage2, multi_flow_outImage2;
+    printElapsedTime("Feature Extraction (GFTT): ", t1, t2);
+    printElapsedTime("Optical Flow: ", t3, t8);
+    printElapsedTime(" | Opencv's LK Flow: ", t3, t4);
+    printElapsedTime(" | Single-layer LK Flow: ", t5, t6);
+    printElapsedTime(" | Multi-layer LK Flow: ", t7, t8);
 
-    // Draw tracked features on Image 2
+    /* Draw tracked features in Image 2 */
+    Mat cv_flow_outImage2, single_flow_outImage2, multi_flow_outImage2;
     for (auto &kp: single_flow_kps2) single_flow_pts2_2d.push_back(kp.pt);
+    for (auto &kp: multi_flow_kps2) multi_flow_pts2_2d.push_back(kp.pt);
 
     drawOpticalFlow<uchar>(image2, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
     drawOpticalFlow<bool>(image2, single_flow_outImage2, pts1_2d, single_flow_pts2_2d, single_flow_status);
-
-    
-    printElapsedTime(" | Feature Extraction (GFTT): ", t1, t2);
-    printElapsedTime(" | Opencv's LK Flow: ", t3, t4);
+    drawOpticalFlow<bool>(image2, multi_flow_outImage2, pts1_2d, multi_flow_pts2_2d, multi_flow_status);
 
     /* Display Images */
     // imshow("image1", image1);
     // imshow("image2", image2);
     imshow("Tracked by Single-layer", single_flow_outImage2);
-    // imshow("Tracked by Multi-level", outImage2_flow3_multi);
+    imshow("Tracked by Multi-layer (Pyramid)", multi_flow_outImage2);
     imshow("Tracked by OpenCV", cv_flow_outImage2);
+
+    if(saveResults){
+        char buffer[100];
+        int ret;
+        
+        ret = sprintf(buffer, "../src/results/optical_flow_img2_single_%ld.jpg", std::time(nullptr));
+        cv::imwrite(buffer, single_flow_outImage2);
+
+        ret = sprintf(buffer, "../src/results/optical_flow_img2_multi_%ld.jpg", std::time(nullptr));
+        cv::imwrite(buffer, multi_flow_outImage2);
+
+        ret = sprintf(buffer, "../src/results/optical_flow_img2_CV_%ld.jpg", std::time(nullptr));
+        cv::imwrite(buffer, cv_flow_outImage2);
+    }
+    
     cout << "\nPress 'ESC' to exit the program..." << endl;
     waitKey(0);
 
