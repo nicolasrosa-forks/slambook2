@@ -11,8 +11,9 @@
 using namespace std;
 using namespace cv;
 
-string file_1 = "../images/LK1.png";  // first image
-string file_2 = "../images/LK2.png";  // second image
+
+string file_1 = "../../images/LK1.png";  // first image
+string file_2 = "../../images/LK2.png";  // second image
 
 /// Optical flow tracker and interface
 class OpticalFlowTracker {

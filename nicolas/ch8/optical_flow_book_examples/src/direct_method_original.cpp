@@ -29,7 +29,7 @@ public:
         const cv::Mat &img1_,
         const cv::Mat &img2_,
         const VecVector2d &px_ref_,
-        const vector<double> depth_ref_,
+        const vector<double> depth_ref_,    //FIXME: Use &?//FIXME: Use &?
         Sophus::SE3d &T21_) :
         img1(img1_), img2(img2_), px_ref(px_ref_), depth_ref(depth_ref_), T21(T21_) {
         projection = VecVector2d(px_ref.size(), Eigen::Vector2d(0, 0));
@@ -61,7 +61,7 @@ private:
     const cv::Mat &img1;
     const cv::Mat &img2;
     const VecVector2d &px_ref;
-    const vector<double> depth_ref;
+    const vector<double> depth_ref;  //FIXME: Use &?
     Sophus::SE3d &T21;
     VecVector2d projection; // projected points
 
@@ -83,7 +83,7 @@ void DirectPoseEstimationMultiLayer(
     const cv::Mat &img1,
     const cv::Mat &img2,
     const VecVector2d &px_ref,
-    const vector<double> depth_ref,
+    const vector<double> depth_ref,  //FIXME: Use &?
     Sophus::SE3d &T21
 );
 
@@ -159,7 +159,7 @@ void DirectPoseEstimationSingleLayer(
     const cv::Mat &img1,
     const cv::Mat &img2,
     const VecVector2d &px_ref,
-    const vector<double> depth_ref,
+    const vector<double> depth_ref,  //FIXME: Use &?
     Sophus::SE3d &T21) {
 
     const int iterations = 10;
@@ -297,7 +297,7 @@ void DirectPoseEstimationMultiLayer(
     const cv::Mat &img1,
     const cv::Mat &img2,
     const VecVector2d &px_ref,
-    const vector<double> depth_ref,
+    const vector<double> depth_ref,  //FIXME: Use &?
     Sophus::SE3d &T21) {
 
     // parameters

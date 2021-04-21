@@ -24,6 +24,9 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
+// string filename = "/home/nicolas/Downloads/Driving_Downtown_-_New_York_City_4K_-_USA_360p.mp4";
+string filename = "/home/nicolas/Downloads/Driving_Downtown_-_San_Francisco_4K_-_USA_720p.mp4";
+
 int nfeatures = 500;
 
 /* ===================== */
@@ -35,13 +38,6 @@ std::vector<T> create_copy(std::vector<T> const &vec){
     return v;
 }
 
-class myexception: public exception{
-    virtual const char* what() const throw(){
-        return "My exception happened";
-    }
-} myex;
-
-
 /* ====== */
 /*  Main  */
 /* ====== */
@@ -52,7 +48,7 @@ int main(int argc, char **argv) {
     /* Load the images */
     // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name
-    VideoCapture cap("/home/nicolas/Downloads/Driving_Downtown_-_New_York_City_4K_-_USA_360p.mp4"); 
+    VideoCapture cap(filename); 
     
     // Check if camera opened successfully
     if(!cap.isOpened()){
@@ -72,13 +68,14 @@ int main(int argc, char **argv) {
     vector<Point2f> pts1_2d;
     
     // Optical Flow Variables
-    Ptr<GFTTDetector> detector = GFTTDetector::create(500, 0.01, 20);
+    Ptr<GFTTDetector> detector = GFTTDetector::create(nfeatures, 0.01, 20);
     
-    vector<KeyPoint> multi_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
-    vector<Point2f> multi_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
-    vector<bool> multi_flow_status;
+    vector<KeyPoint> cv_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
+    vector<Point2f> cv_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
+    vector<uchar> cv_flow_status;
+    vector<float> cv_flow_error;
     
-    Mat cv_flow_outImage2, single_flow_outImage2, multi_flow_outImage2;
+    Mat cv_flow_outImage2;
 
     // First frame initialization
     cap >> image1_rgb;
@@ -110,32 +107,37 @@ int main(int argc, char **argv) {
 
         /* ----- Features Extraction and Matching ----- */
         cv::cvtColor(image2_rgb, image2_grey, COLOR_BGR2GRAY);
-        detector->detect(image2_grey, multi_flow_kps2);
 
         /* ----- Optical Flow ----- */
-        OpticalFlowMultiLevel(image1_grey, image2_grey, kps1, multi_flow_kps2, multi_flow_status, true);
+        cv::calcOpticalFlowPyrLK(image1_grey, image2_grey, pts1_2d, cv_flow_pts2_2d, cv_flow_status, cv_flow_error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
 
         /* ----- Results ----- */
-        for(auto &kp: multi_flow_kps2) multi_flow_pts2_2d.push_back(kp.pt);
-        drawOpticalFlow<bool>(image2_grey, multi_flow_outImage2, pts1_2d, multi_flow_pts2_2d, multi_flow_status);
-        
+        drawOpticalFlow<uchar>(image2_grey, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
+
+        vector<Point2f> good_new;
+        for(uint i = 0; i < pts1_2d.size(); i++){
+            // Select good points
+            if(cv_flow_status[i] == 1) {
+                good_new.push_back(cv_flow_pts2_2d[i]);
+            }
+        }
+
         // Display
         // // imshow( "Frame1", image1);
         // // imshow( "Frame2", image2);
         imshow("image2_rgb", image2_rgb);
         imshow("image2_grey", image2_grey);
-        imshow("Tracked by Multi-layer (Pyramid)", multi_flow_outImage2);
+        imshow("Tracked by OpenCV", cv_flow_outImage2);
 
         /* ----- End Iteration ----- */
         // Next Iteration Prep
         image1_grey = image2_grey.clone();  // Save last frame
-        pts1_2d = create_copy<Point2f>(multi_flow_pts2_2d);
-        kps1 = create_copy<KeyPoint>(multi_flow_kps2);
+        pts1_2d = good_new;
 
         // Free vectors
-        multi_flow_kps2.clear();
-        multi_flow_pts2_2d.clear();
-        multi_flow_status.clear();
+        cv_flow_kps2.clear();
+        cv_flow_pts2_2d.clear();
+        cv_flow_status.clear();
         
         // FPS Calculation
         frameCounter++;

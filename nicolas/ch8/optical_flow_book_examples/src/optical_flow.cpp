@@ -11,9 +11,9 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../common/libUtils_basic.h"
-#include "../../common/libUtils_eigen.h"
-#include "../../common/libUtils_opencv.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
+#include "../../../common/libUtils_opencv.h"
 #include "../include/optical_flow.h"
 #include "../include/OpticalFlowTracker.h"
 
@@ -21,8 +21,8 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
-string image1_filepath = "../images/LK1.png";
-string image2_filepath = "../images/LK2.png";
+string image1_filepath = "../../images/LK1.png";
+string image2_filepath = "../../images/LK2.png";
 
 int nfeatures = 500;
 bool saveResults = false;
@@ -43,6 +43,12 @@ int main(int argc, char **argv) {
     // Note, they are CV_8UC1, not CV_8UC3
     Mat image1 = imread(image1_filepath, cv::IMREAD_GRAYSCALE);
     Mat image2 = imread(image2_filepath, cv::IMREAD_GRAYSCALE);
+    
+    if (image1.empty() || image2.empty()) {
+        // fail, bail out!
+        cout << "Couldn't find '" << image1_filepath << "' file!" << endl;
+        return -1; 
+    }
 
     /* Initialization */
     vector<KeyPoint> kps1;    // Keypoints in Image 1
@@ -62,7 +68,7 @@ int main(int argc, char **argv) {
     Timer t2 = chrono::steady_clock::now();
 
     // Fills the `pts1_2d` with the detected keypoints in Image 1.
-    for (auto &kp: kps1) pts1_2d.push_back(kp.pt);
+    for(auto &kp: kps1) pts1_2d.push_back(kp.pt);
 
     /* ------------------ */
     /*  LK Flow in OpenCV */
@@ -98,7 +104,7 @@ int main(int argc, char **argv) {
     vector<bool> multi_flow_status;
 
     Timer t7 = chrono::steady_clock::now();
-    OpticalFlowMultiLevel(image1, image2, kps1, multi_flow_kps2, multi_flow_status, true);
+    OpticalFlowMultiLevel(image1, image2, kps1, multi_flow_kps2, multi_flow_status, true, true);
     Timer t8 = chrono::steady_clock::now();
 
     /* --------- */

@@ -23,7 +23,8 @@ void OpticalFlowMultiLevel(
     const vector<KeyPoint> &kp1,
     vector<KeyPoint> &kp2,
     vector<bool> &success,
-    bool inverse
+    bool inverse,
+    bool verbose
 );
 
 template <typename TType>

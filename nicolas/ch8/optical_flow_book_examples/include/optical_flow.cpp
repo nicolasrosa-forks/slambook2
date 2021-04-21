@@ -20,9 +20,9 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../common/libUtils_basic.h"
-#include "../../common/libUtils_eigen.h"
-#include "../../common/libUtils_opencv.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
+#include "../../../common/libUtils_opencv.h"
 #include "../include/OpticalFlowTracker.h"
 
 using namespace std;
@@ -76,8 +76,9 @@ void OpticalFlowMultiLevel(
     const vector<KeyPoint> &kp1,
     vector<KeyPoint> &kp2,
     vector<bool> &success,
-    bool inverse){
-
+    bool inverse,
+    bool verbose
+){
     /* Parameters */
     int n_layers = 4;
     double pyramid_scale = 0.5;  // Scaling factor
@@ -102,7 +103,8 @@ void OpticalFlowMultiLevel(
     }
     Timer t2 = chrono::steady_clock::now();
 
-    printElapsedTime("Build Pyramid time: ", t1, t2);
+    if(verbose)
+        printElapsedTime("Build Pyramid time: ", t1, t2);
 
     /* Coarse-to-Fine LK tracking in Pyramids */
     vector<KeyPoint> kp1_pyr, kp2_pyr;
@@ -122,7 +124,9 @@ void OpticalFlowMultiLevel(
         OpticalFlowSingleLevel(pyr1[level], pyr2[level], kp1_pyr, kp2_pyr, success, inverse, true);
         t2 = chrono::steady_clock::now();
         auto time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
-        cout << "Track pyr " << level << " cost time: " << time_used.count() << endl;
+        
+        if(verbose)
+            cout << "Track pyr " << level << " cost time: " << time_used.count() << endl;
         // char *msg;
         // sprintf(msg, "track pyr %s", 5);
         // printElapsedTime(msg.(), t1, t2);
@@ -135,7 +139,8 @@ void OpticalFlowMultiLevel(
                 kp.pt /= pyramid_scale;
         }
     }
-    cout << endl;
+    if(verbose)
+        cout << endl;
 
     /* Returns the computed tracked points */
     for (auto &kp: kp2_pyr)
