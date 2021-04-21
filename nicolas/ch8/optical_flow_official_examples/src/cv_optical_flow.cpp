@@ -24,7 +24,11 @@ int main(int argc, char **argv)
         parser.printMessage();
         return 0;
     }
-    string filename = samples::findFile(parser.get<string>("@image"));
+    // string filename = samples::findFile(parser.get<string>("@image"));    
+    
+    string filename = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch8/optical_flow_official_examples/videos/slow_traffic_small.mp4";  // FIXME
+    // string filename = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch8/optical_flow_official_examples/videos/vtest.avi";  //FIXME
+
     if (!parser.check())
     {
         parser.printErrors();

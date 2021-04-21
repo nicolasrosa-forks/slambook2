@@ -10,7 +10,10 @@ using namespace std;
 
 int main()
 {
-    VideoCapture capture(samples::findFile("vtest.avi"));
+    // string filename = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch8/optical_flow_official_examples/videos/slow_traffic_small.mp4";  // FIXME
+    string filename = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch8/optical_flow_official_examples/videos/vtest.avi";  //FIXME
+
+    VideoCapture capture(filename);
     if (!capture.isOpened()){
         //error in opening the video input
         cerr << "Unable to open file!" << endl;
@@ -48,7 +51,8 @@ int main()
         hsv.convertTo(hsv8, CV_8U, 255.0);
         cvtColor(hsv8, bgr, COLOR_HSV2BGR);
 
-        imshow("frame2", bgr);
+        imshow("frame2", frame2);
+        imshow("dense", bgr);
 
         int keyboard = waitKey(30);
         if (keyboard == 'q' || keyboard == 27)
