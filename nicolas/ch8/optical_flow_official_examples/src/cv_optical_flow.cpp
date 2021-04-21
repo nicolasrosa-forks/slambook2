@@ -26,8 +26,8 @@ int main(int argc, char **argv)
     }
     // string filename = samples::findFile(parser.get<string>("@image"));    
     
-    string filename = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch8/optical_flow_official_examples/videos/slow_traffic_small.mp4";  // FIXME
-    // string filename = "/home/nicolas/github/nicolasrosa-forks/slam/slambook2/nicolas/ch8/optical_flow_official_examples/videos/vtest.avi";  //FIXME
+    // string filename = "../../videos/slow_traffic_small.mp4";
+    string filename = "../../videos/vtest.avi";
 
     if (!parser.check())
     {
