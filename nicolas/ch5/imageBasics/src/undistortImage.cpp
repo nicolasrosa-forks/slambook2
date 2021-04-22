@@ -5,7 +5,7 @@ using namespace std;
 
 /* Global Variables */
 bool debug = false;
-string image_filepath = "../../imageBasics/src/distorted.png";
+string image_filepath = "../../imageBasics/images/distorted.png";
 
 // Rad-Tan model params
 double k1 = -0.28340811, k2 = 0.07395907, p1 = 0.00019359, p2 = 1.76187114e-05;

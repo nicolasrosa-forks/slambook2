@@ -20,7 +20,7 @@
 #include <opencv2/opencv.hpp>
 
 // Image to perform undistort
-std::string image_filepath = "../../imageBasics/src/distorted.png";
+std::string image_filepath = "../../imageBasics/images/distorted.png";
 
 // Compute the image size of the undistorted image
 void computeUndistortedBoundary(/*in*/cv::Size &image_size,

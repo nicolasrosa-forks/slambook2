@@ -5,8 +5,8 @@ using namespace std;
 using namespace Eigen;
 
 /* Global Variables */
-string left_filepath = "../../stereoVision/src/left.png";
-string right_filepath = "../../stereoVision/src/right.png";
+string left_filepath = "../../stereoVision/images/left.png";
+string right_filepath = "../../stereoVision/images/right.png";
 
 // Stereo Camera Intrinsics params
 double fx = 718.856,  fy = 718.856;   // Focal lengths
