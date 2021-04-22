@@ -6,7 +6,7 @@ using namespace Eigen;
 
 /* Global Variables */
 string pose_filepath = "../../rgbd/src/pose.txt";
-string rgbd_folder_path = "../../rgbd/src/";
+string rgbd_folder_path = "../../rgbd/src/images/";
 
 // RGB-D Camera Intrinsics params
 double fx = 518.0, fy = 519.0;  // Focal Lengths

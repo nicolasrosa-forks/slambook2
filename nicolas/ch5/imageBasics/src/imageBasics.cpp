@@ -4,7 +4,7 @@
 using namespace std;
 
 /* Global Variables */
-string image_filepath = "../../imageBasics/images/dog.jpg";
+string image_filepath = "../../imageBasics/src/images/dog.jpg";
 
 /* ====== */
 /*  Main  */
