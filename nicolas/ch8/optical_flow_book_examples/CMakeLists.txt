@@ -33,6 +33,9 @@ target_link_libraries(optical_flow_original ${OpenCV_LIBS})
 add_executable(optical_flow_video_opencv src/optical_flow_video_opencv.cpp)
 target_link_libraries(optical_flow_video_opencv ${OpenCV_LIBS})
 
+add_executable(optical_flow_video_single src/optical_flow_video_single.cpp)
+target_link_libraries(optical_flow_video_single ${OpenCV_LIBS})
+
 add_executable(optical_flow_video_multi src/optical_flow_video_multi.cpp)
 target_link_libraries(optical_flow_video_multi ${OpenCV_LIBS})
 

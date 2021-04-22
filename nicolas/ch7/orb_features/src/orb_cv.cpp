@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     /* Load the images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
     Mat image2 = imread(image2_filepath, CV_LOAD_IMAGE_COLOR);
-    assert(image1.data != nullptr && image2.data != nullptr);
+    assert(image1.data != nullptr && image2.data != nullptr);  // FIXME: I think this its not working!
 
     /* Initialization */
     vector<KeyPoint> keypoints1, keypoints2;
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     waitKey(0);
 
     /* Save */
-    imwrite("../../orb_features/src/results_orb_cv_goodMatches.png", image_goodMatches);
+    imwrite("../../orb_features/src/results/orb_cv_goodMatches.png", image_goodMatches);
 
     cout << "Done." << endl;
 

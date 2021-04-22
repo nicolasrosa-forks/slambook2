@@ -6,6 +6,7 @@
 #include <chrono>
 #include <stdio.h>
 #include <exception>
+#include <string>
 
 /* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
@@ -15,17 +16,17 @@
 #include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
-#include "../../common/libUtils_basic.h"
-#include "../../common/libUtils_eigen.h"
-#include "../../common/libUtils_opencv.h"
+#include "../../../common/libUtils_basic.h"
+#include "../../../common/libUtils_eigen.h"
+#include "../../../common/libUtils_opencv.h"
 #include "../include/optical_flow.h"
 
 using namespace std;
 using namespace cv;
 
 /* Global Variables */
-// string filename = "/home/nicolas/Downloads/Driving_Downtown_-_New_York_City_4K_-_USA_360p.mp4";
-string filename = "/home/nicolas/Downloads/Driving_Downtown_-_San_Francisco_4K_-_USA_720p.mp4";
+string filename = "/home/nicolas/Downloads/Driving_Downtown_-_New_York_City_4K_-_USA_360p.mp4";
+// string filename = "/home/nicolas/Downloads/Driving_Downtown_-_San_Francisco_4K_-_USA_720p.mp4";
 
 int nfeatures = 500;
 
@@ -42,7 +43,7 @@ std::vector<T> create_copy(std::vector<T> const &vec){
 /*  Main  */
 /* ====== */
 /* This program demonstrates how to extract ORB features and perform matching using the OpenCV library. */
-int main(int argc, char **argv) {
+int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corretamente.
     cout << "[orb_cv_video] Hello!" << endl << endl;
 
     /* Load the images */
@@ -79,7 +80,7 @@ int main(int argc, char **argv) {
 
     // First frame initialization
     cap >> image1_rgb;
-    assert(image1_rgb.data != nullptr);
+    assert(image1_rgb.data != nullptr);  // FIXME: I think this its not working!
 
     cv::cvtColor(image1_rgb, image1_grey, COLOR_BGR2GRAY);
     detector->detect(image1_grey, kps1);
@@ -90,6 +91,9 @@ int main(int argc, char **argv) {
     std::time_t timeBegin = std::time(0);
     int tick = 0;
 
+    // Sharpen Filter // TODO: Manter?
+    // Mat blurred; double sigma = 1, threshold = 5, amount = 1;
+    
     /* ------ */
     /*  Loop  */
     /* ------ */
@@ -105,8 +109,24 @@ int main(int argc, char **argv) {
         // cout << "Width : " << image2_rgb.size().width << endl;
         // cout << "Height: " << image2_rgb.size().height << endl;
 
+        /* Apply Filters */ // TODO: Manter?
+        // GaussianBlur(image2_rgb, blurred, Size(), sigma, sigma);
+        // Mat lowContrastMask = abs(image2_rgb - blurred) < threshold;
+        // Mat sharpened = image2_rgb*(1+amount) + blurred*(-amount);
+        // image2_rgb.copyTo(sharpened, lowContrastMask);
+        // sharpened.copyTo(image2_rgb); // Overwrite
+        // imshow("sharpened", sharpened);
+        // imshow("lowContrastMask", lowContrastMask);
+
         /* ----- Features Extraction and Matching ----- */
         cv::cvtColor(image2_rgb, image2_grey, COLOR_BGR2GRAY);
+        
+        /* ----- Apply Histogram Equalization ----- */
+        Mat image2_grey_est;
+        calcHist(image2_grey, "image2_grey");  // Before Equalization
+        equalizeHist( image2_grey, image2_grey_est );  // Input needs to be greyscale!
+        calcHist(image2_grey_est, "image2_grey_est");  // After Equalization
+        image2_grey_est.copyTo(image2_grey); // Overwrite
 
         /* ----- Optical Flow ----- */
         cv::calcOpticalFlowPyrLK(image1_grey, image2_grey, pts1_2d, cv_flow_pts2_2d, cv_flow_status, cv_flow_error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
@@ -114,25 +134,25 @@ int main(int argc, char **argv) {
         /* ----- Results ----- */
         drawOpticalFlow<uchar>(image2_grey, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
 
-        vector<Point2f> good_new;
+        vector<Point2f> good_pts2_2d;
         for(uint i = 0; i < pts1_2d.size(); i++){
             // Select good points
             if(cv_flow_status[i] == 1) {
-                good_new.push_back(cv_flow_pts2_2d[i]);
+                good_pts2_2d.push_back(cv_flow_pts2_2d[i]);
             }
         }
 
         // Display
-        // // imshow( "Frame1", image1);
-        // // imshow( "Frame2", image2);
+        // imshow( "Frame1", image1);
+        // imshow( "Frame2", image2);
         imshow("image2_rgb", image2_rgb);
-        imshow("image2_grey", image2_grey);
+        // imshow("image2_grey", image2_grey);
         imshow("Tracked by OpenCV", cv_flow_outImage2);
 
         /* ----- End Iteration ----- */
         // Next Iteration Prep
         image1_grey = image2_grey.clone();  // Save last frame
-        pts1_2d = good_new;
+        pts1_2d = good_pts2_2d;
 
         // Free vectors
         cv_flow_kps2.clear();

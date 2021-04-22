@@ -29,3 +29,12 @@ target_link_libraries(cv_optical_flow ${OpenCV_LIBS})
 # ==================== #
 add_executable(cv_optical_flow_dense src/cv_optical_flow_dense.cpp)
 target_link_libraries(cv_optical_flow_dense ${OpenCV_LIBS})
+
+# ========== #
+#  Examples  #
+# ========== #
+add_executable(calcHist_Demo src/examples/calcHist_Demo.cpp)
+target_link_libraries(calcHist_Demo ${OpenCV_LIBS})
+
+add_executable(EqualizeHist_Demo src/examples/EqualizeHist_Demo.cpp)
+target_link_libraries(EqualizeHist_Demo ${OpenCV_LIBS})

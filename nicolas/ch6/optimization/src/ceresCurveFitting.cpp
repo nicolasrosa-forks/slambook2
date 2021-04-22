@@ -125,11 +125,11 @@ int main(int argc, char **argv) {
 
     cout << "\n---" << endl;
     cout << "Real:\t   a,b,c = ";
-    for(auto item:abc_r) cout << item << ", ";
+    for(auto &item: abc_r) cout << item << ", ";
     cout << endl;
 
     cout << "Estimated: a,b,c = ";
-    for(auto item:abc_e) cout << item << ", ";
+    for(auto &item: abc_e) cout << item << ", ";
     cout << "\n---" <<endl;
 
     cout << "RMSE: " << rmse << endl;

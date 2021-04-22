@@ -64,11 +64,12 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
     int half_patch_size = 4;
     int iterations = 10;
 
+    /* Iterate over Features */
     for(size_t i=range.start; i < range.end; i++){
         auto kp = kps1[i];
         double dx = 0, dy = 0;  // dx, dy need to be estimated from
 
-        if(has_initial){
+        if(has_initial_guess){
             dx = kps2[i].pt.x - kp.pt.x;
             dy = kps2[i].pt.y - kp.pt.y;
         }
@@ -76,12 +77,14 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
         double cost = 0.0, lastCost = 0.0;
         bool succ = true;  // Indicate if current point succeeded
 
-        // Gauss-Newton method (Solves the Optical Flow Optimization problem)
+        /* Gauss-Newton method Initialization */
+        // Used to solve the Optical Flow Optimization problem (Minimizes the photometric error).
         Eigen::Matrix2d H = Eigen::Matrix2d::Zero();  // Hessian
         Eigen::Vector2d b = Eigen::Vector2d::Zero();  // bias
 
         Eigen::Vector2d J;  // Jacobian
 
+        /* Iterations */
         for (int iter = 0; iter < iterations; iter++){
             if(inverse == false){
                 // Resets H and b
@@ -101,18 +104,19 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
 
             /* ----- Compute Photometric Error ----- */
             // Iterate over Patch
-            for(int x = -half_patch_size; x < half_patch_size; x++)
-                for(int y = -half_patch_size; y < half_patch_size; y++){
+            for(int x = -half_patch_size; x <= half_patch_size; x++)       // FIXME: x < half_patch_size OR x <= half_patch_size?
+                for(int y = -half_patch_size; y <= half_patch_size; y++){  // FIXME: y < half_patch_size OR y <= half_patch_size?
                     /* 1. Compute Residual */
                     // Residual Error, e = I1(x, y) - I2(x + ∆x, y + ∆y)
-                    double error = GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y) -
-                                   GetPixelValue(img2, kp.pt.x + x + dx, kp.pt.y + y + dy); //FIXME: Why to use GetPixelValue?
+                    double error =  GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y) -
+                                    GetPixelValue(img2, kp.pt.x + x + dx, kp.pt.y + y + dy);
 
                     /* 2. Compute the Least-Squares Cost */
                     cost += error * error;
 
-                    /* 3. Compute Jacobian */ // TODO: Why?
+                    /* 3. Compute Jacobian */ // TODO: How it's calculated?
                     if(inverse == false){
+                        // In this mode, we need to calculate the Jacobian every iteration.
                         J = -1.0 * Eigen::Vector2d(
                              0.5 * (GetPixelValue(img2, kp.pt.x + dx + x + 1, kp.pt.y + dy + y) -
                                     GetPixelValue(img2, kp.pt.x + dx + x - 1, kp.pt.y + dy + y)),
@@ -134,9 +138,10 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
                     // Information Matrix(Ω) wasn't informed, so consider it as identity.
                     if(inverse == false || iter == 0){
                         // also update the Hessian
-                        H += J * J.transpose();  // Hessian, H(x) = J(x)'*Ω*J(x)  # FIXME: J.transpose()*J?
+                        H += J * J.transpose();  // Hessian, H(x) = J(x)'*Ω*J(x)
                     }
-                    b += -error * J;  // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)  # FIXME: -J.transnpose()*error?
+                    b += -J * error;  // Bias, g(x) = -b(x) = -e(x)'*Ω*J(x) = -(Ω*J(x))'*e(x) = -Ω*J(x)'*e(x)
+                    // printMatrix<Vector2d>("J: ", J);
                 }
 
             /* ----- Solve! ----- */

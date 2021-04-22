@@ -70,11 +70,11 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     // Optical Flow Variables
     Ptr<GFTTDetector> detector = GFTTDetector::create(500, 0.01, 20);
     
-    vector<KeyPoint> multi_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
-    vector<Point2f> multi_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
-    vector<bool> multi_flow_status;
+    vector<KeyPoint> single_flow_kps2;    // Estimated KeyPoints in Image 2 by Single-Level Optical Flow
+    vector<Point2f> single_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
+    vector<bool> single_flow_status;
     
-    Mat multi_flow_outImage2;
+    Mat single_flow_outImage2;
 
     // First frame initialization
     cap >> image1_rgb;
@@ -108,20 +108,20 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         cv::cvtColor(image2_rgb, image2_grey, COLOR_BGR2GRAY);
 
         /* ----- Optical Flow ----- */
-        OpticalFlowSingleLevel(image1_grey, image2_grey, kps1, multi_flow_kps2, multi_flow_status, true, false);
+        OpticalFlowSingleLevel(image1_grey, image2_grey, kps1, single_flow_kps2, single_flow_status, true, false);
 
         /* ----- Results ----- */
-        for(auto &kp: multi_flow_kps2) multi_flow_pts2_2d.push_back(kp.pt);
-        drawOpticalFlow<bool>(image2_grey, multi_flow_outImage2, pts1_2d, multi_flow_pts2_2d, multi_flow_status);
+        for(auto &kp: single_flow_kps2) single_flow_pts2_2d.push_back(kp.pt);
+        drawOpticalFlow<bool>(image2_grey, single_flow_outImage2, pts1_2d, single_flow_pts2_2d, single_flow_status);
 
         vector<Point2f> good_pts2_2d;
         vector<KeyPoint> good_kps2;
         
         for(uint i = 0; i < pts1_2d.size(); i++){
             // Select good points
-            if(multi_flow_status[i] == 1) {
-                good_pts2_2d.push_back(multi_flow_pts2_2d[i]);
-                good_kps2.push_back(multi_flow_kps2[i]);
+            if(single_flow_status[i] == 1) {
+                good_pts2_2d.push_back(single_flow_pts2_2d[i]);
+                good_kps2.push_back(single_flow_kps2[i]);
             }
         }
 
@@ -130,7 +130,7 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         // // imshow( "Frame2", image2);
         imshow("image2_rgb", image2_rgb);
         imshow("image2_grey", image2_grey);
-        imshow("Tracked by Multi-layer (Pyramid)", multi_flow_outImage2);
+        imshow("Tracked by Single-layer (Pyramid)", single_flow_outImage2);
 
         /* ----- End Iteration ----- */
         // Next Iteration Prep
@@ -140,13 +140,13 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         // kps1.clear();
 
         image1_grey = image2_grey.clone();  // Save last frame
-        // pts1_2d = create_copy<Point2f>(multi_flow_pts2_2d);
-        // kps1 = create_copy<KeyPoint>(multi_flow_kps2);
+        // pts1_2d = create_copy<Point2f>(single_flow_pts2_2d);
+        // kps1 = create_copy<KeyPoint>(single_flow_kps2);
 
         // Free vectors
-        multi_flow_kps2.clear();
-        multi_flow_pts2_2d.clear();
-        multi_flow_status.clear();
+        single_flow_kps2.clear();
+        single_flow_pts2_2d.clear();
+        single_flow_status.clear();
         
         // FPS Calculation
         frameCounter++;

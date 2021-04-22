@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     Timer t1 = chrono::steady_clock::now();
     for(int iter=0; iter < iterations; iter++){
         Matrix3d H = Matrix3d::Zero();     // Hessian, H(x) = J(x)'*Ω*J(x) in Gauss-Newton
-        Vector3d b = Vector3d::Zero();     // Bias, g(x) = -J(x).f(x)
+        Vector3d b = Vector3d::Zero();     // Bias, g(x) = -b(x) = -e(x)'*Ω*J(x) = -(Ω*J(x))'*e(x) = -Ω*J(x)'*e(x)
         
         cost = 0.0;                        // Reset
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
             // The Slambook2 doesn't have the Gauss-Newton equation considering the information matrix (inverse of covariance)
             // The following equations are from Wangxin's Blog, http://wangxinliu.com/slam/optimization/research&study/g2o-3/
             H +=  inv_sigma * inv_sigma * J * J.transpose();  // Hessian, H(x) = J(x)'*Ω*J(x)
-            b += -inv_sigma * inv_sigma * J * ei;             // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
+            b += -inv_sigma * inv_sigma * J * ei;             // Bias, g(x) = -b(x) = -e(x)'*Ω*J(x) = -(Ω*J(x))'*e(x) = -Ω*J(x)'*e(x)
 
             // Least-Squares Cost (Objective Function)
             // This is the actual error function being minimized by solving the proposed linear system: min_x(sum_i ||ei(x)||^2).

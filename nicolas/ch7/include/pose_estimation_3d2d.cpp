@@ -130,7 +130,7 @@ void bundleAdjustmentGaussNewton(const VecVector3d &pts1_3d, const VecVector2d &
             /* ----- Hessian and Bias ----- */
             // Information Matrix(Ω) wasn't informed, so consider it as identity.
             H +=  J.transpose() * J;  // Hessian, H(x) = J(x)'*Ω*J(x)
-            b += -J.transpose() * e;  // Bias, g(x) = -b(x) = -Ω*J(x)*f(x), f(x)=e(x)
+            b += -J.transpose() * e;  // Bias, g(x) = -b(x) = -e(x)'*Ω*J(x) = -(Ω*J(x))'*e(x) = -Ω*J(x)'*e(x)
         }
 
         /* ----- Solve! ----- */

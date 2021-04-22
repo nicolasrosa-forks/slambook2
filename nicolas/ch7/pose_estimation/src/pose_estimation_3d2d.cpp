@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     /* Load the color images */
     Mat image1 = imread(image1_filepath, CV_LOAD_IMAGE_COLOR);
     Mat image2 = imread(image2_filepath, CV_LOAD_IMAGE_COLOR);
-    assert(image1.data != nullptr && image2.data != nullptr);
+    assert(image1.data != nullptr && image2.data != nullptr);  // FIXME: I think this its not working!
 
     /* Load the depth images */
     // The depth image is a 16-bit unsigned number, single channel image (16UC1)

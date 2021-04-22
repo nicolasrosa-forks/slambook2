@@ -16,7 +16,7 @@ public:
         vector<bool> &success_,
         bool inverse_ = true, bool has_initial_ = false) :
         img1(img1_), img2(img2_), kps1(kps1_), kps2(kps2_), success(success_), inverse(inverse_),
-        has_initial(has_initial_) {}
+        has_initial_guess(has_initial_) {}
 
     void calculateOpticalFlow(const Range &range);
 
@@ -27,7 +27,7 @@ private:
     vector<KeyPoint> &kps2;
     vector<bool> &success;
     bool inverse = true;
-    bool has_initial = false;
+    bool has_initial_guess = false;
 };
 
 #include "OpticalFlowTracker.cpp"

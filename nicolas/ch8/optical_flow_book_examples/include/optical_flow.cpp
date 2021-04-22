@@ -28,9 +28,7 @@
 using namespace std;
 using namespace cv;
 
-/** Description
- * @brief Single-layer Optical Flow
- * 
+/** Single-layer Optical Flow
  * @param [in] img1 First image
  * @param [in] img2 Second image
  * @param [in] kps1 Detected keypoints in the Image 1
@@ -59,9 +57,8 @@ void OpticalFlowSingleLevel(
     parallel_for_(Range(0, kps1.size()), std::bind(&OpticalFlowTracker::calculateOpticalFlow, &tracker, placeholders::_1));
 }
 
-/** Description
- * @brief Multi-level Optical Flow, 
- * Scale of pyramid is set to 2 by default, the image pyramid will be create inside the function.
+/** Multi-level Optical Flow
+ * @brief Scale of pyramid is set to 2 by default, the image pyramid will be create inside the function.
  * 
  * @param [in] img1 First image (base of pyramid 1)
  * @param [in] img2 Second image (base of pyramid 2)

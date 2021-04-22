@@ -20,4 +20,6 @@ void printMatrix(const char text[], cv::MatExpr var);
 
 Point2f pixel2cam(const Point2f &p, const Mat &K);
 
+void calcHist(const Mat src, string img_name);
+
 #endif

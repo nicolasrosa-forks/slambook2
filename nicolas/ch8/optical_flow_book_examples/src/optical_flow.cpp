@@ -27,11 +27,6 @@ string image2_filepath = "../../images/LK2.png";
 int nfeatures = 500;
 bool saveResults = false;
 
-/* =========== */
-/*  Functions  */
-/* =========== */
-
-
 /* ====== */
 /*  Main  */
 /* ====== */
@@ -44,16 +39,19 @@ int main(int argc, char **argv) {
     Mat image1 = imread(image1_filepath, cv::IMREAD_GRAYSCALE);
     Mat image2 = imread(image2_filepath, cv::IMREAD_GRAYSCALE);
     
-    if (image1.empty() || image2.empty()) {
-        // fail, bail out!
-        cout << "Couldn't find '" << image1_filepath << "' file!" << endl;
-        return -1; 
+    // FIXME
+    // assert(image1.empty() || image2.empty());
+    // assert(image1.data != nullptr && image2.data && "Can not load images!");
+    // assert(!image1.empty() && !image2.empty() && "Can not load images!");
+
+    if (image1.empty() || image2.empty()){
+        std::cerr << "[FileNotFoundError] imread() failed: image not found!" << std::endl;
+        return -1;  // Don't let the execution continue, else imshow() will crash.
     }
 
     /* Initialization */
     vector<KeyPoint> kps1;    // Keypoints in Image 1
     vector<Point2f> pts1_2d;  // Coordinates of the Keypoints in Image 1
-    
 
     /* --------------------- */
     /*  Features Extraction  */
@@ -61,7 +59,7 @@ int main(int argc, char **argv) {
     /** GFTT: Good Features To Track (Shi-Tomasi method)
      * https://docs.opencv.org/master/d4/d8c/tutorial_py_shi_tomasi.html
      */
-    Ptr<GFTTDetector> detector = GFTTDetector::create(500, 0.01, 20);
+    Ptr<GFTTDetector> detector = GFTTDetector::create(nfeatures, 0.01, 20);
     
     Timer t1 = chrono::steady_clock::now();
     detector->detect(image1, kps1);
@@ -74,8 +72,8 @@ int main(int argc, char **argv) {
     /*  LK Flow in OpenCV */
     /* ------------------ */
     // Let's use OpenCV's flow for validation.
-    vector<Point2f> cv_flow_pts2_2d;
-    vector<uchar> cv_flow_status;  // uchar: unsigned char, [0, 255]
+    vector<Point2f> cv_flow_pts2_2d;      // Coordinates of Tracked Keypoints in Image 2
+    vector<uchar> cv_flow_status;         // uchar: unsigned char, [0, 255]
     vector<float> cv_flow_error;
 
     Timer t3 = chrono::steady_clock::now();
@@ -99,8 +97,8 @@ int main(int argc, char **argv) {
 
     /* ----- Multi-Layer Optical Flow ----- */
     // Then let's test the multi-layer LK
-    vector<KeyPoint> multi_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
-    vector<Point2f> multi_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
+    vector<KeyPoint> multi_flow_kps2;     // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
+    vector<Point2f> multi_flow_pts2_2d;   // Coordinates of Tracked Keypoints in Image 2
     vector<bool> multi_flow_status;
 
     Timer t7 = chrono::steady_clock::now();
