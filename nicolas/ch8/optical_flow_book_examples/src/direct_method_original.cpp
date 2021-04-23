@@ -13,9 +13,9 @@ double fx = 718.856, fy = 718.856, cx = 607.1928, cy = 185.2157;
 // baseline
 double baseline = 0.573;
 // paths
-string left_file = "../images/left.png";
-string disparity_file = "../images/disparity.png";
-boost::format fmt_others("../images/%06d.png");    // other files
+string left_file = "../../images/left.png";
+string disparity_file = "../../images/disparity.png";
+boost::format fmt_others("../../images/%06d.png");    // other files
 
 // useful typedefs
 typedef Eigen::Matrix<double, 6, 6> Matrix6d;
@@ -83,7 +83,7 @@ void DirectPoseEstimationMultiLayer(
     const cv::Mat &img1,
     const cv::Mat &img2,
     const VecVector2d &px_ref,
-    const vector<double> depth_ref,  //FIXME: Use &?
+    const vector<double> depth_ref,
     Sophus::SE3d &T21
 );
 
