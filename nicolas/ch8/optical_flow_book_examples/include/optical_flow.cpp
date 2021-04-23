@@ -70,8 +70,8 @@ void OpticalFlowSingleLevel(
 void OpticalFlowMultiLevel(
     const Mat &img1,
     const Mat &img2,
-    const vector<KeyPoint> &kp1,
-    vector<KeyPoint> &kp2,
+    const vector<KeyPoint> &kps1,
+    vector<KeyPoint> &kps2,
     vector<bool> &success,
     bool inverse,
     bool verbose
@@ -83,7 +83,7 @@ void OpticalFlowMultiLevel(
 
     /* Create Pyramids */
     Timer t1 = chrono::steady_clock::now();
-    vector<Mat> pyr1, pyr2;  // Images pyramids
+    vector<Mat> pyr1, pyr2;  // Image pyramids
     for(int i=0; i<n_layers; i++){
         if(i == 0){
             pyr1.push_back(img1);
@@ -104,44 +104,41 @@ void OpticalFlowMultiLevel(
         printElapsedTime("Build Pyramid time: ", t1, t2);
 
     /* Coarse-to-Fine LK tracking in Pyramids */
-    vector<KeyPoint> kp1_pyr, kp2_pyr;
+    vector<KeyPoint> kps1_pyr, kps2_pyr;
     
     // Top Layer
-    for(auto &kp: kp1){
+    for(auto &kp: kps1){
         auto kp_top = kp;
         kp_top.pt *= scales[n_layers - 1];
-        kp1_pyr.push_back(kp_top);
-        kp2_pyr.push_back(kp_top);
+        kps1_pyr.push_back(kp_top);
+        kps2_pyr.push_back(kp_top);
     }
 
     // Other Layers
-    for(int level = n_layers - 1; level >= 0; level--){  // Top-Bottom
+    for(int level = n_layers - 1; level >= 0; level--){  // Top-to-Bottom
         success.clear();
         t1 = chrono::steady_clock::now();
-        OpticalFlowSingleLevel(pyr1[level], pyr2[level], kp1_pyr, kp2_pyr, success, inverse, true);
+        OpticalFlowSingleLevel(pyr1[level], pyr2[level], kps1_pyr, kps2_pyr, success, inverse, true);
         t2 = chrono::steady_clock::now();
         auto time_used = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
         
         if(verbose)
             cout << "Track pyr " << level << " cost time: " << time_used.count() << endl;
-        // char *msg;
-        // sprintf(msg, "track pyr %s", 5);
-        // printElapsedTime(msg.(), t1, t2);
 
-        /* Updates KeyPoint Pyramid Coordinates */
+        /* Updates the KeyPoints Coordinates in the Pyramids */
         if(level > 0){
-            for(auto &kp: kp1_pyr)      // Note that we're not creating a copy of the element, by acessing it through reference (&).
-                kp.pt /= pyramid_scale;  // Downscales the KeyPoint Coordinates in the Keypoint Pyramid of Image 1
-            for(auto &kp: kp2_pyr)      // Downscales the KeyPoint Coordinates in the Keypoint Pyramid of Image 2
-                kp.pt /= pyramid_scale;
+            for(auto &kp: kps1_pyr)       // Note that we're not creating a copy of the element, by acessing it through reference (&).
+                kp.pt /= pyramid_scale;  // Downscales the KeyPoints Coordinates in the Keypoint Pyramid of Image 1
+            for(auto &kp: kps2_pyr)       
+                kp.pt /= pyramid_scale;  // Downscales the KeyPoints Coordinates in the Keypoint Pyramid of Image 2
         }
     }
     if(verbose)
         cout << endl;
 
     /* Returns the computed tracked points */
-    for (auto &kp: kp2_pyr)
-        kp2.push_back(kp);
+    for (auto &kp: kps2_pyr)
+        kps2.push_back(kp);
 }
 
 template <typename TType>

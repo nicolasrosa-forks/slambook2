@@ -130,15 +130,14 @@ int main(int argc, char **argv) {
 
     if(saveResults){
         char buffer[100];
-        int ret;
         
-        ret = sprintf(buffer, "../src/results/optical_flow_img2_single_%ld.jpg", std::time(nullptr));
+        sprintf(buffer, "../../optical_flow_book_examples/src/results/optical_flow_img2_single_%ld.jpg", std::time(nullptr));
         cv::imwrite(buffer, single_flow_outImage2);
 
-        ret = sprintf(buffer, "../src/results/optical_flow_img2_multi_%ld.jpg", std::time(nullptr));
+        sprintf(buffer, "../../optical_flow_book_examples/src/results/optical_flow_img2_multi_%ld.jpg", std::time(nullptr));
         cv::imwrite(buffer, multi_flow_outImage2);
 
-        ret = sprintf(buffer, "../src/results/optical_flow_img2_CV_%ld.jpg", std::time(nullptr));
+        sprintf(buffer, "../../optical_flow_book_examples/src/results/optical_flow_img2_CV_%ld.jpg", std::time(nullptr));
         cv::imwrite(buffer, cv_flow_outImage2);
     }
     

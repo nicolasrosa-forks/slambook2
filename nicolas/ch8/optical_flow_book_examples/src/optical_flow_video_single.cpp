@@ -117,7 +117,7 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         vector<Point2f> good_pts2_2d;
         vector<KeyPoint> good_kps2;
         
-        for(uint i = 0; i < pts1_2d.size(); i++){
+        for(size_t i = 0; i < pts1_2d.size(); i++){
             // Select good points
             if(single_flow_status[i] == 1) {
                 good_pts2_2d.push_back(single_flow_pts2_2d[i]);

@@ -2,6 +2,7 @@
  * @function EqualizeHist_Demo.cpp
  * @brief Demo code for equalizeHist function
  * @author OpenCV team
+ * @link https://docs.opencv.org/3.4/d4/d1b/tutorial_histogram_equalization.html
  */
 
 #include "opencv2/imgcodecs.hpp"

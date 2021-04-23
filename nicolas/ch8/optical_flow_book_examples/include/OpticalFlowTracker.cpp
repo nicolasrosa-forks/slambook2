@@ -13,11 +13,11 @@
 #include <eigen3/Eigen/Dense>
 
 /* OpenCV Libraries */
+#include <opencv2/opencv.hpp>
 //#include <opencv2/core/core.hpp>
 //#include <opencv2/features2d/features2d.hpp>
 //#include <opencv2/highgui/highgui.hpp>
 //#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/opencv.hpp>
 
 /* Custom Libraries */
 #include "../../../common/libUtils_basic.h"
@@ -65,7 +65,7 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
     int iterations = 10;
 
     /* Iterate over Features */
-    for(size_t i=range.start; i < range.end; i++){
+    for(size_t i = range.start; i < range.end; i++){
         auto kp = kps1[i];
         double dx = 0, dy = 0;  // dx, dy need to be estimated from
 
