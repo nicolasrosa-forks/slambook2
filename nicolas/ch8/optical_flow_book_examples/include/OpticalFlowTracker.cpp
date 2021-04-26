@@ -28,20 +28,20 @@
 using namespace std;
 using namespace cv;
 
-/** Description
+/** Bilinear Interpolation
  * @brief Get a grayscale value from reference image (bilinear interpolation)
  * 
- * @param img
- * @param x
- * @param y
+ * @param img input image
+ * @param x x-coordinate of the center pixel
+ * @param y y-coordinate of the center pixel
  * @return the interpolated value of this pixel
  */
 inline float GetPixelValue(const cv::Mat &img, float x, float y){
-    // Boundary check
-    if (x < 0) x = 0;                    // Avoid negative x-axis coordinates
-    if (y < 0) y = 0;                    // Avoid negative y-axis coordinates
-    if (x >= img.cols) x = img.cols -1;  // Avoid positive x-axis coordinates outside image width
-    if (y >= img.rows) y = img.rows -1;  // Avoid positive y-axis coordinates outside image height
+    /* Boundary check */
+    if (x < 0) x = 0;                     // Avoid negative x-axis coordinates
+    if (y < 0) y = 0;                     // Avoid negative y-axis coordinates
+    if (x >= img.cols) x = img.cols - 1;  // Avoid positive x-axis coordinates outside image width
+    if (y >= img.rows) y = img.rows - 1;  // Avoid positive y-axis coordinates outside image height
 
     uchar *data = &img.data[int(y)*img.step + int(x)];
     
@@ -104,8 +104,8 @@ void OpticalFlowTracker::calculateOpticalFlow(const Range &range){
 
             /* ----- Compute Photometric Error ----- */
             // Iterate over Patch
-            for(int x = -half_patch_size; x <= half_patch_size; x++)       // FIXME: x < half_patch_size OR x <= half_patch_size?
-                for(int y = -half_patch_size; y <= half_patch_size; y++){  // FIXME: y < half_patch_size OR y <= half_patch_size?
+            for(int x = -half_patch_size; x <= half_patch_size; x++)
+                for(int y = -half_patch_size; y <= half_patch_size; y++){
                     /* 1. Compute Residual */
                     // Residual Error, e = I1(x, y) - I2(x + ∆x, y + ∆y)
                     double error =  GetPixelValue(img1, kp.pt.x + x, kp.pt.y + y) -

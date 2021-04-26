@@ -7,7 +7,7 @@
 /* ===================== */
 class OpticalFlowTracker{
 public:
-    //Constructor
+    // Constructor
     OpticalFlowTracker(
         const Mat &img1_,
         const Mat &img2_,
