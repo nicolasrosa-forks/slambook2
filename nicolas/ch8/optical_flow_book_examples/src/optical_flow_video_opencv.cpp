@@ -19,6 +19,7 @@
 #include "../../../common/libUtils_basic.h"
 #include "../../../common/libUtils_eigen.h"
 #include "../../../common/libUtils_opencv.h"
+#include "../../../common/libUtils_fps.h"
 #include "../include/optical_flow.h"
 
 using namespace std;
@@ -31,36 +32,6 @@ string filename = "/home/nicolas/Downloads/Driving_Downtown_-_New_York_City_4K_-
 
 int nfeatures = 500;
 int min_nfeatures = 250;
-
-class FPS{
-public:
-    // Constructor
-    FPS(){
-        frameCounter = 0;
-        timeBegin = std::time(0);
-        tick = 0;
-    }
-
-    void update();
-
-private:
-    long frameCounter;
-    std::time_t timeBegin;
-    int tick;
-};
-
-void FPS::update(){
-    // cout << frameCounter << endl;
-    frameCounter++;
-    std::time_t timeNow = std::time(0) - timeBegin;
-
-    if (timeNow - tick >= 1){  // Print every 1s
-        tick++;
-        cout << "FPS: " << frameCounter << endl;
-        frameCounter = 0;
-    }
-}
-
 
 /* ====== */
 /*  Main  */
