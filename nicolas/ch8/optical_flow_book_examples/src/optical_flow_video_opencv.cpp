@@ -25,19 +25,42 @@ using namespace std;
 using namespace cv;
 
 /* Global Variables */
+// Choose:
 string filename = "/home/nicolas/Downloads/Driving_Downtown_-_New_York_City_4K_-_USA_360p.mp4";
 // string filename = "/home/nicolas/Downloads/Driving_Downtown_-_San_Francisco_4K_-_USA_720p.mp4";
 
 int nfeatures = 500;
+int min_nfeatures = 250;
 
-/* ===================== */
-/*  Function Prototypes  */
-/* ===================== */
-template<typename T>
-std::vector<T> create_copy(std::vector<T> const &vec){
-    std::vector<T> v(vec);
-    return v;
+class FPS{
+public:
+    // Constructor
+    FPS(){
+        frameCounter = 0;
+        timeBegin = std::time(0);
+        tick = 0;
+    }
+
+    void update();
+
+private:
+    long frameCounter;
+    std::time_t timeBegin;
+    int tick;
+};
+
+void FPS::update(){
+    // cout << frameCounter << endl;
+    frameCounter++;
+    std::time_t timeNow = std::time(0) - timeBegin;
+
+    if (timeNow - tick >= 1){  // Print every 1s
+        tick++;
+        cout << "FPS: " << frameCounter << endl;
+        frameCounter = 0;
+    }
 }
+
 
 /* ====== */
 /*  Main  */
@@ -47,20 +70,18 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     cout << "[orb_cv_video] Hello!" << endl << endl;
 
     /* Load the images */
-    // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name
-    VideoCapture cap(filename); 
-    
+    VideoCapture cap(filename);  // Create a VideoCapture object and open the input file
+
     // Check if camera opened successfully
     if(!cap.isOpened()){
         cout << "Error opening video stream or file" << endl;
         return -1;
     }
 
-    // If you do not care about backward compatibility
-    // You can use the following instead for OpenCV3
-    double fps = cap.get(CAP_PROP_FPS);
-    cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps << endl;
+    // Get Original FPS from the video
+    double fps_v = cap.get(CAP_PROP_FPS);
+    cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps_v << endl;
 
     /* Initialization */
     Mat image1_rgb, image2_rgb;
@@ -71,14 +92,14 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     // Optical Flow Variables
     Ptr<GFTTDetector> detector = GFTTDetector::create(nfeatures, 0.01, 20);
     
-    vector<KeyPoint> cv_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
+    // vector<KeyPoint> cv_flow_kps2;    // Estimated KeyPoints in Image 2 by Multi-Level Optical Flow
     vector<Point2f> cv_flow_pts2_2d;  // Coordinates of Tracked Keypoints in Image 2
     vector<uchar> cv_flow_status;
     vector<float> cv_flow_error;
-    
+
     Mat cv_flow_outImage2;
 
-    // First frame initialization
+    // Get first frame
     cap >> image1_rgb;
     assert(image1_rgb.data != nullptr);  // FIXME: I think this its not working!
 
@@ -87,12 +108,7 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     for(auto &kp: kps1) pts1_2d.push_back(kp.pt);
 
     // Variables for FPS Calculation
-    long frameCounter = 0;
-    std::time_t timeBegin = std::time(0);
-    int tick = 0;
-
-    // Sharpen Filter // TODO: Manter?
-    // Mat blurred; double sigma = 1, threshold = 5, amount = 1;
+    FPS fps = FPS();
     
     /* ------ */
     /*  Loop  */
@@ -109,24 +125,8 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         // cout << "Width : " << image2_rgb.size().width << endl;
         // cout << "Height: " << image2_rgb.size().height << endl;
 
-        /* Apply Filters */ // TODO: Manter?
-        // GaussianBlur(image2_rgb, blurred, Size(), sigma, sigma);
-        // Mat lowContrastMask = abs(image2_rgb - blurred) < threshold;
-        // Mat sharpened = image2_rgb*(1+amount) + blurred*(-amount);
-        // image2_rgb.copyTo(sharpened, lowContrastMask);
-        // sharpened.copyTo(image2_rgb); // Overwrite
-        // imshow("sharpened", sharpened);
-        // imshow("lowContrastMask", lowContrastMask);
-
         /* ----- Features Extraction and Matching ----- */
         cv::cvtColor(image2_rgb, image2_grey, COLOR_BGR2GRAY);
-        
-        /* ----- Apply Histogram Equalization ----- */
-        Mat image2_grey_est;
-        calcHist(image2_grey, "image2_grey");  // Before Equalization
-        equalizeHist( image2_grey, image2_grey_est );  // Input needs to be greyscale!
-        calcHist(image2_grey_est, "image2_grey_est");  // After Equalization
-        image2_grey_est.copyTo(image2_grey); // Overwrite
 
         /* ----- Optical Flow ----- */
         cv::calcOpticalFlowPyrLK(image1_grey, image2_grey, pts1_2d, cv_flow_pts2_2d, cv_flow_status, cv_flow_error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
@@ -135,40 +135,43 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         drawOpticalFlow<uchar>(image2_grey, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
 
         vector<Point2f> good_pts2_2d;
-        for(uint i = 0; i < pts1_2d.size(); i++){
+        for(size_t i = 0; i < pts1_2d.size(); i++){
             // Select good points
             if(cv_flow_status[i] == 1) {
                 good_pts2_2d.push_back(cv_flow_pts2_2d[i]);
             }
         }
+        int n_good = good_pts2_2d.size();
+        cout << n_good << "/" << nfeatures << endl;
 
         // Display
-        // imshow( "Frame1", image1);
-        // imshow( "Frame2", image2);
+        // imshow("Frame1", image1);
+        // imshow("Frame2", image2);
         imshow("image2_rgb", image2_rgb);
         // imshow("image2_grey", image2_grey);
-        imshow("Tracked by OpenCV", cv_flow_outImage2);
+        imshow("Tracked by OpenCV (1->2)", cv_flow_outImage2);
 
         /* ----- End Iteration ----- */
         // Next Iteration Prep
         image1_grey = image2_grey.clone();  // Save last frame
-        pts1_2d = good_pts2_2d;
+
+        if (n_good < min_nfeatures){  // Few Features, get detect more!
+        // if (true){  // Few Features, get detect more!
+            detector->detect(image1_grey, kps1);
+            for(auto &kp: kps1) pts1_2d.push_back(kp.pt);
+            for(auto &pt: good_pts2_2d) pts1_2d.push_back(pt); // Retains previously detected keypoints
+        }else{
+            pts1_2d = good_pts2_2d;
+        }
 
         // Free vectors
-        cv_flow_kps2.clear();
+        // cv_flow_kps2.clear();
         cv_flow_pts2_2d.clear();
         cv_flow_status.clear();
         
         // FPS Calculation
-        frameCounter++;
-        std::time_t timeNow = std::time(0) - timeBegin;
-
-        if (timeNow - tick >= 1){
-            tick++;
-            cout << "FPS: " << frameCounter << endl;
-            frameCounter = 0;
-        }
-
+        fps.update();
+        cout << endl;
         // Press 'ESC' on keyboard to exit.
         char c = (char) waitKey(25);
         if(c==27) break;
