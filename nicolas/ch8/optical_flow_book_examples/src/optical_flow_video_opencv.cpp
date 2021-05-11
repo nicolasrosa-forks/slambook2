@@ -6,7 +6,6 @@
 #include <chrono>
 #include <stdio.h>
 #include <exception>
-#include <string>
 
 /* OpenCV Libraries */
 #include <opencv2/core/core.hpp>
@@ -55,8 +54,8 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps_v << endl;
 
     /* Initialization */
-    Mat image1_rgb, image2_rgb;
-    Mat image1_grey, image2_grey;
+    Mat image1_bgr, image2_bgr;
+    Mat image1, image2;
     vector<KeyPoint> kps1;
     vector<Point2f> pts1_2d;
     
@@ -71,11 +70,11 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     Mat cv_flow_outImage2;
 
     // Get first frame
-    cap >> image1_rgb;
-    assert(image1_rgb.data != nullptr);  // FIXME: I think this its not working!
+    cap >> image1_bgr;
+    assert(image1_bgr.data != nullptr);  // FIXME: I think this its not working!
 
-    cv::cvtColor(image1_rgb, image1_grey, COLOR_BGR2GRAY);
-    detector->detect(image1_grey, kps1);
+    cv::cvtColor(image1_bgr, image1, COLOR_BGR2GRAY);
+    detector->detect(image1, kps1);
     for(auto &kp: kps1) pts1_2d.push_back(kp.pt);
 
     // Variables for FPS Calculation
@@ -87,23 +86,23 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
     while(1){
         /* Read */
         // Capture frame-by-frame
-        cap >> image2_rgb;
+        cap >> image2_bgr;
 
         // If the frame is empty, break immediately
-        if (image2_rgb.empty())
+        if (image2_bgr.empty())
             break;
 
-        // cout << "Width : " << image2_rgb.size().width << endl;
-        // cout << "Height: " << image2_rgb.size().height << endl;
+        // cout << "Width : " << image2_bgr.size().width << endl;
+        // cout << "Height: " << image2_bgr.size().height << endl;
 
         /* ----- Features Extraction and Matching ----- */
-        cv::cvtColor(image2_rgb, image2_grey, COLOR_BGR2GRAY);
+        cv::cvtColor(image2_bgr, image2, COLOR_BGR2GRAY);
 
         /* ----- Optical Flow ----- */
-        cv::calcOpticalFlowPyrLK(image1_grey, image2_grey, pts1_2d, cv_flow_pts2_2d, cv_flow_status, cv_flow_error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
+        cv::calcOpticalFlowPyrLK(image1, image2, pts1_2d, cv_flow_pts2_2d, cv_flow_status, cv_flow_error);  // Fills the pts2_2d with the corresponding keypoints tracked in Image 2.
 
         /* ----- Results ----- */
-        drawOpticalFlow<uchar>(image2_grey, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
+        drawOpticalFlow<uchar>(image2, cv_flow_outImage2, pts1_2d, cv_flow_pts2_2d, cv_flow_status);
 
         vector<Point2f> good_pts2_2d;
         for(size_t i = 0; i < pts1_2d.size(); i++){
@@ -118,17 +117,17 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         // Display
         // imshow("Frame1", image1);
         // imshow("Frame2", image2);
-        imshow("image2_rgb", image2_rgb);
-        // imshow("image2_grey", image2_grey);
+        imshow("image2_bgr", image2_bgr);
+        // imshow("image2", image2);
         imshow("Tracked by OpenCV (1->2)", cv_flow_outImage2);
 
         /* ----- End Iteration ----- */
         // Next Iteration Prep
-        image1_grey = image2_grey.clone();  // Save last frame
+        image1 = image2.clone();  // Save last frame
 
         if (n_good < min_nfeatures){  // Few Features, get detect more!
         // if (true){  // Few Features, get detect more!
-            detector->detect(image1_grey, kps1);
+            detector->detect(image1, kps1);
             for(auto &kp: kps1) pts1_2d.push_back(kp.pt);
             for(auto &pt: good_pts2_2d) pts1_2d.push_back(pt); // Retains previously detected keypoints
         }else{
@@ -143,6 +142,7 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
         // FPS Calculation
         fps.update();
         cout << endl;
+
         // Press 'ESC' on keyboard to exit.
         char c = (char) waitKey(25);
         if(c==27) break;
