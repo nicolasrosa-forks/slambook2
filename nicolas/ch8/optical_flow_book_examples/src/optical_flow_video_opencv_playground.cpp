@@ -19,6 +19,7 @@
 #include "../../../common/libUtils_eigen.h"
 #include "../../../common/libUtils_opencv.h"
 #include "../../../common/libUtils_fps.h"
+#include "../../../common/connected_components.h"
 #include "../include/optical_flow.h"
 
 using namespace std;
@@ -102,6 +103,100 @@ static void on_diff_thresh_trackbar(int, void *)
     setTrackbarPos("Diff Thresh", window_event_name, low_Diff);
 }
 
+
+// Glare Detection
+// https://rcvaram.medium.com/glare-removal-with-inpainting-opencv-python-95355aa2aa52
+
+// def create_mask(image):
+//     gray = cv2.cvtColor( image, cv2.COLOR_BGR2GRAY )
+//     blurred = cv2.GaussianBlur( gray, (9,9), 0 )
+//     _,thresh_img = cv2.threshold( blurred, 180, 255, cv2.THRESH_BINARY)
+//     thresh_img = cv2.erode( thresh_img, None, iterations=2 )
+//     thresh_img  = cv2.dilate( thresh_img, None, iterations=4 )
+// 
+//     # perform a connected component analysis on the thresholded image,
+//     # then initialize a mask to store only the "large" components
+//     labels = measure.label( thresh_img, neighbors=8, background=0 )
+//     mask = np.zeros( thresh_img.shape, dtype="uint8" )
+// 
+//     # loop over the unique components
+//     for label in np.unique( labels ):
+//         # if this is the background label, ignore it
+//         if label == 0:
+//             continue
+//
+//         # otherwise, construct the label mask and count the
+//         # number of pixels
+//         labelMask = np.zeros( thresh_img.shape, dtype="uint8" )
+//         labelMask[labels == label] = 255
+//         numPixels = cv2.countNonZero( labelMask )
+//
+//         # if the number of pixels in the component is sufficiently
+//         # large, then add it to our mask of "large blobs"
+//         if numPixels > 300:
+//             mask = cv2.add( mask, labelMask )
+//     return mask
+
+Mat create_glare_mask(Mat image){
+    Mat gray, blurred, thresh_img;  // FIXME: gray -> grey
+    cv::cvtColor(image, gray, COLOR_BGR2GRAY);
+    cv::GaussianBlur(gray, blurred, cv::Size(9, 9), 0);
+    cv::threshold( blurred, thresh_img, 180, 255, THRESH_BINARY);
+    cv::erode(thresh_img, thresh_img, getStructuringElement(MORPH_RECT, Size(3, 3)), Point(-1,-1), 2);
+    cv::dilate(thresh_img, thresh_img, getStructuringElement(MORPH_RECT, Size(3, 3)), Point(-1,-1), 4);
+
+    // Perform a connected component analysis on the thresholded image,
+    // then initialize a mask to store only the "large" components
+    // cv::measure.label
+    std::vector<ConnectedComponent> labels;
+
+    findCC(thresh_img, labels);
+
+    int n_labels = labels.size();
+
+    Mat mask = cv::Mat::zeros(thresh_img.size(), CV_8UC1);
+
+    for(size_t i=0; i<n_labels; i++){
+        // if this is the background label, ignore it
+        if(i==0)
+            continue;
+
+        // otherwise, construct the label mask and count the
+        // number of pixels
+        Mat labelMask = cv::Mat::zeros(thresh_img.size(), CV_8UC1);
+        
+        for(auto px: (*labels[i].getPixels())){
+            // cout << px << endl;
+            labelMask.at<uchar>(px) = 255;
+        }
+        
+        int numPixels = cv::countNonZero(labelMask);
+
+        // imshow("labelMask", labelMask);
+        cout << "label[" << i << "], numPixels: " << numPixels << endl;
+
+        // if the number of pixels in the component is sufficiently
+        // large, then add it to our mask of "large blobs"
+        if(numPixels > 300){
+            cv::add(mask, labelMask, mask);
+        }
+    }
+
+    float alpha = 0.5;
+    float beta = ( 1.0 - alpha);
+    Mat glare_overlay = cv::Mat::zeros(image.size(), CV_8UC1);
+    addWeighted( gray, alpha, mask, beta, 0.0, glare_overlay);
+
+    // cout << image.size() << "vs." << mask.size() << endl;
+
+    imshow("grey", gray);
+    imshow("blurred", blurred);
+    imshow("thresh_img", thresh_img);
+    imshow("mask", mask);
+    imshow("glare_overlay", glare_overlay);
+    
+    return mask;
+}
 
 /* ====== */
 /*  Main  */
@@ -277,6 +372,8 @@ int main(int argc, char **argv) { // FIXME: Acho que não está funcionando corr
 
 
         // cout << diffImage.size() << endl;
+
+        Mat mask = create_glare_mask(image2_bgr);
 
         /* ----- Results ----- */
         drawOpticalFlow<uchar>(image2, cv_flow_outImage12, pts1_2d, cv_flow_pts2_2d, cv_flow_status12);
